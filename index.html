@@ -36,7 +36,7 @@ h1 {
 </head>
 
 <body>
-
+<div id="ton-connect"></div>
 <h1>ASIQPAI</h1>
 
 <p>Music Artist | Qazaqstan</p>
@@ -64,6 +64,13 @@ Spotify
 <p>Web3:</p>
 
 <p>asiqpai.ton</p>
+<script>
 
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: 'https://qaztrap.github.io/asiqpai/tonconnect-manifest.json',
+    buttonRootId: 'ton-connect'
+});
+
+</script>
 </body>
 </html>
