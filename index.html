@@ -10,7 +10,22 @@
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 
 <style>
+.logo{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    object-fit:cover;
+    margin:20px auto;
+    display:block;
 
+    box-shadow:0 0 35px rgba(255,215,0,.45);
+
+    transition:.4s;
+}
+
+.logo:hover{
+    transform:scale(1.05);
+}
 body{
     background:white;
     color:black;
@@ -52,28 +67,13 @@ audio{
 }
 
 </style>
-.logo{
-    width:140px;
-    height:140px;
-    border-radius:50%;
-    object-fit:cover;
-    margin:20px auto;
-    display:block;
 
-    box-shadow:0 0 35px rgba(255,215,0,.45);
-
-    transition:.4s;
-}
-
-.logo:hover{
-    transform:scale(1.05);
-}
 </head>
 
 <body>
 
 <div id="ton-connect"></div>
-img src="images/logo.png" class="logo" alt="ASIQPAI Logo">
+<img src="images/logo.png" class="logo" alt="ASIQPAI Logo">
 <h1>ASIQPAI</h1>
 
 <p>Music Artist | Qazaqstan</p>
