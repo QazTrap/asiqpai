@@ -1,69 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Asiqpai Official</title>
 
+<!-- TON Connect -->
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
 <style>
-body {
-    background: #111;
-    color: white;
-    font-family: Arial;
-    text-align: center;
-    padding: 40px;
+
+body{
+    background:white;
+    color:black;
+    font-family:Arial, sans-serif;
+    text-align:center;
+    padding:40px;
+    margin:0;
 }
 
-h1 {
-    font-size: 50px;
+h1{
+    font-size:50px;
 }
 
-.button {
-    display: block;
-    background: #222;
-    color: white;
-    padding: 15px;
-    margin: 15px auto;
-    width: 250px;
-    border-radius: 10px;
-    text-decoration: none;
+.button{
+    display:block;
+    background:#0088ff;
+    color:white;
+    padding:15px;
+    margin:15px auto;
+    width:250px;
+    border-radius:12px;
+    text-decoration:none;
+    transition:0.3s;
 }
 
-.button:hover {
-    background: #444;
+.button:hover{
+    background:#0066cc;
 }
+
+#ton-connect{
+    display:flex;
+    justify-content:center;
+    margin-bottom:30px;
+}
+
+audio{
+    width:300px;
+    margin-top:20px;
+}
+
 </style>
 
 </head>
 
 <body>
+
 <div id="ton-connect"></div>
+
 <h1>ASIQPAI</h1>
 
 <p>Music Artist | Qazaqstan</p>
 
-<a class="button" href="https://t.me/asiqpai">
-Telegram
-</a>
+<a class="button" href="https://t.me/asiqpai">Telegram</a>
 
-<a class="button" href="https://youtube.com/@asiqpai">
-YouTube
-</a>
+<a class="button" href="https://youtube.com/@asiqpai">YouTube</a>
 
-<a class="button" href="https://tiktok.com/@asiqpai">
-TikTok
-</a>
+<a class="button" href="https://www.tiktok.com/@asiqpai">TikTok</a>
 
-<a class="button" href="https://www.instagram.com/asiqpai">
-Instagram
-</a>
+<a class="button" href="https://www.instagram.com/asiqpai">Instagram</a>
 
-<a class="button" href="https://artists.spotify.com/c/ru/artist/3vDynJM4I5vlhclbEsQz67/home">
-Spotify
-</a>
+<a class="button" href="https://open.spotify.com/">Spotify</a>
 
-<p>Web3:</p>
+<h2>Latest Release</h2>
+
+<audio controls>
+    <source src="music/latest.mp3" type="audio/mpeg">
+    Ваш браузер не поддерживает аудио.
+</audio>
+
+<p><b>Web3</b></p>
 
 <p>asiqpai.ton</p>
+
 <script>
 
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
@@ -72,5 +92,6 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
 });
 
 </script>
+
 </body>
 </html>
