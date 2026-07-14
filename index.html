@@ -159,9 +159,9 @@ Music Artist • Producer • Beatmaker
 
     <p><strong>Key:</strong> F#m</p>
 
-    <button class="buy-button">
-        💎 Buy — 10 GRAM
-    </button>
+    <button class="buy-button" onclick="buyBeat()">
+    💎 Buy — 10 GRAM
+</button>
 
 </div>
 <p><b>Web3</b></p>
@@ -174,7 +174,31 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://qaztrap.github.io/asiqpai/tonconnect-manifest.json',
     buttonRootId: 'ton-connect'
 });
+async function buyBeat() {
 
+    try {
+
+        const transaction = {
+            validUntil: Math.floor(Date.now() / 1000) + 600,
+            messages: [
+                {
+                    address: "UQCe36C6cCa5uQoOS34ljjfsbOLGfjMxqXvwFqFvMzISERqh",
+                    amount: "10000000000"
+                }
+            ]
+        };
+
+        await tonConnectUI.sendTransaction(transaction);
+
+        alert("Спасибо за покупку!");
+
+    } catch (e) {
+
+        alert("Оплата отменена.");
+
+    }
+
+}
 </script>
 
 </body>
