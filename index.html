@@ -79,6 +79,7 @@
     box-shadow:none;
 
     transition:.4s;
+    animation: glow 3s ease-in-out infinite;  
 }
 
 .logo:hover{
@@ -275,6 +276,21 @@ audio{
     font-size:14px;
 
     width:40px;
+
+} 
+@keyframes glow{
+
+    0%{
+        filter:brightness(1);
+    }
+
+    50%{
+        filter:brightness(1.2);
+    }
+
+    100%{
+        filter:brightness(1);
+    }
 
 }    
 </style>
