@@ -401,7 +401,19 @@ async function buyBeat() {
 
     } catch (e) {
 
-        alert("Сначало подключи кошелёк ублюдок 🖕.");
+    console.log(e);
+
+    if (e.message?.includes("balance")){
+
+        alert("💰 Пополни кошелёк.");
+
+    }else if (e.message?.includes("reject")){
+
+        alert("❌ Оплата отменена.");
+
+    }else{
+
+        alert("⚠️ Подключите кошелёк или проверьте баланс.");
 
     }
 
