@@ -252,13 +252,43 @@ audio{
 
     color:white;
 
-    font-size:22px;
+    font-size:10px;
 
     font-weight:bold;
 
     margin-bottom:10px;
 
 }
+.progress-container{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:20px;
+
+}
+
+#progress{
+
+    flex:1;
+
+    cursor:pointer;
+
+}
+
+#currentTime,
+#duration{
+
+    color:white;
+
+    font-size:14px;
+
+    width:40px;
+
+}    
 </style>
 
 </head>
@@ -452,7 +482,40 @@ const playlist = [
     }
 ];
 
-let currentTrack = 0;    
+let currentTrack = 0;
+    const progress = document.getElementById("progress");
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+
+player.addEventListener("loadedmetadata", () => {
+
+    duration.textContent = formatTime(player.duration);
+
+});
+
+player.addEventListener("timeupdate", () => {
+
+    progress.value = (player.currentTime / player.duration) * 100;
+
+    currentTime.textContent = formatTime(player.currentTime);
+
+});
+
+progress.addEventListener("input", () => {
+
+    player.currentTime = (progress.value / 100) * player.duration;
+
+});
+
+function formatTime(seconds){
+
+    const minutes = Math.floor(seconds / 60);
+
+    const secs = Math.floor(seconds % 60);
+
+    return `${minutes}:${secs.toString().padStart(2,"0")}`;
+
+}
 </script>
 
 </body>
