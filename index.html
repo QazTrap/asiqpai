@@ -307,7 +307,7 @@ Music Artist • Producer • Beatmaker
 <h2 class="graffiti">TRAP RELEASE</h2>
                                      
 <audio id="player">
-    <source src="music/track.mp3" type="audio/mpeg">
+    <audio id="player"></audio>
 </audio>
 <div class="player">
 
@@ -315,33 +315,21 @@ Music Artist • Producer • Beatmaker
        🎵 Asiqpai - track #1
     </div>
 
-    <div class="controls">
+<div class="controls">
 
-    <button id="prevButton">
-        ...
-    </button>
+    <button id="prevButton">...</button>
 
-    <button id="playButton">
-        ...
-    </button>
+    <button id="playButton">...</button>
 
-    <button id="nextButton">
-        ...
-    </button>
+    <button id="nextButton">...</button>
 
 </div>
 
-<div class="progress-container">
+    <div class="progress-container">
 
     <span id="currentTime">0:00</span>
 
-    <input
-        type="range"
-        id="progress"
-        value="0"
-        min="0"
-        max="100"
-    >
+    <input type="range" id="progress">
 
     <span id="duration">0:00</span>
 
@@ -448,7 +436,6 @@ document.getElementById("nextButton").onclick = function(){
 
         currentTrack = 0;
 
-    }
 
     loadTrack(currentTrack);
 
@@ -466,7 +453,17 @@ document.getElementById("prevButton").onclick = function(){
 
         currentTrack = playlist.length - 1;
 
+        
+const playlist = [
+    {
+        title:"🎵 Asiqpai - Track #1",
+        file:"music/track.mp3"
     }
+];
+
+
+        
+let currentTrack = 0;
 
     loadTrack(currentTrack);
 
@@ -476,11 +473,7 @@ document.getElementById("prevButton").onclick = function(){
 
 }
 
-const playlist = [
-...
-];
 
-let currentTrack = 0;
     {
         title: "TRAP RELESE",
         file: "music/track.mp3"
