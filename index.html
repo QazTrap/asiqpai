@@ -136,7 +136,55 @@ audio{
     width:280px;
     margin-top:60px;
 }
+.player{
 
+    width:330px;
+
+    margin:25px auto;
+
+    background:#1b1b1b;
+
+    border-radius:18px;
+
+    padding:18px;
+
+    box-shadow:0 0 20px rgba(212,175,55,.18);
+
+}
+
+#playButton{
+
+    width:70px;
+
+    height:70px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#d4af37;
+
+    color:black;
+
+    font-size:28px;
+
+    cursor:pointer;
+
+}
+
+#trackName{
+
+    display:block;
+
+    margin-top:15px;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+}
 </style>
     
 </head>
@@ -163,9 +211,18 @@ Music Artist • Producer • Beatmaker
 
 <h2 class="graffiti">TRAP RELEASE</h2>
                                      
-<audio controls> <source src="music/track.mp3" type="audio/mpeg"> 
-    Ваш браузер не поддерживает аудио.
+<audio id="player">
+    <source src="music/track.mp3" type="audio/mpeg">
 </audio>
+<div class="player">
+
+    <button id="playButton">▶</button>
+
+    <span id="trackName">
+        TRAP RELEASE
+    </span>
+
+</div>
     
 <h2>🎹 Beat Store</h2>
 
@@ -214,6 +271,26 @@ async function buyBeat() {
     }
 
 }
+const player = document.getElementById("player");
+const playButton = document.getElementById("playButton");
+
+playButton.onclick = function(){
+
+    if(player.paused){
+
+        player.play();
+
+        playButton.innerHTML = "⏸";
+
+    }else{
+
+        player.pause();
+
+        playButton.innerHTML = "▶";
+
+    }
+
+};    
 </script>
 
 </body>
