@@ -359,11 +359,28 @@ Music Artist • Producer • Beatmaker
 <p>asiqpai.ton</p>
 
 <script>
+const playlist = [
+    {
+        title: "🎵 Asiqpai - Track #1",
+        file: "music/track.mp3"
+    }
+];
+
+let currentTrack = 0;
+
+// =======================
+// TON CONNECT
+// =======================
 
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-    manifestUrl: 'https://qaztrap.github.io/asiqpai/tonconnect-manifest.json',
-    buttonRootId: 'ton-connect'
-});    
+    manifestUrl: "https://qaztrap.github.io/asiqpai/tonconnect-manifest.json",
+    buttonRootId: "ton-connect"
+});
+
+// =======================
+// ПОКУПКА БИТА
+// =======================
+
 async function buyBeat() {
 
     try {
@@ -389,8 +406,32 @@ async function buyBeat() {
     }
 
 }
+
+// =======================
+// ПЛЕЕР
+// =======================
+
 const player = document.getElementById("player");
 const playButton = document.getElementById("playButton");
+const trackName = document.getElementById("trackName");
+
+const progress = document.getElementById("progress");
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+
+// =======================
+
+function loadTrack(index){
+
+    player.src = playlist[index].file;
+
+    trackName.textContent = playlist[index].title;
+
+}
+
+// =======================
+// PLAY / PAUSE
+// =======================
 
 playButton.onclick = function(){
 
@@ -398,26 +439,23 @@ playButton.onclick = function(){
 
         player.play();
 
-        playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        playButton.innerHTML =
+        '<i class="fa-solid fa-pause"></i>';
 
     }else{
 
         player.pause();
 
-        playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        playButton.innerHTML =
+        '<i class="fa-solid fa-play"></i>';
 
     }
 
 };
-const trackName = document.getElementById("trackName");
 
-function loadTrack(index){
-
-    player.src = playlist[index].file;
-
-    trackName.innerHTML = playlist[index].title;
-
-}
+// =======================
+// NEXT
+// =======================
 
 document.getElementById("nextButton").onclick = function(){
 
@@ -427,14 +465,20 @@ document.getElementById("nextButton").onclick = function(){
 
         currentTrack = 0;
 
+    }
 
     loadTrack(currentTrack);
 
     player.play();
 
-    playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    playButton.innerHTML =
+    '<i class="fa-solid fa-pause"></i>';
 
-}
+};
+
+// =======================
+// PREVIOUS
+// =======================
 
 document.getElementById("prevButton").onclick = function(){
 
@@ -444,57 +488,56 @@ document.getElementById("prevButton").onclick = function(){
 
         currentTrack = playlist.length - 1;
 
-        
-const playlist = [
-    {
-        title:"🎵 Asiqpai - Track #1",
-        file:"music/track.mp3"
     }
-];
-
-
-        
-let currentTrack = 0;
 
     loadTrack(currentTrack);
 
     player.play();
 
-    playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    playButton.innerHTML =
+    '<i class="fa-solid fa-pause"></i>';
 
-}
+};
 
+// =======================
+// ПРОГРЕСС
+// =======================
 
-    {
-        title: "TRAP RELESE",
-        file: "music/track.mp3"
+player.addEventListener("loadedmetadata", function(){
+
+    duration.textContent =
+    formatTime(player.duration);
+
+});
+
+player.addEventListener("timeupdate", function(){
+
+    if(player.duration){
+
+        progress.value =
+        (player.currentTime / player.duration) * 100;
+
+        currentTime.textContent =
+        formatTime(player.currentTime);
+
     }
-];
-
-let currentTrack = 0;
-    const progress = document.getElementById("progress");
-const currentTime = document.getElementById("currentTime");
-const duration = document.getElementById("duration");
-
-player.addEventListener("loadedmetadata", () => {
-
-    duration.textContent = formatTime(player.duration);
 
 });
 
-player.addEventListener("timeupdate", () => {
+progress.addEventListener("input", function(){
 
-    progress.value = (player.currentTime / player.duration) * 100;
+    if(player.duration){
 
-    currentTime.textContent = formatTime(player.currentTime);
+        player.currentTime =
+        (progress.value / 100) * player.duration;
 
-});
-
-progress.addEventListener("input", () => {
-
-    player.currentTime = (progress.value / 100) * player.duration;
+    }
 
 });
+
+// =======================
+// ФОРМАТ ВРЕМЕНИ
+// =======================
 
 function formatTime(seconds){
 
@@ -502,9 +545,15 @@ function formatTime(seconds){
 
     const secs = Math.floor(seconds % 60);
 
-    return `${minutes}:${secs.toString().padStart(2,"0")}`;
+    return minutes + ":" + secs.toString().padStart(2,"0");
 
 }
+
+// =======================
+// ЗАГРУЗКА ПЕРВОГО ТРЕКА
+// =======================
+
+loadTrack(currentTrack);
 </script>
 
 </body>
