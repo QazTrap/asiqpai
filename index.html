@@ -285,7 +285,7 @@ Music Artist • Producer • Beatmaker
 
 <a class="button" href="https://open.spotify.com/">Spotify</a>
 
-<h2 class="graffiti2">TRAP RELEASE</h2>
+<h2 class="graffiti">TRAP RELEASE</h2>
                                      
 <audio id="player">
     <source src="music/track.mp3" type="audio/mpeg">
@@ -293,10 +293,25 @@ Music Artist • Producer • Beatmaker
 <div class="player">
 
     <div id="trackName">
-        TRAP RELEASE
+       🎵 Asiqpai - track #1
     </div>
 
     <div class="controls">
+        <div class="progress-container">
+
+    <span id="currentTime">0:00</span>
+
+    <input
+        type="range"
+        id="progress"
+        value="0"
+        min="0"
+        max="100"
+    >
+
+    <span id="duration">0:00</span>
+
+</div>
 
         <button id="prevButton">
             <i class="fa-solid fa-backward-step"></i>
