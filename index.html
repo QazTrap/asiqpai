@@ -335,7 +335,7 @@ Music Artist • Producer • Beatmaker
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: 'https://qaztrap.github.io/asiqpai/tonconnect-manifest.json',
     buttonRootId: 'ton-connect'
-});
+});    
 async function buyBeat() {
 
     try {
@@ -381,17 +381,63 @@ playButton.onclick = function(){
     }
 
 };
-document.getElementById("prevButton").onclick = function(){
+const trackName = document.getElementById("trackName");
 
-    alert("Предыдущий трек");
+function loadTrack(index){
+
+    player.src = playlist[index].file;
+
+    trackName.innerHTML = playlist[index].title;
 
 }
 
 document.getElementById("nextButton").onclick = function(){
 
-    alert("Следующий трек");
+    currentTrack++;
 
-}    
+    if(currentTrack >= playlist.length){
+
+        currentTrack = 0;
+
+    }
+
+    loadTrack(currentTrack);
+
+    player.play();
+
+    playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+}
+
+document.getElementById("prevButton").onclick = function(){
+
+    currentTrack--;
+
+    if(currentTrack < 0){
+
+        currentTrack = playlist.length - 1;
+
+    }
+
+    loadTrack(currentTrack);
+
+    player.play();
+
+    playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+
+}
+
+loadTrack(currentTrack);
+
+} 
+const playlist = [
+    {
+        title: "TRAP RELESE",
+        file: "music/track.mp3"
+    }
+];
+
+let currentTrack = 0;    
 </script>
 
 </body>
