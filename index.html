@@ -248,17 +248,6 @@ audio{
 
 }
 
-#trackName{
-
-    color:white;
-
-    font-size:10px;
-
-    font-weight:bold;
-
-    margin-bottom:10px;
-
-}
 .progress-container{
 
     display:flex;
@@ -327,7 +316,22 @@ Music Artist • Producer • Beatmaker
     </div>
 
     <div class="controls">
-        <div class="progress-container">
+
+    <button id="prevButton">
+        ...
+    </button>
+
+    <button id="playButton">
+        ...
+    </button>
+
+    <button id="nextButton">
+        ...
+    </button>
+
+</div>
+
+<div class="progress-container">
 
     <span id="currentTime">0:00</span>
 
@@ -472,10 +476,11 @@ document.getElementById("prevButton").onclick = function(){
 
 }
 
-loadTrack(currentTrack);
-
-} 
 const playlist = [
+...
+];
+
+let currentTrack = 0;
     {
         title: "TRAP RELESE",
         file: "music/track.mp3"
