@@ -192,8 +192,73 @@ audio{
     font-weight:bold;
 
 }
+.controls{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:25px;
+
+    margin-top:20px;
+
+}
+
+.controls button{
+
+    width:55px;
+
+    height:55px;
+
+    border:none;
+
+    border-radius:50%;
+
+    background:#d4af37;
+
+    color:black;
+
+    cursor:pointer;
+
+    font-size:22px;
+
+    transition:.3s;
+
+}
+
+.controls button:hover{
+
+    transform:scale(1.1);
+
+    background:#c59d2c;
+
+}
+
+#playButton{
+
+    width:70px;
+
+    height:70px;
+
+    font-size:28px;
+
+}
+
+#trackName{
+
+    color:white;
+
+    font-size:22px;
+
+    font-weight:bold;
+
+    margin-bottom:10px;
+
+}
 </style>
-    
+
 </head>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     
@@ -223,15 +288,27 @@ Music Artist • Producer • Beatmaker
 <audio id="player">
     <source src="music/track.mp3" type="audio/mpeg">
 </audio>
-<div class="player">
+div class="player">
 
-<button id="playButton">
-    <i class="fa-solid fa-play"></i>
-</button>
-
-    <span id="trackName">
+    <div id="trackName">
         TRAP RELEASE
-    </span>
+    </div>
+
+    <div class="controls">
+
+        <button id="prevButton">
+            <i class="fa-solid fa-backward-step"></i>
+        </button>
+
+        <button id="playButton">
+            <i class="fa-solid fa-play"></i>
+        </button>
+
+        <button id="nextButton">
+            <i class="fa-solid fa-forward-step"></i>
+        </button>
+
+    </div>
 
 </div>
     
@@ -301,7 +378,18 @@ playButton.onclick = function(){
 
     }
 
-};    
+};
+document.getElementById("prevButton").onclick = function(){
+
+    alert("Предыдущий трек");
+
+}
+
+document.getElementById("nextButton").onclick = function(){
+
+    alert("Следующий трек");
+
+}    
 </script>
 
 </body>
