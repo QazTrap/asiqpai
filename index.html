@@ -294,7 +294,15 @@ audio{
         filter:brightness(1);
     }
 
-}    
+}
+    #sparkCanvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:-1;
+}
 </style>
 
 </head>
@@ -303,6 +311,7 @@ audio{
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
 <body>
 <canvas id="smokeCanvas"></canvas>
+    <canvas id="sparkCanvas"></canvas>
 <div id="ton-connect"></div>
 <img src="images/crow.png" class="logo" alt="ASIQPAI Logo">
 <h1 class="title">ASIQPAI</h1>
@@ -574,6 +583,68 @@ loadTrack(currentTrack);
 </script>
 
 </body>
+    <script>
+const sparkCanvas = document.getElementById("sparkCanvas");
+const sctx = sparkCanvas.getContext("2d");
+
+function resizeSpark(){
+    sparkCanvas.width = window.innerWidth;
+    sparkCanvas.height = window.innerHeight;
+}
+resizeSpark();
+window.addEventListener("resize", resizeSpark);
+
+const sparks=[];
+
+function createSpark(){
+
+    sparks.push({
+        x:window.innerWidth/2+(Math.random()-0.5)*220,
+        y:270+Math.random()*180,
+        size:1+Math.random()*3,
+        speed:0.3+Math.random()*0.8,
+        alpha:0.6+Math.random()*0.4
+    });
+
+}
+
+setInterval(createSpark,250);
+
+function animateSpark(){
+
+    sctx.clearRect(0,0,sparkCanvas.width,sparkCanvas.height);
+
+    for(let i=sparks.length-1;i>=0;i--){
+
+        const p=sparks[i];
+
+        sctx.beginPath();
+
+        sctx.fillStyle=`rgba(255,210,70,${p.alpha})`;
+
+        sctx.shadowBlur=15;
+        sctx.shadowColor="#FFD54A";
+
+        sctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+
+        sctx.fill();
+
+        p.y-=p.speed;
+
+        p.alpha-=0.003;
+
+        if(p.alpha<=0){
+            sparks.splice(i,1);
+        }
+
+    }
+
+    requestAnimationFrame(animateSpark);
+
+}
+
+animateSpark();
+</script>
  <script>
 const canvas = document.getElementById("smokeCanvas");
 const ctx = canvas.getContext("2d");
