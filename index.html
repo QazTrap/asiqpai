@@ -105,7 +105,7 @@ body{ background:#060505;
      color:white; 
      font-family:Arial, sans-serif; 
      text-align:center; padding:40px; 
-     margin:0; };
+     margin:0; 
 }   
 h1{
     font-size:50px;
@@ -270,8 +270,6 @@ audio{
 
 }
 
-}
-
 #currentTime,
 #duration{
 
@@ -281,7 +279,7 @@ audio{
 
     width:40px;
 }
-  } 
+  
     @keyframes glow{
 
     0%{
@@ -599,8 +597,6 @@ function formatTime(seconds){
 
 loadTrack(currentTrack);
 </script>
-
-</body>
     <script>
 const sparkCanvas = document.getElementById("sparkCanvas");
 const sctx = sparkCanvas.getContext("2d");
@@ -724,5 +720,6 @@ function draw(){
 
 draw();
      
-</script>   
+</script>
+    </body>
 </html>
