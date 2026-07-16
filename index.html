@@ -71,7 +71,12 @@ body{
     font-weight:900;
     letter-spacing:3px;
     color:#d4af37;
-    text-shadow:0 0 18px rgba(212,175,55,.4);
+
+    text-shadow:
+        0 0 12px rgba(212,175,55,.6),
+        0 0 25px rgba(212,175,55,.35);
+
+    animation: floatText 5s ease-in-out infinite;
 }
 
 .subtitle{
@@ -278,9 +283,9 @@ audio{
     font-size:14px;
 
     width:40px;
-
-} 
-@keyframes glow{
+}
+  } 
+    @keyframes glow{
 
     0%{
         filter:brightness(1);
@@ -292,8 +297,24 @@ audio{
 
     100%{
         filter:brightness(1);
+        
     }
 
+    @keyframes floatText{
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-3px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+
+    
 }
     #sparkCanvas{
     position:fixed;
@@ -315,6 +336,7 @@ audio{
 <div id="ton-connect"></div>
 <img src="images/crow.png" class="logo" alt="ASIQPAI Logo">
 <h1 class="title">ASIQPAI</h1>
+    
 
 <p class="subtitle">
 Music Artist • Producer • Beatmaker
@@ -705,5 +727,6 @@ function draw(){
 }
 
 draw();
+     animation: floatText 5s ease-in-out infinite;
 </script>   
 </html>
