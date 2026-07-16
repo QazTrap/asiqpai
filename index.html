@@ -65,13 +65,15 @@ body{
     background:#c59d2c;
     transform:scale(1.03);
 }
-    .title{ font-size:56px; 
-           margin:10px 0; 
-           font-weight:900; 
-           letter-spacing:3px; 
-           color:#d4af37; 
-           text-shadow:0 0 18px rgba(212,175,55,.4); 
-    
+    .title{
+    font-size:56px;
+    margin:10px 0;
+    font-weight:900;
+    letter-spacing:3px;
+    color:#d4af37;
+    text-shadow:0 0 18px rgba(212,175,55,.4);
+
+    animation: floatText 5s ease-in-out infinite;
 }
 
 .subtitle{
@@ -292,8 +294,9 @@ audio{
 
     100%{
         filter:brightness(1);
-        
     }
+
+}
 
     @keyframes floatText{
     0%{
@@ -308,8 +311,6 @@ audio{
         transform:translateY(0px);
     }
 
-
-    
 }
     #sparkCanvas{
     position:fixed;
