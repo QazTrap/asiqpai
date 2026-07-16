@@ -613,8 +613,8 @@ const sparks=[];
 function createSpark(){
 
     sparks.push({
-        x:window.innerWidth/2+(Math.random()-0.5)*220,
-        y:270+Math.random()*180,
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
         size:1+Math.random()*3,
         speed:0.3+Math.random()*0.8,
         alpha:0.6+Math.random()*0.4
