@@ -73,7 +73,7 @@ body{
     color:#d4af37;
     text-shadow:0 0 18px rgba(212,175,55,.4);
 
-    animation: floatText 5s ease-in-out infinite;
+    animation: floatText 3s ease-in-out infinite;
 }
 
 .subtitle{
@@ -297,16 +297,25 @@ audio{
 }
 
     @keyframes floatText{
+
     0%{
-        transform:translateY(0px);
+        transform: translateY(0px) scale(1);
+    }
+
+    25%{
+        transform: translateY(-6px) scale(1.01);
     }
 
     50%{
-        transform:translateY(-3px);
+        transform: translateY(-12px) scale(1.03);
+    }
+
+    75%{
+        transform: translateY(-6px) scale(1.01);
     }
 
     100%{
-        transform:translateY(0px);
+        transform: translateY(0px) scale(1);
     }
 
 }
