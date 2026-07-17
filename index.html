@@ -789,8 +789,8 @@ const distance = 30 + Math.random() * 90;
 const offsetX = Math.cos(angle) * distance;
 const offsetY = Math.sin(angle) * distance;
 
-plus.style.left = (rect.left + rect.width / 2 + offsetX) + "px";
 plus.style.left = (rect.left + rect.width / 2 + offsetX - 25) + "px";
+plus.style.top = (rect.top + rect.height / 2 + offsetY) + "px";
     
     // Центрируем надпись относительно точки появления
 plus.style.transform = "translate(-50%, -50%)";
