@@ -27,6 +27,8 @@
 <script>
 "use strict";
 
+const API_URL = "https://asiqpai-production.up.railway.app";
+
 const SafeStorage = (() => {
     const allowedKeys = new Set([
         "currentTrack",
@@ -391,6 +393,12 @@ body{
 .buy-button:hover{
     background:#c59d2c;
     transform:scale(1.03);
+}
+
+.buy-button:disabled{
+    opacity:.58;
+    cursor:wait;
+    transform:none;
 }
 
 .buy-button.coming-soon{
@@ -1291,8 +1299,8 @@ Music Artist • Producer • Beatmaker
         👑 Claim Gold License
     </button>
 
-    <button id="buyGPButton" class="buy-button coming-soon" onclick="showPaymentComingSoon()">
-        🚧 Покупка GP — скоро
+    <button id="buyGPButton" class="buy-button" type="button" onclick="buyGP()">
+        💎 Купить 100 000 GP — 10 TON
     </button>
 
 </div>
@@ -1352,12 +1360,172 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
 // ПОКУПКА БИТА
 // =======================
 
-function showPaymentComingSoon() {
-    if (window.Telegram?.WebApp?.HapticFeedback) {
-        Telegram.WebApp.HapticFeedback.notificationOccurred("warning");
+function getTelegramInitData(){
+    return window.Telegram?.WebApp?.initData || "";
+}
+
+function getApiHeaders(withJson = false){
+    const headers = {
+        "Accept": "application/json",
+        "X-Telegram-Init-Data": getTelegramInitData()
+    };
+
+    if(withJson){
+        headers["Content-Type"] = "application/json";
     }
 
-    showToast("🚧 Покупка GP станет доступна после запуска", "warning");
+    return headers;
+}
+
+async function apiRequest(path, options = {}){
+    const response = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+            ...getApiHeaders(Boolean(options.body)),
+            ...(options.headers || {})
+        }
+    });
+
+    let data = {};
+    try{
+        data = await response.json();
+    }catch{}
+
+    if(!response.ok){
+        throw new Error(data.error || `HTTP ${response.status}`);
+    }
+
+    return data;
+}
+
+async function syncServerProfile(){
+    if(!getTelegramInitData()) return null;
+
+    try{
+        const data = await apiRequest("/api/me");
+        const serverGP = Number(data.user?.gp);
+
+        if(Number.isFinite(serverGP) && serverGP >= 0){
+            /*
+             * Пока обычные тапы ещё считаются локально, не уменьшаем баланс.
+             * После переноса тапов на backend сервер станет единственным источником GP.
+             */
+            gp = Math.max(gp, serverGP);
+            SafeStorage.set("gp", String(gp));
+            updateGP();
+        }
+
+        if(data.user?.goldLicense === true){
+            goldLicenseClaimed = true;
+            SafeStorage.set("goldLicenseClaimed", "true");
+            updateGP();
+        }
+
+        return data.user;
+    }catch(error){
+        console.warn("Не удалось синхронизировать профиль:", error.message);
+        return null;
+    }
+}
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForOrderPayment(orderId){
+    const maxAttempts = 30;
+
+    for(let attempt = 0; attempt < maxAttempts; attempt++){
+        const order = await apiRequest(`/api/orders/${encodeURIComponent(orderId)}`);
+
+        if(order.status === "paid"){
+            return order;
+        }
+
+        if(order.status === "expired"){
+            throw new Error("Время оплаты истекло");
+        }
+
+        await sleep(4000);
+    }
+
+    throw new Error("Платёж ещё не найден. Баланс можно обновить позже");
+}
+
+let paymentInProgress = false;
+
+async function buyGP(){
+    if(paymentInProgress) return;
+
+    if(!getTelegramInitData()){
+        showToast("Открой приложение внутри Telegram для покупки GP", "warning");
+        return;
+    }
+
+    if(!tonConnectUI.account?.address){
+        showToast("Сначала подключи TON-кошелёк", "warning");
+        try{
+            await tonConnectUI.openModal();
+        }catch{}
+        return;
+    }
+
+    paymentInProgress = true;
+    buyGPButton.disabled = true;
+    buyGPButton.textContent = "Создание заказа…";
+
+    try{
+        const order = await apiRequest("/api/orders", {
+            method: "POST",
+            body: JSON.stringify({
+                walletAddress: tonConnectUI.account.address
+            })
+        });
+
+        buyGPButton.textContent = "Подтверди оплату в кошельке…";
+
+        await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 600,
+            messages: [{
+                address: order.address,
+                amount: String(order.amount),
+                payload: order.payload
+            }]
+        });
+
+        showToast("⏳ Платёж отправлен. Проверяем блокчейн…");
+        buyGPButton.textContent = "Проверяем оплату…";
+
+        const paidOrder = await waitForOrderPayment(order.orderId);
+        const serverTotal = Number(paidOrder.gpTotal);
+
+        if(Number.isFinite(serverTotal) && serverTotal >= 0){
+            gp = Math.max(gp, serverTotal);
+        }else{
+            gp += Number(paidOrder.gpReward || 0);
+        }
+
+        SafeStorage.set("gp", String(gp));
+        updateGP();
+
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+
+        showToast(`💎 Начислено ${Number(paidOrder.gpReward).toLocaleString()} GP`, "success");
+    }catch(error){
+        console.error(error);
+        const message = error?.message || "Не удалось выполнить покупку";
+
+        if(/reject|cancel/i.test(message)){
+            showToast("Оплата отменена", "warning");
+        }else{
+            showToast(message, "warning");
+        }
+    }finally{
+        paymentInProgress = false;
+        buyGPButton.disabled = false;
+        buyGPButton.textContent = "💎 Купить 100 000 GP — 10 TON";
+    }
 }
 
 // =======================
@@ -1975,6 +2143,7 @@ function claimLicense(){
 }
 
 updateGP();
+syncServerProfile();
 
 /**
  * Чем ближе баланс к 100 000 GP, тем сложнее добыча.
