@@ -365,8 +365,8 @@ body{
 
 #gpPanel{
     position:fixed;
-    top:12px;
-    left:12px;
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));;
 
     background:rgba(20,20,20,.45);
     border:1px solid rgba(212,175,55,.25);
@@ -397,9 +397,9 @@ body{
 </style>
 
 </head>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     
-<link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
 <body>
 
     <div id="gpPanel">
@@ -410,7 +410,7 @@ body{
 <canvas id="smokeCanvas"></canvas>
     <canvas id="sparkCanvas"></canvas>
 <div id="ton-connect"></div>
-<img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo">
+    <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo">
 <h1 class="title">ASIQPAI</h1>
     
 
