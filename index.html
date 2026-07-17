@@ -3,7 +3,10 @@
 <head>
     <link rel="icon" type="image/png" href="images/logo.png">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
 
 <title>Asiqpai Official</title>
 <!-- TON Connect -->
@@ -740,18 +743,30 @@ audio{
 #playButton{
     width:66px;
     height:66px;
+
     display:grid;
     place-items:center;
+
     padding:0;
-    border:2px solid #d8b05c;
-    border-radius:50%;
-    background:radial-gradient(circle at 50% 35%,#24201a,#080808 70%);
+    border:none;
+    border-radius:0;
+
+    background:none;
+    box-shadow:none;
+
     color:#e2ba66;
-    font-size:23px;
-    box-shadow:
-        0 0 0 5px rgba(216,176,92,.045),
-        inset 0 0 18px rgba(216,176,92,.06);
+    font-size:34px;
+    line-height:1;
+
     cursor:pointer;
+    outline:none;
+
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        transform .15s ease,
+        color .15s ease;
 }
 
 .controls button:hover{
@@ -761,7 +776,15 @@ audio{
 }
 
 #playButton:hover{
-    background:radial-gradient(circle at 50% 35%,#30271b,#0b0b0b 72%);
+    background:none;
+    box-shadow:none;
+    color:#f1ca75;
+}
+
+#playButton:active{
+    transform:scale(.88);
+    background:none;
+    box-shadow:none;
 }
 
 @media (max-width:390px){
@@ -847,6 +870,28 @@ audio{
 }
 
 </style>
+ <style>
+
+html,
+body{
+    touch-action:manipulation;
+}
+
+button{
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
+
+/* дальше идёт твой остальной CSS */
+
+body{
+    margin:0;
+    background:#050505;
+    color:white;
+}
+
+</style>
+   
 
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -1053,6 +1098,21 @@ const progress = document.getElementById("progress");
 const currentTime = document.getElementById("currentTime");
 const duration = document.getElementById("duration");
 
+    function trackHaptic(){
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+
+        Telegram.WebApp.HapticFeedback
+            .selectionChanged();
+
+    }else if(navigator.vibrate){
+
+        navigator.vibrate(25);
+
+    }
+
+}
+
 // =======================
 
 function saveCurrentTrack(){
@@ -1123,12 +1183,24 @@ function loadTrack(index){
 
 playButton.onclick = function(){
 
+    if(window.Telegram?.WebApp?.HapticFeedback){
+
+        Telegram.WebApp.HapticFeedback
+            .impactOccurred("light");
+
+    }else if(navigator.vibrate){
+
+        navigator.vibrate(15);
+
+    }
+
     if(player.paused){
 
         player.play();
 
         playButton.innerHTML =
-        '<i class="fa-solid fa-pause"></i>';
+            '<i class="fa-solid fa-pause"></i>';
+
         musicPlayer.classList.add("playing");
 
     }else{
@@ -1136,7 +1208,8 @@ playButton.onclick = function(){
         player.pause();
 
         playButton.innerHTML =
-        '<i class="fa-solid fa-play"></i>';
+            '<i class="fa-solid fa-play"></i>';
+
         musicPlayer.classList.remove("playing");
 
     }
@@ -1148,6 +1221,9 @@ playButton.onclick = function(){
 // =======================
 
 document.getElementById("nextButton").onclick = function(){
+
+    trackHaptic();
+
     currentTrack = playMode === "shuffle"
         ? getRandomTrackIndex()
         : (currentTrack + 1) % playlist.length;
@@ -1161,11 +1237,21 @@ document.getElementById("nextButton").onclick = function(){
 // =======================
 
 document.getElementById("prevButton").onclick = function(){
+
+    trackHaptic();
+
     if(playMode === "shuffle"){
+
         currentTrack = getRandomTrackIndex();
+
     }else{
+
         currentTrack--;
-        if(currentTrack < 0) currentTrack = playlist.length - 1;
+
+        if(currentTrack < 0){
+            currentTrack = playlist.length - 1;
+        }
+
     }
 
     loadTrack(currentTrack);
