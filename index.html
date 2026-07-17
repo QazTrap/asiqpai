@@ -168,6 +168,55 @@ body{
     letter-spacing:.5px;
 }
 
+
+.license-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    margin:4px auto 14px;
+    padding:7px 12px;
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:999px;
+    background:rgba(212,175,55,.07);
+    color:#bdbdbd;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+.license-status.unlocked{
+    color:#FFD700;
+    border-color:rgba(255,215,0,.55);
+    background:rgba(255,215,0,.12);
+    box-shadow:0 0 16px rgba(255,215,0,.16);
+}
+
+.claim-button{
+    display:none;
+    width:100%;
+    padding:12px;
+    margin-top:12px;
+    border:1px solid #FFD700;
+    border-radius:10px;
+    background:transparent;
+    color:#FFD700;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.claim-button.show{
+    display:block;
+}
+
+.claim-button:hover{
+    background:#FFD700;
+    color:#111;
+    transform:scale(1.02);
+}
+
 .buy-button{
     width:100%;
     padding:12px;
@@ -610,7 +659,15 @@ Music Artist • Producer • Beatmaker
 
     <p id="progressText">0 / 100 000 GP</p>
 
-    <button class="buy-button" onclick="buyGP()">
+    <div id="licenseStatus" class="license-status">
+        🔒 Gold License Locked
+    </div>
+
+    <button id="claimLicenseButton" class="claim-button" onclick="claimLicense()">
+        👑 Claim Gold License
+    </button>
+
+    <button id="buyGPButton" class="buy-button" onclick="buyGP()">
         💎 Get 100 000 GP — 10 GRAM
     </button>
 
@@ -659,7 +716,11 @@ async function buyGP() {
 
         await tonConnectUI.sendTransaction(transaction);
 
-        alert("Спасибо за покупку!");
+        gp += 100000;
+        localStorage.setItem("gp", gp);
+        updateGP();
+
+        alert("💎 100 000 GP начислено!");
 
     } catch (e) {
 
@@ -951,7 +1012,13 @@ const progressFill = document.getElementById("progressFill");
 const progressText = document.getElementById("progressText");
 
 const progressPercent = document.getElementById("progressPercent");
+const licenseStatus = document.getElementById("licenseStatus");
+const claimLicenseButton = document.getElementById("claimLicenseButton");
+const buyGPButton = document.getElementById("buyGPButton");
+
 const LICENSE_COST = 100000;
+let goldLicenseClaimed =
+    localStorage.getItem("goldLicenseClaimed") === "true";
 
 function updateGP(){
     gpCounter.textContent = gp.toLocaleString();
@@ -960,8 +1027,50 @@ function updateGP(){
 
     progressFill.style.width = percent + "%";
     progressText.textContent =
-        gp.toLocaleString() + " / " + LICENSE_COST.toLocaleString() + " GP";
+        Math.min(gp, LICENSE_COST).toLocaleString() +
+        " / " +
+        LICENSE_COST.toLocaleString() +
+        " GP";
     progressPercent.textContent = Math.floor(percent) + "%";
+
+    if(goldLicenseClaimed){
+        licenseStatus.textContent = "✅ Gold License Claimed";
+        licenseStatus.classList.add("unlocked");
+        claimLicenseButton.classList.remove("show");
+        buyGPButton.style.display = "none";
+    }
+    else if(gp >= LICENSE_COST){
+        licenseStatus.textContent = "🔓 Gold License Unlocked";
+        licenseStatus.classList.add("unlocked");
+        claimLicenseButton.classList.add("show");
+        buyGPButton.style.display = "none";
+    }
+    else{
+        licenseStatus.textContent = "🔒 Gold License Locked";
+        licenseStatus.classList.remove("unlocked");
+        claimLicenseButton.classList.remove("show");
+        buyGPButton.style.display = "block";
+    }
+}
+
+function claimLicense(){
+    if(gp < LICENSE_COST || goldLicenseClaimed){
+        return;
+    }
+
+    gp -= LICENSE_COST;
+    goldLicenseClaimed = true;
+
+    localStorage.setItem("gp", gp);
+    localStorage.setItem("goldLicenseClaimed", "true");
+
+    updateGP();
+
+    if(window.Telegram && Telegram.WebApp){
+        Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+    }
+
+    alert("👑 Gold License успешно получена!");
 }
 
 updateGP();
