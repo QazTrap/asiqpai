@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Әңгіме",
+    "artist": "ASIQPAI",
+    "meta": "INSTRUMENTAL",
+    "cover": "images/dark-nights-cover.jpg",
+    "file": "music/track.mp3",
+    "accent": "212,175,55"
+  },
+  {
+    "title": "Демон",
+    "artist": "ASIQPAI",
+    "meta": "TRACK",
+    "cover": "images/Демон.jpg",
+    "file": "music/Демон.mp3",
+    "accent": "175,42,42"
+  },
+  {
+    "title": "Baby",
+    "artist": "ASIQPAI",
+    "meta": "TRACK",
+    "cover": "images/Baby.jpg",
+    "file": "music/Baby.mp3",
+    "accent": "184,134,255"
+  }
+]
