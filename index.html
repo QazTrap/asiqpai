@@ -757,10 +757,36 @@ crown.addEventListener("click", () => {
 const plus = document.createElement("div");
 
 plus.className = "plusOne";
-plus.textContent = "+1";
+    
+const random = Math.random();
 
-plus.style.left = (rect.left + rect.width / 2 - 10) + "px";
-plus.style.top = (rect.top + 20) + "px";
+if (random < 0.65) {
+    plus.textContent = "+1 GP";
+    plus.style.color = "#FFD700";
+}
+else if (random < 0.85) {
+    plus.textContent = "+2 GP";
+    plus.style.color = "#FFD700";
+}
+else if (random < 0.95) {
+    plus.textContent = "+3 GP";
+    plus.style.color = "#FFA500";
+}
+else if (random < 0.99) {
+    plus.textContent = "⭐ +5 GP";
+    plus.style.color = "#FF8C00";
+}
+else {
+    plus.textContent = "💎 +10 GP";
+    plus.style.color = "#00E5FF";
+}
+
+// Случайное смещение вокруг короны
+const offsetX = (Math.random() - 0.5) * 140; // от -70 до +70 px
+const offsetY = (Math.random() - 0.5) * 120; // от -60 до +60 px
+
+plus.style.left = (rect.left + rect.width / 2 + offsetX) + "px";
+plus.style.top = (rect.top + rect.height / 2 + offsetY) + "px";
 
 document.body.appendChild(plus);
 
