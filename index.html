@@ -297,6 +297,7 @@ audio{
 }         
 .plusOne{
     position:fixed;
+    transform:translate(-50%, -50%);
     color:#FFD700;
     font-size:28px;
     font-weight:bold;
@@ -782,7 +783,7 @@ else {
 }
 
 // Случайное появление по кругу вокруг короны
-const angle = Math.random() * Math.PI * 5;
+const angle = Math.random() * Math.PI * 2;
 const distance = 30 + Math.random() * 90;
 
 const offsetX = Math.cos(angle) * distance;
