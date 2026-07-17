@@ -235,6 +235,19 @@ body{
     background:#c59d2c;
     transform:scale(1.03);
 }
+
+.buy-button.coming-soon{
+    background:linear-gradient(135deg,#6f5b1d,#3f3518);
+    color:#f4d76b;
+    border:1px solid rgba(212,175,55,.55);
+    cursor:pointer;
+    opacity:.9;
+}
+
+.buy-button.coming-soon:hover{
+    background:linear-gradient(135deg,#7b651f,#4a3e1b);
+    transform:scale(1.01);
+}
     .title{
     font-size:40px;
     margin:10px 0;
@@ -667,8 +680,8 @@ Music Artist • Producer • Beatmaker
         👑 Claim Gold License
     </button>
 
-    <button id="buyGPButton" class="buy-button" onclick="buyGP()">
-        💎 Get 100 000 GP — 10 GRAM
+    <button id="buyGPButton" class="buy-button coming-soon" onclick="showPaymentComingSoon()">
+        🚧 Покупка GP — скоро
     </button>
 
 </div>
@@ -700,34 +713,12 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
 // ПОКУПКА БИТА
 // =======================
 
-async function buyGP() {
-
-    try {
-
-        const transaction = {
-            validUntil: Math.floor(Date.now() / 1000) + 600,
-            messages: [
-                {
-                    address: "UQCe36C6cCa5uQoOS34ljjfsbOLGfjMxqXvwFqFvMzISERqh",
-                    amount: "10000000000"
-                }
-            ]
-        };
-
-        await tonConnectUI.sendTransaction(transaction);
-
-        gp += 100000;
-        localStorage.setItem("gp", gp);
-        updateGP();
-
-        alert("💎 100 000 GP начислено!");
-
-    } catch (e) {
-
-        alert("Сначала подключите кошелёк.");
-
+function showPaymentComingSoon() {
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.notificationOccurred("warning");
     }
 
+    alert("🚧 Покупка GP станет доступна после официального запуска ASIQPAI. Сейчас реальные платежи отключены.");
 }
 
 // =======================
