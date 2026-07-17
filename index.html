@@ -539,19 +539,24 @@ audio{
    
 
 #gpPanel{
-    position:fixed;
+    position:absolute;
     top:max(12px, env(safe-area-inset-top));
     left:max(12px, env(safe-area-inset-left));
-    background:rgba(15,15,15,.72);
-    border:1px solid rgba(212,175,55,.34);
-    border-radius:12px;
-    padding:7px 10px;
-    -webkit-backdrop-filter:blur(12px);
-    backdrop-filter:blur(12px);
-    box-shadow:0 8px 24px rgba(0,0,0,.34),0 0 18px rgba(212,175,55,.10);
-    z-index:100000;
+
+    background:rgba(15,15,15,.62);
+    border:1px solid rgba(212,175,55,.30);
+    border-radius:10px;
+    padding:6px 9px;
+
+    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(9px);
+
+    box-shadow:
+        0 6px 18px rgba(0,0,0,.28),
+        0 0 12px rgba(212,175,55,.08);
+
+    z-index:1000;
     pointer-events:none;
-    transform:translateZ(0);
 } 
     
 
@@ -782,26 +787,44 @@ audio{
     position:absolute;
     left:18px;
     bottom:28px;
-    width:42px;
-    height:42px;
+
+    width:36px;
+    height:36px;
+
     display:grid;
     place-items:center;
+
+    padding:0;
     border:none;
-    border-radius:50%;
-    background:transparent;
+    border-radius:0;
+    outline:none;
+
+    background:none;
+    box-shadow:none;
+
     color:#8d8d8d;
     font-size:20px;
+    line-height:1;
     cursor:pointer;
-    transition:.2s ease;
+
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        color .2s ease,
+        transform .2s ease,
+        text-shadow .2s ease;
 }
 .play-mode-button:hover{
-    background:rgba(216,176,92,.08);
+    background:none;
+    box-shadow:none;
     color:#d8b05c;
     transform:scale(1.06);
 }
 .play-mode-button.active{
+    background:none;
+    box-shadow:none;
     color:#e2ba66;
-    text-shadow:0 0 14px rgba(226,186,102,.45);
+    text-shadow:0 0 12px rgba(226,186,102,.38);
 }
 .play-mode-button.mode-flash{
     animation:modeFlash .28s ease;
@@ -812,6 +835,15 @@ audio{
 }
 @media (max-width:390px){
     .play-mode-button{left:14px;bottom:25px;}
+}
+
+
+.play-mode-button:focus,
+.play-mode-button:active{
+    border:none;
+    outline:none;
+    background:none;
+    box-shadow:none;
 }
 
 </style>
