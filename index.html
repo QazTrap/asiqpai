@@ -3,12 +3,166 @@
 <head>
     <link rel="icon" type="image/png" href="images/logo.png">
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' https: data: blob:;
+    script-src 'self' 'unsafe-inline' https://unpkg.com https://telegram.org;
+    style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+    font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    media-src 'self' blob: https:;
+    connect-src 'self' https: wss:;
+    frame-src https:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    upgrade-insecure-requests;
+">
 <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
 >
 
 <title>Asiqpai Official</title>
+
+<script>
+"use strict";
+
+const SafeStorage = (() => {
+    const allowedKeys = new Set([
+        "currentTrack",
+        "playMode",
+        "likedTracks",
+        "gp",
+        "goldLicenseClaimed"
+    ]);
+
+    const maxValueLength = 20000;
+
+    function validKey(key){
+        return typeof key === "string" && allowedKeys.has(key);
+    }
+
+    function get(key, fallback = null){
+        if(!validKey(key)) return fallback;
+
+        try{
+            const value = window.SafeStorage.get(key);
+            if(value === null || value.length > maxValueLength) return fallback;
+            return value;
+        }catch{
+            return fallback;
+        }
+    }
+
+    function set(key, value){
+        if(!validKey(key)) return false;
+
+        const stringValue = String(value);
+        if(stringValue.length > maxValueLength) return false;
+
+        try{
+            window.SafeStorage.set(key, stringValue);
+            return true;
+        }catch{
+            return false;
+        }
+    }
+
+    function getJSON(key, fallback = {}){
+        const raw = get(key, null);
+        if(raw === null) return fallback;
+
+        try{
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed
+                : fallback;
+        }catch{
+            return fallback;
+        }
+    }
+
+    function setJSON(key, value){
+        try{
+            return set(key, JSON.stringify(value));
+        }catch{
+            return false;
+        }
+    }
+
+    return Object.freeze({ get, set, getJSON, setJSON });
+})();
+
+function cleanText(value, maxLength = 80){
+    if(typeof value !== "string") return "";
+
+    return value
+        .replace(/[\u0000-\u001F\u007F]/g, "")
+        .trim()
+        .slice(0, maxLength);
+}
+
+function isSafeAssetPath(path, type){
+    if(typeof path !== "string" || path.length < 1 || path.length > 220) return false;
+    if(path.includes("..") || path.includes("\\") || path.startsWith("/")) return false;
+    if(/^[a-z][a-z0-9+.-]*:/i.test(path) || path.startsWith("//")) return false;
+
+    const normalized = path.split("?")[0].split("#")[0];
+
+    if(type === "audio"){
+        return /^music\/[^/]+\.(mp3|m4a|ogg|wav)$/iu.test(normalized);
+    }
+
+    if(type === "image"){
+        return /^images\/[^/]+\.(png|jpe?g|webp|gif)$/iu.test(normalized);
+    }
+
+    return false;
+}
+
+function normalizeAccent(value){
+    if(typeof value !== "string") return "212,175,55";
+    const match = value.match(/^(\d{1,3}),(\d{1,3}),(\d{1,3})$/);
+    if(!match) return "212,175,55";
+
+    const values = match.slice(1).map(Number);
+    return values.every(number => number >= 0 && number <= 255)
+        ? values.join(",")
+        : "212,175,55";
+}
+
+function normalizeTrack(track){
+    if(!track || typeof track !== "object") return null;
+    if(!isSafeAssetPath(track.file, "audio")) return null;
+    if(!isSafeAssetPath(track.cover, "image")) return null;
+
+    const title = cleanText(track.title, 80);
+    if(!title) return null;
+
+    return Object.freeze({
+        title,
+        artist: cleanText(track.artist || "ASIQPAI", 50) || "ASIQPAI",
+        meta: cleanText(track.meta || "TRACK", 50) || "TRACK",
+        cover: track.cover,
+        file: track.file,
+        accent: normalizeAccent(track.accent)
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('a[href^="http"]').forEach(link => {
+        link.setAttribute("rel", "noopener noreferrer");
+    });
+
+    if(window.Telegram?.WebApp){
+        try{
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+        }catch{}
+    }
+});
+</script>
+
 <!-- TON Connect -->
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
 <!-- Telegram Web App -->
@@ -1176,8 +1330,14 @@ const fallbackPlaylist = [
 ];
 
 let playlist = [];
-let currentTrack = Number(localStorage.getItem("currentTrack")) || 0;
-let playMode = localStorage.getItem("playMode") || "sequence";
+let currentTrack = Number.parseInt(SafeStorage.get("currentTrack", "0"), 10);
+if(!Number.isSafeInteger(currentTrack) || currentTrack < 0 || currentTrack > 999){
+    currentTrack = 0;
+}
+let playMode = SafeStorage.get("playMode", "sequence");
+if(!["sequence", "repeat", "shuffle"].includes(playMode)){
+    playMode = "sequence";
+}
 
 // =======================
 // TON CONNECT
@@ -1261,7 +1421,7 @@ const duration = document.getElementById("duration");
 // =======================
 
 function saveCurrentTrack(){
-    localStorage.setItem("currentTrack", String(currentTrack));
+    SafeStorage.set("currentTrack", String(currentTrack));
 }
 
 function updatePlayModeButton(){
@@ -1336,7 +1496,7 @@ async function playLoadedTrack(){
         playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
         musicPlayer.classList.add("playing");
     }catch(error){
-        console.warn("Ошибка воспроизведения:", error, player.currentSrc);
+        console.warn("Ошибка воспроизведения аудио");
 
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
@@ -1367,10 +1527,10 @@ async function loadTrack(index, options = {}){
 
     trackName.textContent = track.title;
     trackMeta.textContent = `${track.artist} • ${track.meta}`;
-    trackCover.src = track.cover;
+    trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
 
-    const likedTracks = JSON.parse(localStorage.getItem("likedTracks") || "{}");
+    const likedTracks = SafeStorage.getJSON("likedTracks", {});
     const isLiked = Boolean(likedTracks[track.file]);
 
     likeButton.classList.toggle("active", isLiked);
@@ -1457,9 +1617,9 @@ likeButton.addEventListener("click", function(){
         ? "fa-solid fa-heart"
         : "fa-regular fa-heart";
 
-    const likedTracks = JSON.parse(localStorage.getItem("likedTracks") || "{}");
+    const likedTracks = SafeStorage.getJSON("likedTracks", {});
     likedTracks[playlist[currentTrack].file] = isLiked;
-    localStorage.setItem("likedTracks", JSON.stringify(likedTracks));
+    SafeStorage.setJSON("likedTracks", likedTracks);
 
     if(window.Telegram?.WebApp?.HapticFeedback){
         Telegram.WebApp.HapticFeedback.impactOccurred("light");
@@ -1476,7 +1636,7 @@ playModeButton.addEventListener("click", function(){
     else if(playMode === "repeat") playMode = "shuffle";
     else playMode = "sequence";
 
-    localStorage.setItem("playMode", playMode);
+    SafeStorage.set("playMode", playMode);
     updatePlayModeButton();
 
     playModeButton.classList.remove("mode-flash");
@@ -1509,12 +1669,7 @@ player.addEventListener("ended", async function(){
 
 player.addEventListener("error", function(){
     const track = playlist[currentTrack];
-    console.warn("Ошибка загрузки MP3:", {
-        track: track?.title,
-        file: track?.file,
-        currentSrc: player.currentSrc,
-        mediaError: player.error?.code
-    });
+    console.warn("Ошибка загрузки MP3");
 });
 
 player.addEventListener("loadedmetadata", function(){
@@ -1536,11 +1691,6 @@ player.addEventListener("timeupdate", function(){
 });
 
 
-
-document.addEventListener("visibilitychange", function(){
-    if(document.visibilityState === "hidden"){
-    }
-});
 
 progress.addEventListener("input", function(){
 
@@ -1573,31 +1723,43 @@ function formatTime(seconds){
 
 async function loadPlaylist(){
     try{
-        const response = await fetch("tracks.json", { cache: "no-store" });
+        const response = await fetch("tracks.json", {
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { "Accept": "application/json" }
+        });
 
         if(!response.ok){
             throw new Error(`HTTP ${response.status}`);
         }
 
-        const data = await response.json();
+        const raw = await response.text();
+
+        if(raw.length > 100000){
+            throw new Error("tracks.json слишком большой");
+        }
+
+        const data = JSON.parse(raw);
 
         if(!Array.isArray(data) || data.length === 0){
             throw new Error("tracks.json пустой или имеет неверный формат");
         }
 
-        playlist = data.filter(track =>
-            track &&
-            typeof track.title === "string" &&
-            typeof track.file === "string" &&
-            typeof track.cover === "string"
-        );
+        playlist = data
+            .slice(0, 100)
+            .map(normalizeTrack)
+            .filter(Boolean);
 
         if(playlist.length === 0){
-            throw new Error("В tracks.json нет корректных треков");
+            throw new Error("В tracks.json нет безопасных корректных треков");
         }
     }catch(error){
-        console.warn("Не удалось загрузить tracks.json. Используется резервный список.", error);
-        playlist = fallbackPlaylist;
+        console.warn("Не удалось загрузить tracks.json. Используется резервный список.");
+
+        playlist = fallbackPlaylist
+            .map(normalizeTrack)
+            .filter(Boolean);
+
         showToast("Используется резервный список треков", "warning");
     }
 
@@ -1607,6 +1769,15 @@ async function loadPlaylist(){
 
     updatePlayModeButton();
     await loadTrack(currentTrack, { notify:false });
+
+    const isTelegramLaunch = Boolean(
+        window.Telegram?.WebApp?.initData &&
+        window.Telegram.WebApp.initData.length > 0
+    );
+
+    if(!isTelegramLaunch){
+        showToast("Тестовый режим: приложение открыто вне Telegram", "warning");
+    }
 }
 
 loadPlaylist();
@@ -1738,7 +1909,7 @@ draw();
     <script>
 const crown = document.getElementById("crown");
         
-let gp = Number(localStorage.getItem("gp")) || 0;
+let gp = Number(SafeStorage.get("gp")) || 0;
 
 const gpCounter = document.getElementById("gpCounter");
 const progressFill = document.getElementById("progressFill");
@@ -1751,7 +1922,7 @@ const buyGPButton = document.getElementById("buyGPButton");
 
 const LICENSE_COST = 100000;
 let goldLicenseClaimed =
-    localStorage.getItem("goldLicenseClaimed") === "true";
+    SafeStorage.get("goldLicenseClaimed") === "true";
 
 function updateGP(){
     gpCounter.textContent = gp.toLocaleString();
@@ -1794,8 +1965,8 @@ function claimLicense(){
     gp -= LICENSE_COST;
     goldLicenseClaimed = true;
 
-    localStorage.setItem("gp", gp);
-    localStorage.setItem("goldLicenseClaimed", "true");
+    SafeStorage.set("gp", gp);
+    SafeStorage.set("goldLicenseClaimed", "true");
 
     updateGP();
 
@@ -1847,7 +2018,7 @@ else {
 }
 
 gp += reward;
-localStorage.setItem("gp", gp);
+SafeStorage.set("gp", gp);
 updateGP();
 
 if(reward >= 5){
