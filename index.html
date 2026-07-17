@@ -570,6 +570,212 @@ audio{
     text-shadow:0 0 8px rgba(255,215,0,.5);
     line-height:1;
 }
+
+/* ===== ASIQPAI DARK PLAYER ===== */
+.player{
+    width:min(92vw,390px);
+    max-width:390px;
+    margin:28px auto;
+    padding:14px 14px 22px;
+    background:
+        linear-gradient(180deg,rgba(24,24,24,.98),rgba(8,8,8,.98));
+    border:1px solid rgba(212,175,55,.16);
+    border-radius:32px;
+    box-shadow:
+        0 22px 55px rgba(0,0,0,.55),
+        inset 0 1px 0 rgba(255,255,255,.035);
+    overflow:hidden;
+}
+
+.player-cover-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    overflow:hidden;
+    border-radius:24px;
+    background:#111;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.035),
+        0 14px 34px rgba(0,0,0,.38);
+}
+
+.player-cover{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+    transition:opacity .25s ease, transform .45s ease;
+}
+
+.player.playing .player-cover{
+    transform:scale(1.018);
+}
+
+.cover-shade{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to top,rgba(0,0,0,.34),transparent 34%);
+    pointer-events:none;
+}
+
+.cover-badge{
+    position:absolute;
+    left:14px;
+    bottom:13px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(5,5,5,.64);
+    border:1px solid rgba(222,185,101,.35);
+    color:#e0b965;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.8px;
+    backdrop-filter:blur(8px);
+}
+
+.track-info{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:12px;
+    margin:18px 5px 4px;
+    text-align:left;
+}
+
+.track-copy{
+    min-width:0;
+}
+
+#trackName{
+    display:block;
+    margin:0;
+    color:#f5f5f5;
+    font-size:22px;
+    line-height:1.15;
+    font-weight:900;
+    letter-spacing:.7px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+#trackMeta{
+    display:block;
+    margin-top:7px;
+    color:#cfaa5b;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.8px;
+}
+
+.like-button{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:transparent;
+    color:#d5ad58;
+    font-size:22px;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.like-button.active{
+    color:#f1c55f;
+    transform:scale(1.08);
+    text-shadow:0 0 15px rgba(241,197,95,.45);
+}
+
+.progress-container{
+    display:grid;
+    grid-template-columns:38px 1fr 38px;
+    align-items:center;
+    gap:9px;
+    margin:17px 4px 0;
+}
+
+#progress{
+    width:100%;
+    height:4px;
+    margin:0;
+    cursor:pointer;
+    accent-color:#d8b05c;
+}
+
+#currentTime,
+#duration{
+    width:auto;
+    color:#d8d8d8;
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr 66px 1fr;
+    align-items:center;
+    gap:26px;
+    margin:21px auto 2px;
+    max-width:255px;
+}
+
+#prevButton,
+#nextButton{
+    width:45px;
+    height:45px;
+    justify-self:center;
+    padding:0;
+    border:none;
+    border-radius:50%;
+    background:transparent;
+    color:#f2f2f2;
+    font-size:25px;
+    cursor:pointer;
+}
+
+#playButton{
+    width:66px;
+    height:66px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:2px solid #d8b05c;
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 35%,#24201a,#080808 70%);
+    color:#e2ba66;
+    font-size:23px;
+    box-shadow:
+        0 0 0 5px rgba(216,176,92,.045),
+        inset 0 0 18px rgba(216,176,92,.06);
+    cursor:pointer;
+}
+
+.controls button:hover{
+    background:rgba(216,176,92,.09);
+    color:#f1ca75;
+    transform:scale(1.06);
+}
+
+#playButton:hover{
+    background:radial-gradient(circle at 50% 35%,#30271b,#0b0b0b 72%);
+}
+
+@media (max-width:390px){
+    body{
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    .player{
+        width:100%;
+        border-radius:27px;
+    }
+
+    #trackName{
+        font-size:20px;
+    }
+}
+
 </style>
 
 </head>
@@ -612,39 +818,51 @@ Music Artist • Producer • Beatmaker
                                      
 <audio id="player"></audio>
 
-<div class="player">
 
-    <div id="trackName">
-       Asiqpai - track #1
+<div class="player" id="musicPlayer">
+
+    <div class="player-cover-wrap">
+        <img
+            id="trackCover"
+            class="player-cover"
+            src="images/dark-nights-cover.jpg"
+            alt="Обложка бита Dark Nights"
+        >
+        <div class="cover-shade"></div>
+        <div class="cover-badge">ASIQPAI ORIGINAL</div>
     </div>
 
+    <div class="track-info">
+        <div class="track-copy">
+            <div id="trackName">Dark Nights</div>
+            <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
+        </div>
 
-<div class="controls">
+        <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное">
+            <i class="fa-regular fa-heart"></i>
+        </button>
+    </div>
 
-    <button id="prevButton">
-        <i class="fa-solid fa-backward-step"></i>
-    </button>
+    <div class="progress-container">
+        <span id="currentTime">0:00</span>
+        <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
+        <span id="duration">0:00</span>
+    </div>
 
-    <button id="playButton">
-        <i class="fa-solid fa-play"></i>
-    </button>
+    <div class="controls">
+        <button id="prevButton" type="button" aria-label="Предыдущий трек">
+            <i class="fa-solid fa-backward-step"></i>
+        </button>
 
-    <button id="nextButton">
-        <i class="fa-solid fa-forward-step"></i>
-    </button>
+        <button id="playButton" type="button" aria-label="Воспроизвести">
+            <i class="fa-solid fa-play"></i>
+        </button>
 
-</div>
+        <button id="nextButton" type="button" aria-label="Следующий трек">
+            <i class="fa-solid fa-forward-step"></i>
+        </button>
+    </div>
 
-<div class="progress-container">
-
-    <span id="currentTime">0:00</span>
-
-    <input type="range" id="progress" value="0" min="0" max="100">
-
-    <span id="duration">0:00</span>
-
-</div>
-    
 </div>
 
 <div class="section-divider">
@@ -693,7 +911,10 @@ Music Artist • Producer • Beatmaker
 <script>
 const playlist = [
     {
-        title: "Asiqpai - Track #1",
+        title: "Dark Nights",
+        artist: "ASIQPAI",
+        meta: "INSTRUMENTAL",
+        cover: "images/dark-nights-cover.jpg",
         file: "music/track.mp3"
     }
 ];
@@ -728,6 +949,10 @@ function showPaymentComingSoon() {
 const player = document.getElementById("player");
 const playButton = document.getElementById("playButton");
 const trackName = document.getElementById("trackName");
+const trackMeta = document.getElementById("trackMeta");
+const trackCover = document.getElementById("trackCover");
+const musicPlayer = document.getElementById("musicPlayer");
+const likeButton = document.getElementById("likeButton");
 
 const progress = document.getElementById("progress");
 const currentTime = document.getElementById("currentTime");
@@ -737,9 +962,13 @@ const duration = document.getElementById("duration");
 
 function loadTrack(index){
 
-    player.src = playlist[index].file;
+    const track = playlist[index];
 
-    trackName.textContent = playlist[index].title;
+    player.src = track.file;
+    trackName.textContent = track.title;
+    trackMeta.textContent = `${track.artist} • ${track.meta}`;
+    trackCover.src = track.cover;
+    trackCover.alt = `Обложка ${track.title}`;
 
 }
 
@@ -755,6 +984,7 @@ playButton.onclick = function(){
 
         playButton.innerHTML =
         '<i class="fa-solid fa-pause"></i>';
+        musicPlayer.classList.add("playing");
 
     }else{
 
@@ -762,6 +992,7 @@ playButton.onclick = function(){
 
         playButton.innerHTML =
         '<i class="fa-solid fa-play"></i>';
+        musicPlayer.classList.remove("playing");
 
     }
 
@@ -787,6 +1018,7 @@ document.getElementById("nextButton").onclick = function(){
 
     playButton.innerHTML =
     '<i class="fa-solid fa-pause"></i>';
+    musicPlayer.classList.add("playing");
 
 };
 
@@ -810,8 +1042,27 @@ document.getElementById("prevButton").onclick = function(){
 
     playButton.innerHTML =
     '<i class="fa-solid fa-pause"></i>';
+    musicPlayer.classList.add("playing");
 
 };
+
+likeButton.addEventListener("click", function(){
+    likeButton.classList.toggle("active");
+
+    const icon = likeButton.querySelector("i");
+    icon.className = likeButton.classList.contains("active")
+        ? "fa-solid fa-heart"
+        : "fa-regular fa-heart";
+
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }
+});
+
+player.addEventListener("ended", function(){
+    musicPlayer.classList.remove("playing");
+    playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+});
 
 // =======================
 // ПРОГРЕСС
