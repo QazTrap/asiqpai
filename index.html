@@ -85,7 +85,66 @@ body{
         
     transition:.3s;
 }
+    /* ВСТАВИТЬ СЮДА */
 
+.progressBar{
+
+    width:100%;
+    height:14px;
+
+    background:#141414;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    margin:16px 0 10px;
+
+    box-shadow:
+        inset 0 0 8px rgba(0,0,0,.7),
+        0 0 8px rgba(212,175,55,.12);
+}
+
+#progressFill{
+
+    width:0%;
+
+    height:100%;
+
+    border-radius:30px;
+
+    background:linear-gradient(
+        90deg,
+        #7a5a00 0%,
+        #FFD700 40%,
+        #FFF4A3 50%,
+        #FFD700 60%,
+        #B8860B 100%
+    );
+
+    box-shadow:
+        0 0 12px rgba(255,215,0,.6),
+        0 0 24px rgba(255,215,0,.25);
+
+    transition:width .35s ease;
+}
+
+#progressText{
+
+    color:#FFD700;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-align:center;
+
+    letter-spacing:1px;
+
+    margin-top:8px;
+
+    text-shadow:0 0 8px rgba(255,215,0,.35);
+}
     .beat-card:hover{
     transform:translateY(-4px);
     box-shadow:0 0 28px rgba(212,175,55,.28);
@@ -518,6 +577,13 @@ Music Artist • Producer • Beatmaker
 
 <h3>⭐⭐⭐⭐⭐</h3>
 <p><strong>BPM:</strong> 148</p>
+    <p><strong>Next License</strong></p>
+
+<div class="progressBar">
+    <div id="progressFill"></div>
+</div>
+
+<p id="progressText">0 / 100 000 GP</p>
 <p><strong>🎹 Key:</strong> F#m</p>
 <button class="buy-button" onclick="buyBeat()">
 💎 Buy — 10 GRAM
@@ -855,7 +921,10 @@ const crown = document.getElementById("crown");
 let gp = Number(localStorage.getItem("gp")) || 0;
 
 const gpCounter = document.getElementById("gpCounter");
+const progressFill = document.getElementById("progressFill");
+const progressText = document.getElementById("progressText");
 
+const LICENSE_COST = 100000;
 function updateGP(){
     gpCounter.textContent = gp;
 }
