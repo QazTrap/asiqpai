@@ -294,8 +294,31 @@ audio{
     100%{
         filter:brightness(1);
     }
+        
+.plusOne{
+    position:fixed;
+    color:#FFD700;
+    font-size:28px;
+    font-weight:bold;
+    pointer-events:none;
+    text-shadow:0 0 10px gold;
+    animation:plusAnim .9s ease-out forwards;
+}
+
+@keyframes plusAnim{
+
+    0%{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+    100%{
+        opacity:0;
+        transform:translateY(-80px) scale(1.4);
+    }
 
 }
+
 
     @keyframes floatText{
 
@@ -727,6 +750,20 @@ draw();
 const crown = document.getElementById("crown");
 
 crown.addEventListener("click", () => {
+
+    const rect = crown.getBoundingClientRect();
+
+const plus = document.createElement("div");
+
+plus.className = "plusOne";
+plus.textContent = "+1";
+
+plus.style.left = (rect.left + rect.width / 2 - 10) + "px";
+plus.style.top = (rect.top + 20) + "px";
+
+document.body.appendChild(plus);
+
+setTimeout(() => plus.remove(), 900);
 
     // Вибрация Telegram
     if (window.Telegram && Telegram.WebApp) {
