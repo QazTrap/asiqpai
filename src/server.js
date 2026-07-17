@@ -46,8 +46,12 @@ async function requireTelegramUser(req, res, next) {
     req.appUser = await upsertTelegramUser(pool, result.user);
     next();
   } catch (error) {
-    res.status(401).json({ error: "Telegram authorization failed" });
-  }
+    console.error("Telegram auth error:", error.message);
+    console.error(error);
+
+    res.status(401).json({
+        error: "Telegram authorization failed"
+    });
 }
 
 app.get("/health", (_req, res) => {
