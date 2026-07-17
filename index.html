@@ -1259,7 +1259,7 @@ Music Artist • Producer • Beatmaker
 <p>asiqpai.ton</p>
 
 <script>
-const playlist = [
+const fallbackPlaylist = [
     {
         title: "Әңгіме",
         artist: "ASIQPAI",
@@ -1268,7 +1268,6 @@ const playlist = [
         file: "music/track.mp3",
         accent: "212,175,55"
     },
-
     {
         title: "Демон",
         artist: "ASIQPAI",
@@ -1277,7 +1276,6 @@ const playlist = [
         file: "music/Демон.mp3",
         accent: "175,42,42"
     },
-
     {
         title: "Baby",
         artist: "ASIQPAI",
@@ -1288,8 +1286,8 @@ const playlist = [
     }
 ];
 
+let playlist = [];
 let currentTrack = Number(localStorage.getItem("currentTrack")) || 0;
-if(currentTrack < 0 || currentTrack >= playlist.length){ currentTrack = 0; }
 let playMode = localStorage.getItem("playMode") || "sequence";
 
 // =======================
@@ -1725,8 +1723,45 @@ function formatTime(seconds){
 // ЗАГРУЗКА ПЕРВОГО ТРЕКА
 // =======================
 
-updatePlayModeButton();
-loadTrack(currentTrack, { notify:false });
+async function loadPlaylist(){
+    try{
+        const response = await fetch("tracks.json", { cache: "no-store" });
+
+        if(!response.ok){
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if(!Array.isArray(data) || data.length === 0){
+            throw new Error("tracks.json пустой или имеет неверный формат");
+        }
+
+        playlist = data.filter(track =>
+            track &&
+            typeof track.title === "string" &&
+            typeof track.file === "string" &&
+            typeof track.cover === "string"
+        );
+
+        if(playlist.length === 0){
+            throw new Error("В tracks.json нет корректных треков");
+        }
+    }catch(error){
+        console.warn("Не удалось загрузить tracks.json. Используется резервный список.", error);
+        playlist = fallbackPlaylist;
+        showToast("Используется резервный список треков", "warning");
+    }
+
+    if(currentTrack < 0 || currentTrack >= playlist.length){
+        currentTrack = 0;
+    }
+
+    updatePlayModeButton();
+    await loadTrack(currentTrack, { notify:false });
+}
+
+loadPlaylist();
 </script>
     <script>
 const sparkCanvas = document.getElementById("sparkCanvas");
