@@ -803,6 +803,16 @@ draw();
 </script>
     <script>
 const crown = document.getElementById("crown");
+        
+let gp = Number(localStorage.getItem("gp")) || 0;
+
+const gpCounter = document.getElementById("gpCounter");
+
+function updateGP(){
+    gpCounter.textContent = gp;
+}
+
+updateGP();
 
 crown.addEventListener("click", () => {
 
@@ -814,26 +824,37 @@ plus.className = "plusOne";
     
 const random = Math.random();
 
+let reward = 1;
+
 if (random < 0.65) {
+    reward = 1;
     plus.textContent = "+1 GP";
     plus.style.color = "#FFD700";
 }
 else if (random < 0.85) {
+    reward = 2;
     plus.textContent = "+2 GP";
     plus.style.color = "#FFD700";
 }
 else if (random < 0.95) {
+    reward = 3;
     plus.textContent = "+3 GP";
     plus.style.color = "#FFA500";
 }
 else if (random < 0.99) {
+    reward = 5;
     plus.textContent = "⭐ +5 GP";
     plus.style.color = "#FF8C00";
 }
 else {
+    reward = 10;
     plus.textContent = "💎 +10 GP";
     plus.style.color = "#00E5FF";
 }
+
+gp += reward;
+localStorage.setItem("gp", gp);
+updateGP();
 
 // Случайное появление по кругу вокруг короны
 const angle = Math.random() * Math.PI * 2;
