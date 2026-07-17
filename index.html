@@ -65,28 +65,6 @@ body{
 .section-divider span{
     text-shadow:0 0 8px rgba(212,175,55,.5);
 }
-    .beat-card{
-    width:100%;
-    max-width:340px;
-
-    margin:30px auto;
-
-    padding:18px;
-
-    box-sizing:border-box;
-
-    background:#1b1b1b;
-
-    border-radius:18px;
-
-    box-shadow:0 0 20px rgba(212,175,55,.18);
-        
-    min-height:240px;
-        
-    transition:.3s;
-}
-    /* ВСТАВИТЬ СЮДА */
-
 .progressBar{
 
     width:100%;
@@ -145,13 +123,49 @@ body{
 
     text-shadow:0 0 8px rgba(255,215,0,.35);
 }
-    .beat-card:hover{
-    transform:translateY(-4px);
-    box-shadow:0 0 28px rgba(212,175,55,.28);
+.license-card{
+    width:100%;
+    max-width:340px;
+    margin:30px auto;
+    padding:24px 18px 20px;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,#1d1d1d 0%,#151515 100%);
+    border-radius:18px;
+    box-shadow:
+        0 0 22px rgba(212,175,55,.18),
+        inset 0 1px 0 rgba(255,255,255,.03);
 }
 
-.beat-card:hover{
-    transform:translateY(-4px);
+.license-icon{
+    font-size:34px;
+    margin-bottom:4px;
+    filter:drop-shadow(0 0 10px rgba(255,215,0,.35));
+}
+
+.license-title{
+    margin:4px 0 10px;
+    color:#FFD700;
+    font-size:24px;
+    letter-spacing:1px;
+}
+
+.license-description{
+    max-width:280px;
+    margin:0 auto 20px;
+    color:#bdbdbd;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.license-progress-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    color:#d4af37;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
 }
 
 .buy-button{
@@ -461,12 +475,11 @@ audio{
     z-index:-1;
 }
    
-/* СЮДА МОЖНО ВСТАВИТЬ */
 
 #gpPanel{
     position:fixed;
     top: max(27px, env(safe-area-inset-top));
-    left: max(12px, env(safe-area-inset-left));;
+    left:max(12px, env(safe-area-inset-left));
 
     background:rgba(20,20,20,.45);
     border:1px solid rgba(212,175,55,.25);
@@ -570,44 +583,39 @@ Music Artist • Producer • Beatmaker
 
 </div>
     
+</div>
+
 <div class="section-divider">
     <span>LICENSE CENTER</span>
 </div>
 
-<div class="beat-card">
-<h2>GP Store</h2>
+<div class="license-card">
 
-<div class="beat-card">
+    <div class="license-icon">👑</div>
 
-<h3>💎 100 000 Gold Points</h3>
+    <h2 class="license-title">Gold License</h2>
 
-<p>Unlock one music license.</p>
+    <p class="license-description">
+        Earn <strong>100 000 GP</strong> to unlock your first music license.
+    </p>
 
-<p><strong>Progress</strong></p>
+    <div class="license-progress-label">
+        <span>Progress</span>
+        <span id="progressPercent">0%</span>
+    </div>
 
-<div class="progressBar">
-    <div id="progressFill"></div>
-</div>
+    <div class="progressBar">
+        <div id="progressFill"></div>
+    </div>
 
-<p id="progressText">0 / 100 000 GP</p>
+    <p id="progressText">0 / 100 000 GP</p>
 
-<button class="buy-button" onclick="buyBeat()">
-💎 Buy 100 000 GP — 10 GRAM
-</button>
-
-</div>
-
-<div class="progressBar">
-    <div id="progressFill"></div>
-</div>
-
-<p id="progressText">0 / 100 000 GP</p>
-
-<button class="buy-button" onclick="buyBeat()">
-💎 Buy — 10 GRAM
-</button>
+    <button class="buy-button" onclick="buyGP()">
+        💎 Get 100 000 GP — 10 GRAM
+    </button>
 
 </div>
+
 <p><b>Web3</b></p>
 
 <p>asiqpai.ton</p>
@@ -635,7 +643,7 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
 // ПОКУПКА БИТА
 // =======================
 
-async function buyBeat() {
+async function buyGP() {
 
     try {
 
@@ -942,9 +950,18 @@ const gpCounter = document.getElementById("gpCounter");
 const progressFill = document.getElementById("progressFill");
 const progressText = document.getElementById("progressText");
 
+const progressPercent = document.getElementById("progressPercent");
 const LICENSE_COST = 100000;
+
 function updateGP(){
-    gpCounter.textContent = gp;
+    gpCounter.textContent = gp.toLocaleString();
+
+    const percent = Math.min((gp / LICENSE_COST) * 100, 100);
+
+    progressFill.style.width = percent + "%";
+    progressText.textContent =
+        gp.toLocaleString() + " / " + LICENSE_COST.toLocaleString() + " GP";
+    progressPercent.textContent = Math.floor(percent) + "%";
 }
 
 updateGP();
