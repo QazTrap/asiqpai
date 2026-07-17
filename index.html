@@ -1541,9 +1541,7 @@ async function loadTrack(index, options = {}){
     progress.value = 0;
     currentTime.textContent = "0:00";
     duration.textContent = "0:00";
-
-    if(options.notify !== false){
-        showToast(`🎵 Сейчас играет «${track.title}»`);
+    
     }
 }
 
