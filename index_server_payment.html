@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/png" href="images/logo.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Asiqpai Official</title>
+<!-- TON Connect -->
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<!-- Telegram Web App -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+    #smokeCanvas{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+    pointer-events:none;
+}
+
+body{
+    background:#000;
+    overflow-x:hidden;
+}
+    .section-divider{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+
+    margin:35px auto 25px;
+
+    color:#d4af37;
+
+    font-size:14px;
+    font-weight:700;
+
+    letter-spacing:4px;
+
+    text-transform:uppercase;
+}
+
+.section-divider::before,
+.section-divider::after{
+
+    content:"";
+
+    flex:1;
+
+    max-width:120px;
+
+    height:1px;
+
+    background:linear-gradient(
+        to right,
+        transparent,
+        rgba(212,175,55,.8),
+        transparent
+    );
+}
+
+.section-divider span{
+    text-shadow:0 0 8px rgba(212,175,55,.5);
+}
+.progressBar{
+
+    width:100%;
+    height:14px;
+
+    background:#141414;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    margin:16px 0 10px;
+
+    box-shadow:
+        inset 0 0 8px rgba(0,0,0,.7),
+        0 0 8px rgba(212,175,55,.12);
+}
+
+#progressFill{
+
+    width:0%;
+
+    height:100%;
+
+    border-radius:30px;
+
+    background:linear-gradient(
+        90deg,
+        #7a5a00 0%,
+        #FFD700 40%,
+        #FFF4A3 50%,
+        #FFD700 60%,
+        #B8860B 100%
+    );
+
+    box-shadow:
+        0 0 12px rgba(255,215,0,.6),
+        0 0 24px rgba(255,215,0,.25);
+
+    transition:width .35s ease;
+}
+
+#progressText{
+
+    color:#FFD700;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-align:center;
+
+    letter-spacing:1px;
+
+    margin-top:8px;
+
+    text-shadow:0 0 8px rgba(255,215,0,.35);
+}
+.license-card{
+    width:100%;
+    max-width:340px;
+    margin:30px auto;
+    padding:24px 18px 20px;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,#1d1d1d 0%,#151515 100%);
+    border-radius:18px;
+    box-shadow:
+        0 0 22px rgba(212,175,55,.18),
+        inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.license-icon{
+    font-size:34px;
+    margin-bottom:4px;
+    filter:drop-shadow(0 0 10px rgba(255,215,0,.35));
+}
+
+.license-title{
+    margin:4px 0 10px;
+    color:#FFD700;
+    font-size:24px;
+    letter-spacing:1px;
+}
+
+.license-description{
+    max-width:280px;
+    margin:0 auto 20px;
+    color:#bdbdbd;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.license-progress-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    color:#d4af37;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+
+.license-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    margin:4px auto 14px;
+    padding:7px 12px;
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:999px;
+    background:rgba(212,175,55,.07);
+    color:#bdbdbd;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+.license-status.unlocked{
+    color:#FFD700;
+    border-color:rgba(255,215,0,.55);
+    background:rgba(255,215,0,.12);
+    box-shadow:0 0 16px rgba(255,215,0,.16);
+}
+
+.claim-button{
+    display:none;
+    width:100%;
+    padding:12px;
+    margin-top:12px;
+    border:1px solid #FFD700;
+    border-radius:10px;
+    background:transparent;
+    color:#FFD700;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.claim-button.show{
+    display:block;
+}
+
+.claim-button:hover{
+    background:#FFD700;
+    color:#111;
+    transform:scale(1.02);
+}
+
+.buy-button{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+    background:#d4af37;
+    color:#111;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.buy-button:hover{
+    background:#c59d2c;
+    transform:scale(1.03);
+}
+    .title{
+    font-size:40px;
+    margin:10px 0;
+    font-weight:900;
+    letter-spacing:3px;
+    color:#d4af37;
+    text-shadow:0 0 18px rgba(212,175,55,.4);
+
+    animation: floatText 3s ease-in-out infinite;
+}
+
+.subtitle{
+    font-size:18px;
+    color:#bdbdbd;
+    margin-bottom:35px;
+    letter-spacing:1px;
+}
+  .logo{
+    width:220px;
+    height:auto;
+
+    display:block;
+    margin:-20px auto 0;
+
+    object-fit:cover;
+    border-radius:50%;
+
+    box-shadow:none;
+
+    transition:.4s;
+    animation:glow 3s ease-in-out infinite;
+
+    -webkit-user-select: none;
+    user-select: none;
+
+    -webkit-user-drag: none;
+
+    -webkit-touch-callout: none;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+.logo:hover{
+    transform:scale(1.05);
+}
+body{ background:#060505; 
+     color:white; 
+     font-family:Arial, sans-serif; 
+     text-align:center; padding:30px; 
+     margin:0; 
+}   
+h1{
+    font-size:50px;
+}
+
+.button{
+
+    display:block;
+
+    max-width:300px;
+    width:90%;
+
+    margin:15px auto;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    background:#1b1b1b;
+
+    color:#d4af37;
+
+    border:1px solid #d4af37;
+
+    transition:.3s;
+}
+
+.button:hover{
+
+    background:#d4af37;
+
+    color:#111;
+}
+
+#ton-connect{
+    display:flex;
+    justify-content:center;
+    margin-bottom:30px;
+}
+
+audio{
+    width:280px;
+    margin-top:60px;
+}
+.player{
+
+    width:100%;
+    max-width:340px;
+
+    margin:30px auto;
+
+    padding:18px;
+
+    box-sizing:border-box;
+
+    background:#1b1b1b;
+
+    border-radius:18px;
+
+    box-shadow:0 0 20px rgba(212,175,55,.18);
+
+}
+#playButton{
+
+    width:54px;
+    height:54px;
+
+    border-radius:50%;
+
+    background:#d4af37;
+
+    color:black;
+
+    font-size:22px;
+
+}
+
+#trackName{
+
+    display:block;
+
+    margin-top:15px;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+}
+.controls{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:25px;
+
+    margin-top:20px;
+
+}
+
+#prevButton,
+#nextButton{
+
+    background:none;
+    border:none;
+
+    width:auto;
+    height:auto;
+
+    color:#d4af37;
+
+    font-size:28px;
+
+    box-shadow:none;
+
+}
+
+.controls button:hover{
+
+    transform:scale(1.1);
+
+    background:#c59d2c;
+
+}
+
+#playButton{
+
+    width:50px;
+
+    height:50px;
+
+    font-size:18px;
+
+}
+
+.progress-container{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:20px;
+
+}
+
+#progress{
+
+    flex:1;
+
+    height:4px;      /* толщина полосы */
+    cursor:pointer;
+
+    accent-color:#d4af37; /* золотой цвет */
+
+}
+
+#currentTime,
+#duration{
+
+    color:white;
+
+    font-size:14px;
+
+    width:40px;
+}
+  
+    @keyframes glow{
+
+    0%{
+        filter:brightness(1);
+    }
+
+    50%{
+        filter:brightness(1.2);
+    }
+
+    100%{
+        filter:brightness(1);
+    }
+}         
+.plusOne{
+    position:fixed;
+    transform:translate(-50%, -50%);
+    color:#FFD700;
+    font-size:28px;
+    font-weight:bold;
+    pointer-events:none;
+    text-shadow:0 0 10px gold;
+    animation:plusAnim .9s ease-out forwards;
+    z-index:9999;
+}
+
+@keyframes plusAnim{
+
+    0%{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+    100%{
+        opacity:0;
+        transform:translateY(-80px) scale(1.4);
+    }
+
+}
+
+
+    @keyframes floatText{
+
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-8px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+}
+    #sparkCanvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:-1;
+}
+   
+
+#gpPanel{
+    position:fixed;
+    top: max(27px, env(safe-area-inset-top));
+    left:max(12px, env(safe-area-inset-left));
+
+    background:rgba(20,20,20,.45);
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:10px;
+
+    padding:5px 8px;
+
+    backdrop-filter:blur(6px);
+
+    z-index:9999;
+    pointer-events:none;
+} 
+    
+
+.gpTitle{
+    color:#FFD700;
+    font-size:9px;
+    opacity:.7;
+    margin-bottom:1px;
+}
+
+#gpCounter{
+    color:#FFD700;
+    font-size:18px;
+    font-weight:900;
+    text-shadow:0 0 8px rgba(255,215,0,.5);
+    line-height:1;
+}
+</style>
+
+</head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
+<body>
+
+    <div id="gpPanel">
+    <div class="gpTitle">⭐ Gold Points</div>
+    <div id="gpCounter">0</div>
+</div>  
+    
+<canvas id="smokeCanvas"></canvas>
+    <canvas id="sparkCanvas"></canvas>
+<div id="ton-connect"></div>
+    <img src="images/crow.png"
+     class="logo"
+     id="crown"
+     alt="ASIQPAI Logo"
+     draggable="false">
+<h1 class="title">ASIQPAI</h1>
+    
+
+<p class="subtitle">
+Music Artist • Producer • Beatmaker
+</p>
+
+<a class="button" href="https://web.telegram.org/a/#-1003866024866">Telegram Community</a>
+
+<a class="button" href="https://youtube.com/@asiqpai">YouTube Community</a>
+
+<a class="button" href="https://www.tiktok.com/@asiqpai">TikTok Community</a>
+
+<a class="button" href="https://www.instagram.com/asiqpai">Instagram Community</a>
+
+<div class="section-divider">
+    <span>NOW PLAYING</span>
+</div>
+                                     
+<audio id="player"></audio>
+
+<div class="player">
+
+    <div id="trackName">
+       Asiqpai - track #1
+    </div>
+
+
+<div class="controls">
+
+    <button id="prevButton">
+        <i class="fa-solid fa-backward-step"></i>
+    </button>
+
+    <button id="playButton">
+        <i class="fa-solid fa-play"></i>
+    </button>
+
+    <button id="nextButton">
+        <i class="fa-solid fa-forward-step"></i>
+    </button>
+
+</div>
+
+<div class="progress-container">
+
+    <span id="currentTime">0:00</span>
+
+    <input type="range" id="progress" value="0" min="0" max="100">
+
+    <span id="duration">0:00</span>
+
+</div>
+    
+</div>
+
+<div class="section-divider">
+    <span>LICENSE CENTER</span>
+</div>
+
+<div class="license-card">
+
+    <div class="license-icon">👑</div>
+
+    <h2 class="license-title">Gold License</h2>
+
+    <p class="license-description">
+        Earn <strong>100 000 GP</strong> to unlock your first music license.
+    </p>
+
+    <div class="license-progress-label">
+        <span>Progress</span>
+        <span id="progressPercent">0%</span>
+    </div>
+
+    <div class="progressBar">
+        <div id="progressFill"></div>
+    </div>
+
+    <p id="progressText">0 / 100 000 GP</p>
+
+    <div id="licenseStatus" class="license-status">
+        🔒 Gold License Locked
+    </div>
+
+    <button id="claimLicenseButton" class="claim-button" onclick="claimLicense()">
+        👑 Claim Gold License
+    </button>
+
+    <button id="buyGPButton" class="buy-button" onclick="buyGP()">
+        💎 Get 100 000 GP — 10 GRAM
+    </button>
+
+</div>
+
+<p><b>Web3</b></p>
+
+<p>asiqpai.ton</p>
+
+<script>
+const playlist = [
+    {
+        title: "Asiqpai - Track #1",
+        file: "music/track.mp3"
+    }
+];
+
+let currentTrack = 0;
+
+const API_URL = "https://YOUR-BACKEND.onrender.com";
+
+// =======================
+// TON CONNECT
+// =======================
+
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: "https://qaztrap.github.io/asiqpai/tonconnect-manifest.json",
+    buttonRootId: "ton-connect"
+});
+
+// =======================
+// ПОКУПКА БИТА
+// =======================
+
+async function buyGP() {
+    try {
+        if (!window.Telegram?.WebApp?.initData) {
+            throw new Error("Откройте приложение внутри Telegram.");
+        }
+
+        if (!tonConnectUI.account?.address) {
+            await tonConnectUI.openModal();
+            return;
+        }
+
+        const headers = {
+            "Content-Type": "application/json",
+            "X-Telegram-Init-Data": Telegram.WebApp.initData
+        };
+
+        const orderResponse = await fetch(`${API_URL}/api/orders`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                walletAddress: tonConnectUI.account.address
+            })
+        });
+
+        const order = await orderResponse.json();
+
+        if (!orderResponse.ok) {
+            throw new Error(order.error || "Не удалось создать заказ.");
+        }
+
+        await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 600,
+            messages: [{
+                address: order.address,
+                amount: order.amount,
+                payload: order.payload
+            }]
+        });
+
+        alert("Платёж отправлен. Проверяем блокчейн…");
+
+        await waitForPayment(order.orderId, headers);
+
+    } catch (error) {
+        console.error(error);
+        alert(error.message || "Платёж не выполнен.");
+    }
+}
+
+async function waitForPayment(orderId, headers) {
+    const startedAt = Date.now();
+    const timeoutMs = 3 * 60 * 1000;
+
+    while (Date.now() - startedAt < timeoutMs) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        const response = await fetch(`${API_URL}/api/orders/${orderId}`, {
+            headers: {
+                "X-Telegram-Init-Data": headers["X-Telegram-Init-Data"]
+            }
+        });
+
+        const order = await response.json();
+
+        if (!response.ok) {
+            throw new Error(order.error || "Ошибка проверки платежа.");
+        }
+
+        if (order.status === "paid") {
+            gp += order.gpReward;
+            localStorage.setItem("gp", gp);
+            updateGP();
+
+            if (window.Telegram?.WebApp) {
+                Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+            }
+
+            alert(`💎 ${order.gpReward.toLocaleString()} GP начислено!`);
+            return;
+        }
+
+        if (order.status === "expired") {
+            throw new Error("Заказ истёк. Создайте новый.");
+        }
+    }
+
+    throw new Error("Транзакция ещё не найдена. Проверьте статус позже.");
+}
+
+// =======================
+// ПЛЕЕР
+// =======================
+
+const player = document.getElementById("player");
+const playButton = document.getElementById("playButton");
+const trackName = document.getElementById("trackName");
+
+const progress = document.getElementById("progress");
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+
+// =======================
+
+function loadTrack(index){
+
+    player.src = playlist[index].file;
+
+    trackName.textContent = playlist[index].title;
+
+}
+
+// =======================
+// PLAY / PAUSE
+// =======================
+
+playButton.onclick = function(){
+
+    if(player.paused){
+
+        player.play();
+
+        playButton.innerHTML =
+        '<i class="fa-solid fa-pause"></i>';
+
+    }else{
+
+        player.pause();
+
+        playButton.innerHTML =
+        '<i class="fa-solid fa-play"></i>';
+
+    }
+
+};
+
+// =======================
+// NEXT
+// =======================
+
+document.getElementById("nextButton").onclick = function(){
+
+    currentTrack++;
+
+    if(currentTrack >= playlist.length){
+
+        currentTrack = 0;
+
+    }
+
+    loadTrack(currentTrack);
+
+    player.play();
+
+    playButton.innerHTML =
+    '<i class="fa-solid fa-pause"></i>';
+
+};
+
+// =======================
+// PREVIOUS
+// =======================
+
+document.getElementById("prevButton").onclick = function(){
+
+    currentTrack--;
+
+    if(currentTrack < 0){
+
+        currentTrack = playlist.length - 1;
+
+    }
+
+    loadTrack(currentTrack);
+
+    player.play();
+
+    playButton.innerHTML =
+    '<i class="fa-solid fa-pause"></i>';
+
+};
+
+// =======================
+// ПРОГРЕСС
+// =======================
+
+player.addEventListener("loadedmetadata", function(){
+
+    duration.textContent =
+    formatTime(player.duration);
+
+});
+
+player.addEventListener("timeupdate", function(){
+
+    if(player.duration){
+
+        progress.value =
+        (player.currentTime / player.duration) * 100;
+
+        currentTime.textContent =
+        formatTime(player.currentTime);
+
+    }
+
+});
+
+progress.addEventListener("input", function(){
+
+    if(player.duration){
+
+        player.currentTime =
+        (progress.value / 100) * player.duration;
+
+    }
+
+});
+
+// =======================
+// ФОРМАТ ВРЕМЕНИ
+// =======================
+
+function formatTime(seconds){
+
+    const minutes = Math.floor(seconds / 60);
+
+    const secs = Math.floor(seconds % 60);
+
+    return minutes + ":" + secs.toString().padStart(2,"0");
+
+}
+
+// =======================
+// ЗАГРУЗКА ПЕРВОГО ТРЕКА
+// =======================
+
+loadTrack(currentTrack);
+</script>
+    <script>
+const sparkCanvas = document.getElementById("sparkCanvas");
+const sctx = sparkCanvas.getContext("2d");
+
+function resizeSpark(){
+    sparkCanvas.width = window.innerWidth;
+    sparkCanvas.height = window.innerHeight;
+}
+resizeSpark();
+window.addEventListener("resize", resizeSpark);
+
+const sparks=[];
+
+function createSpark(){
+
+    sparks.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        size:1+Math.random()*3,
+        speed:0.3+Math.random()*0.8,
+        alpha:0.6+Math.random()*0.4
+    });
+
+}
+
+setInterval(createSpark,250);
+
+function animateSpark(){
+
+    sctx.clearRect(0,0,sparkCanvas.width,sparkCanvas.height);
+
+    for(let i=sparks.length-1;i>=0;i--){
+
+        const p=sparks[i];
+
+        sctx.beginPath();
+
+        sctx.fillStyle=`rgba(255,210,70,${p.alpha})`;
+
+        sctx.shadowBlur=15;
+        sctx.shadowColor="#FFD54A";
+
+        sctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+
+        sctx.fill();
+
+        p.y-=p.speed;
+
+        p.alpha-=0.003;
+
+        if(p.alpha<=0){
+            sparks.splice(i,1);
+        }
+
+    }
+
+    requestAnimationFrame(animateSpark);
+
+}
+
+animateSpark();
+</script>
+ <script>
+const canvas = document.getElementById("smokeCanvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+const particles = [];
+
+for(let i=0;i<60;i++){
+    particles.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:40+Math.random()*100,
+        vx:(Math.random()-0.5)*0.15,
+        vy:-0.15-Math.random()*0.25,
+        alpha:0.12+Math.random()*0.10
+    });
+}
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    particles.forEach(p=>{
+
+        const g = ctx.createRadialGradient(
+            p.x,p.y,0,
+            p.x,p.y,p.r
+        );
+
+        g.addColorStop(0,`rgba(255,255,255,${p.alpha})`);
+        g.addColorStop(1,"rgba(255,255,255,0)");
+
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+
+        p.x+=p.vx;
+        p.y+=p.vy;
+
+        if(p.y<-p.r){
+            p.y=canvas.height+p.r;
+            p.x=Math.random()*canvas.width;
+        }
+
+        if(p.x<-p.r)p.x=canvas.width+p.r;
+        if(p.x>canvas.width+p.r)p.x=-p.r;
+
+    });
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+     
+</script>
+    <script>
+const crown = document.getElementById("crown");
+        
+let gp = Number(localStorage.getItem("gp")) || 0;
+
+const gpCounter = document.getElementById("gpCounter");
+const progressFill = document.getElementById("progressFill");
+const progressText = document.getElementById("progressText");
+
+const progressPercent = document.getElementById("progressPercent");
+const licenseStatus = document.getElementById("licenseStatus");
+const claimLicenseButton = document.getElementById("claimLicenseButton");
+const buyGPButton = document.getElementById("buyGPButton");
+
+const LICENSE_COST = 100000;
+let goldLicenseClaimed =
+    localStorage.getItem("goldLicenseClaimed") === "true";
+
+function updateGP(){
+    gpCounter.textContent = gp.toLocaleString();
+
+    const percent = Math.min((gp / LICENSE_COST) * 100, 100);
+
+    progressFill.style.width = percent + "%";
+    progressText.textContent =
+        Math.min(gp, LICENSE_COST).toLocaleString() +
+        " / " +
+        LICENSE_COST.toLocaleString() +
+        " GP";
+    progressPercent.textContent = Math.floor(percent) + "%";
+
+    if(goldLicenseClaimed){
+        licenseStatus.textContent = "✅ Gold License Claimed";
+        licenseStatus.classList.add("unlocked");
+        claimLicenseButton.classList.remove("show");
+        buyGPButton.style.display = "none";
+    }
+    else if(gp >= LICENSE_COST){
+        licenseStatus.textContent = "🔓 Gold License Unlocked";
+        licenseStatus.classList.add("unlocked");
+        claimLicenseButton.classList.add("show");
+        buyGPButton.style.display = "none";
+    }
+    else{
+        licenseStatus.textContent = "🔒 Gold License Locked";
+        licenseStatus.classList.remove("unlocked");
+        claimLicenseButton.classList.remove("show");
+        buyGPButton.style.display = "block";
+    }
+}
+
+function claimLicense(){
+    if(gp < LICENSE_COST || goldLicenseClaimed){
+        return;
+    }
+
+    gp -= LICENSE_COST;
+    goldLicenseClaimed = true;
+
+    localStorage.setItem("gp", gp);
+    localStorage.setItem("goldLicenseClaimed", "true");
+
+    updateGP();
+
+    if(window.Telegram && Telegram.WebApp){
+        Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+    }
+
+    alert("👑 Gold License успешно получена!");
+}
+
+updateGP();
+
+crown.addEventListener("click", () => {
+
+    const rect = crown.getBoundingClientRect();
+
+const plus = document.createElement("div");
+
+plus.className = "plusOne";
+    
+const random = Math.random();
+
+let reward = 1;
+
+if (random < 0.65) {
+    reward = 1;
+    plus.textContent = "+1 GP";
+    plus.style.color = "#FFD700";
+}
+else if (random < 0.85) {
+    reward = 2;
+    plus.textContent = "+2 GP";
+    plus.style.color = "#FFD700";
+}
+else if (random < 0.95) {
+    reward = 3;
+    plus.textContent = "+3 GP";
+    plus.style.color = "#FFA500";
+}
+else if (random < 0.99) {
+    reward = 5;
+    plus.textContent = "⭐ +5 GP";
+    plus.style.color = "#FF8C00";
+}
+else {
+    reward = 10;
+    plus.textContent = "💎 +10 GP";
+    plus.style.color = "#00E5FF";
+}
+
+gp += reward;
+localStorage.setItem("gp", gp);
+updateGP();
+
+// Случайное появление по кругу вокруг короны
+const angle = Math.random() * Math.PI * 2;
+const distance = 30 + Math.random() * 90;
+
+const offsetX = Math.cos(angle) * distance;
+const offsetY = Math.sin(angle) * distance;
+
+plus.style.left = (rect.left + rect.width / 2 + offsetX - 42) + "px";
+plus.style.top = (rect.top + rect.height / 2 + offsetY) + "px";
+    
+    // Центрируем надпись относительно точки появления
+plus.style.transform = "translate(-50%, -50%)";
+
+document.body.appendChild(plus);
+
+setTimeout(() => plus.remove(), 900);
+
+    // Вибрация Telegram
+    if (window.Telegram && Telegram.WebApp) {
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }
+
+    // Анимация
+    crown.animate([
+        { transform: "scale(1)" },
+        { transform: "scale(0.92)" },
+        { transform: "scale(1)" }
+    ], {
+        duration: 120
+    });
+
+
+});
+</script>
+    </body>
+</html>
