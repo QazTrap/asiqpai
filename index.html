@@ -46,7 +46,7 @@ const SafeStorage = (() => {
         if(!validKey(key)) return fallback;
 
         try{
-            const value = window.SafeStorage.get(key);
+            const value = window.localStorage.getItem(key);
             if(value === null || value.length > maxValueLength) return fallback;
             return value;
         }catch{
@@ -61,7 +61,7 @@ const SafeStorage = (() => {
         if(stringValue.length > maxValueLength) return false;
 
         try{
-            window.SafeStorage.set(key, stringValue);
+            window.localStorage.setItem(key, stringValue);
             return true;
         }catch{
             return false;
@@ -1976,6 +1976,66 @@ function claimLicense(){
 
 updateGP();
 
+/**
+ * Чем ближе баланс к 100 000 GP, тем сложнее добыча.
+ * Возвращает награду за один тап: 0, 1, 2, 3, 5 или 10 GP.
+ */
+function calculateTapReward(currentGP){
+    const random = Math.random();
+
+    if(currentGP < 25000){
+        if(random < 0.65) return 1;
+        if(random < 0.85) return 2;
+        if(random < 0.95) return 3;
+        if(random < 0.99) return 5;
+        return 10;
+    }
+
+    if(currentGP < 50000){
+        if(random < 0.75) return 1;
+        if(random < 0.94) return 2;
+        if(random < 0.99) return 3;
+        return 5;
+    }
+
+    if(currentGP < 75000){
+        if(random < 0.82) return 1;
+        if(random < 0.97) return 2;
+        return 3;
+    }
+
+    if(currentGP < 90000){
+        if(random < 0.25) return 0;
+        if(random < 0.92) return 1;
+        return 2;
+    }
+
+    if(random < 0.65) return 0;
+    return 1;
+}
+
+function applyRewardAppearance(plus, reward){
+    if(reward === 0){
+        plus.textContent = "TRY AGAIN";
+        plus.style.color = "#777";
+    }else if(reward === 1){
+        plus.textContent = "+1 GP";
+        plus.style.color = "#FFD700";
+    }else if(reward === 2){
+        plus.textContent = "+2 GP";
+        plus.style.color = "#FFD700";
+    }else if(reward === 3){
+        plus.textContent = "+3 GP";
+        plus.style.color = "#FFA500";
+    }else if(reward === 5){
+        plus.textContent = "⭐ +5 GP";
+        plus.style.color = "#FF8C00";
+    }else{
+        plus.textContent = "💎 +10 GP";
+        plus.style.color = "#00E5FF";
+    }
+}
+
 crown.addEventListener("click", () => {
 
     const rect = crown.getBoundingClientRect();
@@ -1984,35 +2044,8 @@ const plus = document.createElement("div");
 
 plus.className = "plusOne";
     
-const random = Math.random();
-
-let reward = 1;
-
-if (random < 0.65) {
-    reward = 1;
-    plus.textContent = "+1 GP";
-    plus.style.color = "#FFD700";
-}
-else if (random < 0.85) {
-    reward = 2;
-    plus.textContent = "+2 GP";
-    plus.style.color = "#FFD700";
-}
-else if (random < 0.95) {
-    reward = 3;
-    plus.textContent = "+3 GP";
-    plus.style.color = "#FFA500";
-}
-else if (random < 0.99) {
-    reward = 5;
-    plus.textContent = "⭐ +5 GP";
-    plus.style.color = "#FF8C00";
-}
-else {
-    reward = 10;
-    plus.textContent = "💎 +10 GP";
-    plus.style.color = "#00E5FF";
-}
+const reward = calculateTapReward(gp);
+applyRewardAppearance(plus, reward);
 
 gp += reward;
 SafeStorage.set("gp", gp);
