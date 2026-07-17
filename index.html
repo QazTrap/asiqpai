@@ -345,6 +345,55 @@ audio{
     pointer-events:none;
     z-index:-1;
 }
+    <style>
+
+body{
+    background:#060505;
+    color:white;
+    ...
+}
+
+.logo{
+    ...
+}
+
+.title{
+    ...
+}
+
+/* СЮДА МОЖНО ВСТАВИТЬ */
+
+#gpPanel{
+    position:fixed;
+    top:25px;
+    left:25px;
+
+    background:rgba(20,20,20,.75);
+    border:1px solid rgba(212,175,55,.35);
+    border-radius:16px;
+
+    padding:14px 18px;
+
+    backdrop-filter:blur(8px);
+
+    z-index:9999;
+}
+
+.gpTitle{
+    color:#FFD700;
+    font-size:14px;
+    letter-spacing:1px;
+    opacity:.8;
+}
+
+#gpCounter{
+    color:#FFD700;
+    font-size:34px;
+    font-weight:900;
+    text-shadow:0 0 15px rgba(255,215,0,.6);
+    margin-top:4px;
+}
+
 </style>
 
 </head>
@@ -352,6 +401,12 @@ audio{
     
 <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
 <body>
+
+    <div id="gpPanel">
+    <div class="gpTitle">⭐ Gold Points</div>
+    <div id="gpCounter">0</div>
+</div>  
+    
 <canvas id="smokeCanvas"></canvas>
     <canvas id="sparkCanvas"></canvas>
 <div id="ton-connect"></div>
