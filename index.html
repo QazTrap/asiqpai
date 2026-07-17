@@ -1050,7 +1050,7 @@ Music Artist • Producer • Beatmaker
     <span>NOW PLAYING</span>
 </div>
                                      
-<audio id="player"></audio>
+<audio id="player" preload="metadata"></audio>
 
 
 <div class="player" id="musicPlayer">
@@ -1285,14 +1285,62 @@ function updatePlayModeButton(){
     }
 }
 
+function waitForAudioReady(timeout = 8000){
+    return new Promise((resolve, reject) => {
+        if(player.readyState >= 2){
+            resolve();
+            return;
+        }
+
+        let finished = false;
+
+        const cleanup = () => {
+            player.removeEventListener("canplay", onReady);
+            player.removeEventListener("loadeddata", onReady);
+            player.removeEventListener("error", onError);
+            clearTimeout(timer);
+        };
+
+        const onReady = () => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            resolve();
+        };
+
+        const onError = () => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error("Аудиофайл не загрузился"));
+        };
+
+        const timer = setTimeout(() => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error("Истекло время ожидания аудио"));
+        }, timeout);
+
+        player.addEventListener("canplay", onReady, { once:true });
+        player.addEventListener("loadeddata", onReady, { once:true });
+        player.addEventListener("error", onError, { once:true });
+    });
+}
+
 async function playLoadedTrack(){
     try{
+        await waitForAudioReady();
         await player.play();
+
         playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
         musicPlayer.classList.add("playing");
     }catch(error){
+        console.warn("Ошибка воспроизведения:", error, player.currentSrc);
+
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
+        showToast("Не удалось воспроизвести трек. Проверь путь к MP3", "warning");
     }
 }
 
@@ -1313,7 +1361,8 @@ async function loadTrack(index, options = {}){
     saveCurrentTrack();
     updatePlayerAccent(track);
 
-    player.src = track.file;
+    const safeAudioPath = encodeURI(track.file).replace(/#/g, "%23");
+    player.src = safeAudioPath;
     player.load();
 
     trackName.textContent = track.title;
@@ -1351,13 +1400,7 @@ playButton.onclick = async function(){
     }
 
     if(player.paused){
-        try{
-            await player.play();
-            playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
-            musicPlayer.classList.add("playing");
-        }catch(error){
-            showToast("Не удалось запустить аудио", "warning");
-        }
+        await playLoadedTrack();
     }else{
         player.pause();
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
@@ -1463,6 +1506,16 @@ player.addEventListener("ended", async function(){
 // =======================
 // ПРОГРЕСС
 // =======================
+
+player.addEventListener("error", function(){
+    const track = playlist[currentTrack];
+    console.warn("Ошибка загрузки MP3:", {
+        track: track?.title,
+        file: track?.file,
+        currentSrc: player.currentSrc,
+        mediaError: player.error?.code
+    });
+});
 
 player.addEventListener("loadedmetadata", function(){
     duration.textContent = formatTime(player.duration);
