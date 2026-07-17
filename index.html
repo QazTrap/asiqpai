@@ -25,11 +25,46 @@ body{
     background:#000;
     overflow-x:hidden;
 }
-    .graffiti{
-    font-family:'Rubik Glitch', cursive;
-    font-size:42px;
+    .section-divider{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+
+    margin:35px auto 25px;
+
     color:#d4af37;
-    margin:25px 0;
+
+    font-size:14px;
+    font-weight:700;
+
+    letter-spacing:4px;
+
+    text-transform:uppercase;
+}
+
+.section-divider::before,
+.section-divider::after{
+
+    content:"";
+
+    flex:1;
+
+    max-width:120px;
+
+    height:1px;
+
+    background:linear-gradient(
+        to right,
+        transparent,
+        rgba(212,175,55,.8),
+        transparent
+    );
+}
+
+.section-divider span{
+    text-shadow:0 0 8px rgba(212,175,55,.5);
+}
 }
     .beat-card{
     width:100%;
@@ -47,7 +82,7 @@ body{
 
     box-shadow:0 0 20px rgba(212,175,55,.18);
         
-    min-height:180px;
+    min-height:240px;
         
     transition:.3s;
 }
@@ -444,17 +479,19 @@ body{
 Music Artist • Producer • Beatmaker
 </p>
 
-<a class="button" href="https://t.me/asiqpai">Telegram</a>
+<a class="button" href="https://web.telegram.org/a/#-1003866024866">Telegram Community</a>
 
-<a class="button" href="https://youtube.com/@asiqpai">YouTube</a>
+<a class="button" href="https://youtube.com/@asiqpai">YouTube Community</a>
 
-<a class="button" href="https://www.tiktok.com/@asiqpai">TikTok</a>
+<a class="button" href="https://www.tiktok.com/@asiqpai">TikTok Community</a>
 
-<a class="button" href="https://www.instagram.com/asiqpai">Instagram</a>
+<a class="button" href="https://www.instagram.com/asiqpai">Instagram Community</a>
 
 <a class="button" href="https://open.spotify.com/">Spotify</a>
 
-<h2 class="graffiti">TRAP RELEASE</h2>
+<div class="section-divider">
+    <span>NOW PLAYING</span>
+</div>
                                      
 <audio id="player"></audio>
 
