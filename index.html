@@ -540,19 +540,18 @@ audio{
 
 #gpPanel{
     position:fixed;
-    top: max(27px, env(safe-area-inset-top));
+    top:max(12px, env(safe-area-inset-top));
     left:max(12px, env(safe-area-inset-left));
-
-    background:rgba(20,20,20,.45);
-    border:1px solid rgba(212,175,55,.25);
-    border-radius:10px;
-
-    padding:5px 8px;
-
-    backdrop-filter:blur(6px);
-
-    z-index:9999;
+    background:rgba(15,15,15,.72);
+    border:1px solid rgba(212,175,55,.34);
+    border-radius:12px;
+    padding:7px 10px;
+    -webkit-backdrop-filter:blur(12px);
+    backdrop-filter:blur(12px);
+    box-shadow:0 8px 24px rgba(0,0,0,.34),0 0 18px rgba(212,175,55,.10);
+    z-index:100000;
     pointer-events:none;
+    transform:translateZ(0);
 } 
     
 
@@ -776,6 +775,45 @@ audio{
     }
 }
 
+
+.player{position:relative;}
+
+.play-mode-button{
+    position:absolute;
+    left:18px;
+    bottom:28px;
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border:none;
+    border-radius:50%;
+    background:transparent;
+    color:#8d8d8d;
+    font-size:20px;
+    cursor:pointer;
+    transition:.2s ease;
+}
+.play-mode-button:hover{
+    background:rgba(216,176,92,.08);
+    color:#d8b05c;
+    transform:scale(1.06);
+}
+.play-mode-button.active{
+    color:#e2ba66;
+    text-shadow:0 0 14px rgba(226,186,102,.45);
+}
+.play-mode-button.mode-flash{
+    animation:modeFlash .28s ease;
+}
+@keyframes modeFlash{
+    0%{transform:scale(.86);opacity:.55;}
+    100%{transform:scale(1);opacity:1;}
+}
+@media (max-width:390px){
+    .play-mode-button{left:14px;bottom:25px;}
+}
+
 </style>
 
 </head>
@@ -849,6 +887,12 @@ Music Artist • Producer • Beatmaker
         <span id="duration">0:00</span>
     </div>
 
+
+    <button id="playModeButton" class="play-mode-button" type="button"
+            aria-label="Режим воспроизведения: по порядку" title="По порядку">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+    </button>
+
     <div class="controls">
         <button id="prevButton" type="button" aria-label="Предыдущий трек">
             <i class="fa-solid fa-backward-step"></i>
@@ -919,7 +963,9 @@ const playlist = [
     }
 ];
 
-let currentTrack = 0;
+let currentTrack = Number(localStorage.getItem("currentTrack")) || 0;
+if(currentTrack < 0 || currentTrack >= playlist.length){ currentTrack = 0; }
+let playMode = localStorage.getItem("playMode") || "sequence";
 
 // =======================
 // TON CONNECT
@@ -953,6 +999,7 @@ const trackMeta = document.getElementById("trackMeta");
 const trackCover = document.getElementById("trackCover");
 const musicPlayer = document.getElementById("musicPlayer");
 const likeButton = document.getElementById("likeButton");
+const playModeButton = document.getElementById("playModeButton");
 
 const progress = document.getElementById("progress");
 const currentTime = document.getElementById("currentTime");
@@ -960,15 +1007,65 @@ const duration = document.getElementById("duration");
 
 // =======================
 
+function saveCurrentTrack(){
+    localStorage.setItem("currentTrack", String(currentTrack));
+}
+
+function updatePlayModeButton(){
+    const icon = playModeButton.querySelector("i");
+    playModeButton.classList.remove("active");
+
+    if(playMode === "repeat"){
+        icon.className = "fa-solid fa-repeat";
+        playModeButton.classList.add("active");
+        playModeButton.title = "Повтор текущего трека";
+        playModeButton.setAttribute("aria-label","Режим воспроизведения: повтор");
+    }else if(playMode === "shuffle"){
+        icon.className = "fa-solid fa-shuffle";
+        playModeButton.classList.add("active");
+        playModeButton.title = "Случайный порядок";
+        playModeButton.setAttribute("aria-label","Режим воспроизведения: случайный порядок");
+    }else{
+        icon.className = "fa-solid fa-arrow-right-arrow-left";
+        playModeButton.title = "По порядку";
+        playModeButton.setAttribute("aria-label","Режим воспроизведения: по порядку");
+    }
+}
+
+function playLoadedTrack(){
+    player.play();
+    playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+    musicPlayer.classList.add("playing");
+}
+
+function getRandomTrackIndex(){
+    if(playlist.length <= 1) return currentTrack;
+    let randomIndex;
+    do{
+        randomIndex = Math.floor(Math.random() * playlist.length);
+    }while(randomIndex === currentTrack);
+    return randomIndex;
+}
+
 function loadTrack(index){
 
     const track = playlist[index];
+    saveCurrentTrack();
+    trackCover.style.opacity = "0.35";
 
     player.src = track.file;
     trackName.textContent = track.title;
     trackMeta.textContent = `${track.artist} • ${track.meta}`;
     trackCover.src = track.cover;
     trackCover.alt = `Обложка ${track.title}`;
+    requestAnimationFrame(() => { trackCover.style.opacity = "1"; });
+
+    const likedTracks = JSON.parse(localStorage.getItem("likedTracks") || "{}");
+    const isLiked = Boolean(likedTracks[track.file]);
+    likeButton.classList.toggle("active", isLiked);
+    likeButton.querySelector("i").className = isLiked
+        ? "fa-solid fa-heart"
+        : "fa-regular fa-heart";
 
 }
 
@@ -1003,23 +1100,12 @@ playButton.onclick = function(){
 // =======================
 
 document.getElementById("nextButton").onclick = function(){
-
-    currentTrack++;
-
-    if(currentTrack >= playlist.length){
-
-        currentTrack = 0;
-
-    }
+    currentTrack = playMode === "shuffle"
+        ? getRandomTrackIndex()
+        : (currentTrack + 1) % playlist.length;
 
     loadTrack(currentTrack);
-
-    player.play();
-
-    playButton.innerHTML =
-    '<i class="fa-solid fa-pause"></i>';
-    musicPlayer.classList.add("playing");
-
+    playLoadedTrack();
 };
 
 // =======================
@@ -1027,41 +1113,64 @@ document.getElementById("nextButton").onclick = function(){
 // =======================
 
 document.getElementById("prevButton").onclick = function(){
-
-    currentTrack--;
-
-    if(currentTrack < 0){
-
-        currentTrack = playlist.length - 1;
-
+    if(playMode === "shuffle"){
+        currentTrack = getRandomTrackIndex();
+    }else{
+        currentTrack--;
+        if(currentTrack < 0) currentTrack = playlist.length - 1;
     }
 
     loadTrack(currentTrack);
-
-    player.play();
-
-    playButton.innerHTML =
-    '<i class="fa-solid fa-pause"></i>';
-    musicPlayer.classList.add("playing");
-
+    playLoadedTrack();
 };
 
 likeButton.addEventListener("click", function(){
     likeButton.classList.toggle("active");
-
-    const icon = likeButton.querySelector("i");
-    icon.className = likeButton.classList.contains("active")
+    const isLiked = likeButton.classList.contains("active");
+    likeButton.querySelector("i").className = isLiked
         ? "fa-solid fa-heart"
         : "fa-regular fa-heart";
 
-    if (window.Telegram?.WebApp?.HapticFeedback) {
+    const likedTracks = JSON.parse(localStorage.getItem("likedTracks") || "{}");
+    likedTracks[playlist[currentTrack].file] = isLiked;
+    localStorage.setItem("likedTracks", JSON.stringify(likedTracks));
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }
+});
+
+
+playModeButton.addEventListener("click", function(){
+    if(playMode === "sequence") playMode = "repeat";
+    else if(playMode === "repeat") playMode = "shuffle";
+    else playMode = "sequence";
+
+    localStorage.setItem("playMode", playMode);
+    updatePlayModeButton();
+
+    playModeButton.classList.remove("mode-flash");
+    void playModeButton.offsetWidth;
+    playModeButton.classList.add("mode-flash");
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
         Telegram.WebApp.HapticFeedback.impactOccurred("light");
     }
 });
 
 player.addEventListener("ended", function(){
-    musicPlayer.classList.remove("playing");
-    playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+    if(playMode === "repeat"){
+        player.currentTime = 0;
+        playLoadedTrack();
+        return;
+    }
+
+    currentTrack = playMode === "shuffle"
+        ? getRandomTrackIndex()
+        : (currentTrack + 1) % playlist.length;
+
+    loadTrack(currentTrack);
+    playLoadedTrack();
 });
 
 // =======================
@@ -1118,6 +1227,7 @@ function formatTime(seconds){
 // ЗАГРУЗКА ПЕРВОГО ТРЕКА
 // =======================
 
+updatePlayModeButton();
 loadTrack(currentTrack);
 </script>
     <script>
