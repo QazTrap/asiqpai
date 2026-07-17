@@ -1531,19 +1531,12 @@ player.addEventListener("timeupdate", function(){
         currentTime.textContent =
         formatTime(player.currentTime);
 
-        const now = Date.now();
-        if(now - lastPositionSave > 2000){
-                lastPositionSave = now;
-        }
-
     }
 
 });
 
 
-player.addEventListener("pause", savePlaybackPosition);
 
-window.addEventListener("pagehide", savePlaybackPosition);
 document.addEventListener("visibilitychange", function(){
     if(document.visibilityState === "hidden"){
     }
