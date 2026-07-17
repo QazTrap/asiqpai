@@ -611,12 +611,8 @@ audio{
     height:100%;
     display:block;
     object-fit:cover;
-    transition:opacity .25s ease, transform .45s ease;
 }
 
-.player.playing .player-cover{
-    transform:scale(1.018);
-}
 
 .cover-shade{
     position:absolute;
@@ -904,104 +900,6 @@ audio{
     transition:background .6s ease, opacity .35s ease;
 }
 
-.player-cover{
-    opacity:1;
-    transform:scale(1);
-    will-change:opacity,transform,filter;
-}
-
-.player-cover.cover-leave{
-    opacity:0;
-    transform:scale(.965);
-    filter:blur(4px);
-}
-
-.player-cover.cover-enter{
-    animation:coverEnter .62s cubic-bezier(.22,.8,.25,1);
-}
-
-@keyframes coverEnter{
-    0%{
-        opacity:0;
-        transform:scale(1.045);
-        filter:blur(5px);
-    }
-    100%{
-        opacity:1;
-        transform:scale(1);
-        filter:blur(0);
-    }
-}
-
-.track-copy{
-    will-change:opacity,transform,filter;
-}
-
-.track-copy.track-leave{
-    opacity:0;
-    transform:translateY(8px);
-    filter:blur(3px);
-}
-
-.track-copy.track-enter{
-    animation:trackInfoEnter .48s cubic-bezier(.22,.8,.25,1);
-}
-
-@keyframes trackInfoEnter{
-    0%{
-        opacity:0;
-        transform:translateY(-7px);
-        filter:blur(3px);
-    }
-    100%{
-        opacity:1;
-        transform:translateY(0);
-        filter:blur(0);
-    }
-}
-
-/* Золотой эквалайзер */
-.equalizer{
-    display:flex;
-    align-items:flex-end;
-    justify-content:center;
-    gap:4px;
-    height:20px;
-    margin:11px auto 0;
-    opacity:.35;
-    transition:opacity .25s ease;
-}
-
-.equalizer span{
-    width:3px;
-    height:5px;
-    border-radius:999px;
-    background:linear-gradient(to top,#8b6508,#ffe784);
-    box-shadow:0 0 7px rgba(255,215,0,.28);
-    transform-origin:bottom;
-    animation:eqBounce .72s ease-in-out infinite alternate;
-    animation-play-state:paused;
-}
-
-.equalizer span:nth-child(2){animation-duration:.54s;animation-delay:-.18s;}
-.equalizer span:nth-child(3){animation-duration:.88s;animation-delay:-.35s;}
-.equalizer span:nth-child(4){animation-duration:.61s;animation-delay:-.12s;}
-.equalizer span:nth-child(5){animation-duration:.78s;animation-delay:-.44s;}
-.equalizer span:nth-child(6){animation-duration:.49s;animation-delay:-.27s;}
-.equalizer span:nth-child(7){animation-duration:.83s;animation-delay:-.08s;}
-
-.player.playing .equalizer{
-    opacity:1;
-}
-
-.player.playing .equalizer span{
-    animation-play-state:running;
-}
-
-@keyframes eqBounce{
-    from{height:4px;transform:scaleY(.75);}
-    to{height:19px;transform:scaleY(1);}
-}
 
 #progress{
     transition:filter .2s ease;
@@ -1083,9 +981,6 @@ audio{
 }
 
 @media (prefers-reduced-motion:reduce){
-    .player-cover,
-    .track-copy,
-    .equalizer span,
     .app-toast{
         animation:none !important;
         transition:none !important;
@@ -1181,13 +1076,7 @@ Music Artist • Producer • Beatmaker
             <i class="fa-regular fa-heart"></i>
         </button>
     </div>
-
-    <div class="equalizer" id="equalizer" aria-hidden="true">
-        <span></span><span></span><span></span><span></span>
-        <span></span><span></span><span></span>
-    </div>
-
-    <div class="progress-container">
+<div class="progress-container">
         <span id="currentTime">0:00</span>
         <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
         <span id="duration">0:00</span>
@@ -1324,12 +1213,9 @@ const musicPlayer = document.getElementById("musicPlayer");
 const likeButton = document.getElementById("likeButton");
 const playModeButton = document.getElementById("playModeButton");
 
-const trackCopy = document.querySelector(".track-copy");
 const toastContainer = document.getElementById("toastContainer");
 
-let pendingRestoreTime = 0;
 let trackChangeToken = 0;
-let lastPositionSave = 0;
 
 function showToast(message, type = ""){
     if(!toastContainer) return;
@@ -1347,48 +1233,9 @@ function showToast(message, type = ""){
     window.setTimeout(() => toast.remove(), 2500);
 }
 
-function getTrackPositions(){
-    try{
-        return JSON.parse(localStorage.getItem("trackPositions") || "{}");
-    }catch(error){
-        return {};
-    }
-}
-
-function savePlaybackPosition(){
-    const track = playlist[currentTrack];
-    if(!track || !Number.isFinite(player.currentTime)) return;
-
-    const positions = getTrackPositions();
-    positions[track.file] = Math.max(0, player.currentTime);
-    localStorage.setItem("trackPositions", JSON.stringify(positions));
-}
-
-function restorePlaybackPosition(track){
-    const positions = getTrackPositions();
-    const savedTime = Number(positions[track.file]) || 0;
-    pendingRestoreTime = savedTime;
-}
-
 function updatePlayerAccent(track){
     const rgb = track.accent || "212,175,55";
     document.documentElement.style.setProperty("--player-accent-rgb", rgb);
-}
-
-function animateTrackText(){
-    if(!trackCopy) return;
-    trackCopy.classList.remove("track-leave", "track-enter");
-    void trackCopy.offsetWidth;
-    trackCopy.classList.add("track-enter");
-}
-
-function preloadCover(src){
-    return new Promise(resolve => {
-        const image = new Image();
-        image.onload = () => resolve(true);
-        image.onerror = () => resolve(false);
-        image.src = src;
-    });
 }
 
 
@@ -1463,28 +1310,8 @@ async function loadTrack(index, options = {}){
     const track = playlist[index];
     if(!track) return;
 
-    const token = ++trackChangeToken;
-    const shouldNotify = options.notify !== false;
-
-    savePlaybackPosition();
     saveCurrentTrack();
-    restorePlaybackPosition(track);
     updatePlayerAccent(track);
-
-    trackCover.classList.remove("cover-enter");
-    trackCover.classList.add("cover-leave");
-
-    if(trackCopy){
-        trackCopy.classList.remove("track-enter");
-        trackCopy.classList.add("track-leave");
-    }
-
-    await Promise.all([
-        preloadCover(track.cover),
-        new Promise(resolve => setTimeout(resolve, 190))
-    ]);
-
-    if(token !== trackChangeToken) return;
 
     player.src = track.file;
     player.load();
@@ -1494,17 +1321,9 @@ async function loadTrack(index, options = {}){
     trackCover.src = track.cover;
     trackCover.alt = `Обложка ${track.title}`;
 
-    trackCover.classList.remove("cover-leave");
-    void trackCover.offsetWidth;
-    trackCover.classList.add("cover-enter");
-
-    if(trackCopy){
-        trackCopy.classList.remove("track-leave");
-        animateTrackText();
-    }
-
     const likedTracks = JSON.parse(localStorage.getItem("likedTracks") || "{}");
     const isLiked = Boolean(likedTracks[track.file]);
+
     likeButton.classList.toggle("active", isLiked);
     likeButton.querySelector("i").className = isLiked
         ? "fa-solid fa-heart"
@@ -1514,7 +1333,7 @@ async function loadTrack(index, options = {}){
     currentTime.textContent = "0:00";
     duration.textContent = "0:00";
 
-    if(shouldNotify){
+    if(options.notify !== false){
         showToast(`🎵 Сейчас играет «${track.title}»`);
     }
 }
@@ -1543,7 +1362,6 @@ playButton.onclick = async function(){
         player.pause();
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
-        savePlaybackPosition();
     }
 };
 
@@ -1647,21 +1465,7 @@ player.addEventListener("ended", async function(){
 // =======================
 
 player.addEventListener("loadedmetadata", function(){
-
     duration.textContent = formatTime(player.duration);
-
-    if(
-        pendingRestoreTime > 0 &&
-        Number.isFinite(player.duration)
-    ){
-        player.currentTime = Math.min(
-            pendingRestoreTime,
-            Math.max(0, player.duration - 1)
-        );
-        currentTime.textContent = formatTime(player.currentTime);
-    }
-
-    pendingRestoreTime = 0;
 });
 
 player.addEventListener("timeupdate", function(){
@@ -1676,8 +1480,7 @@ player.addEventListener("timeupdate", function(){
 
         const now = Date.now();
         if(now - lastPositionSave > 2000){
-            savePlaybackPosition();
-            lastPositionSave = now;
+                lastPositionSave = now;
         }
 
     }
@@ -1690,7 +1493,6 @@ player.addEventListener("pause", savePlaybackPosition);
 window.addEventListener("pagehide", savePlaybackPosition);
 document.addEventListener("visibilitychange", function(){
     if(document.visibilityState === "hidden"){
-        savePlaybackPosition();
     }
 });
 
