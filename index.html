@@ -32,16 +32,27 @@ body{
     margin:25px 0;
 }
     .beat-card{
-    width:320px;
-    max-width:90%;
+    width:100%;
+    max-width:340px;
+
     margin:30px auto;
-    padding:20px;
+
+    padding:18px;
+
+    box-sizing:border-box;
+
     background:#1b1b1b;
-    border-radius:16px;
-    box-shadow:none;
+
+    border-radius:18px;
+
+    box-shadow:0 0 20px rgba(212,175,55,.18);
+
     transition:.3s;
-    position:relative;
-    right:6px;
+}
+
+    .beat-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 0 28px rgba(212,175,55,.28);
 }
 
 .beat-card:hover{
