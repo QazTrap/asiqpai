@@ -329,7 +329,7 @@ audio{
 <canvas id="smokeCanvas"></canvas>
     <canvas id="sparkCanvas"></canvas>
 <div id="ton-connect"></div>
-<img src="images/crow.png" class="logo" alt="ASIQPAI Logo">
+<img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo">
 <h1 class="title">ASIQPAI</h1>
     
 
@@ -721,6 +721,27 @@ function draw(){
 
 draw();
      
+</script>
+    <script>
+const crown = document.getElementById("crown");
+
+crown.addEventListener("click", () => {
+
+    // Вибрация
+    if (navigator.vibrate) {
+        navigator.vibrate(30);
+    }
+
+    // Эффект нажатия
+    crown.animate([
+        { transform: "scale(1)" },
+        { transform: "scale(0.92)" },
+        { transform: "scale(1)" }
+    ], {
+        duration: 120
+    });
+
+});
 </script>
     </body>
 </html>
