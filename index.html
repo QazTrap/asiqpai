@@ -781,9 +781,12 @@ else {
     plus.style.color = "#00E5FF";
 }
 
-// Случайное смещение вокруг короны
-const offsetX = (Math.random() - 0.5) * 140; // от -70 до +70 px
-const offsetY = (Math.random() - 0.5) * 120; // от -60 до +60 px
+// Случайное появление по кругу вокруг короны
+const angle = Math.random() * Math.PI * 2;
+const distance = 30 + Math.random() * 90;
+
+const offsetX = Math.cos(angle) * distance;
+const offsetY = Math.sin(angle) * distance;
 
 plus.style.left = (rect.left + rect.width / 2 + offsetX) + "px";
 plus.style.top = (rect.top + rect.height / 2 + offsetY) + "px";
