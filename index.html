@@ -1270,44 +1270,25 @@ Music Artist • Producer • Beatmaker
     <span>LICENSE CENTER</span>
 </div>
 
-<div class="license-card">
-
-    <div class="license-icon">👑</div>
-
-    <h2 class="license-title">Gold License</h2>
-
-    <p class="license-description">
-        Earn <strong>100 000 GP</strong> to unlock your first music license.
-    </p>
-
-    <div class="license-progress-label">
-        <span>Progress</span>
-        <span id="progressPercent">0%</span>
-    </div>
-
-    <div class="license-card">
-
+<div class="license-card" id="licenseCard">
     <div class="license-icon">🎹</div>
 
-    <h2 class="license-title">Dominant</h2>
+    <h2 class="license-title" id="licenseTitle">Dominant</h2>
 
-    <button class="buy-button" onclick="buyLicense('mp3')">
-        MP3 
-        <span>100 000⭐ ≈ 10 GARM</span>
+    <button class="buy-button" type="button" onclick="buyLicense('mp3')">
+        MP3
+        <span>⭐ — 10 GRAM</span>
     </button>
 
-    <button class="buy-button" onclick="buyLicense('wav')">
-        WAV 
-        <span>200 000⭐ ≈ 20 GARM</span>
+    <button class="buy-button" type="button" onclick="buyLicense('wav')">
+        WAV
+        <span>⭐ — 20 GRAM</span>
     </button>
 
-    <button class="buy-button" onclick="buyLicense('full')">
-        FULL 
-        <span>400 000⭐ ≈ 40 GARM</span>
+    <button class="buy-button" type="button" onclick="buyLicense('full')">
+        FULL
+        <span>⭐ — 40 GRAM</span>
     </button>
-
-</div>
-
 </div>
 
 <p><b>Web3</b></p>
@@ -1457,82 +1438,6 @@ async function waitForOrderPayment(orderId){
     throw new Error("Платёж ещё не найден. Баланс можно обновить позже");
 }
 
-let paymentInProgress = false;
-
-async function buyGP(){
-    if(paymentInProgress) return;
-
-    if(!getTelegramInitData()){
-        showToast("Открой приложение внутри Telegram для покупки GP", "warning");
-        return;
-    }
-
-    if(!tonConnectUI.account?.address){
-        showToast("Сначала подключи TON-кошелёк", "warning");
-        try{
-            await tonConnectUI.openModal();
-        }catch{}
-        return;
-    }
-
-    paymentInProgress = true;
-    buyGPButton.disabled = true;
-    buyGPButton.textContent = "Создание заказа…";
-
-    try{
-        const order = await apiRequest("/api/orders", {
-            method: "POST",
-            body: JSON.stringify({
-                walletAddress: tonConnectUI.account.address
-            })
-        });
-
-        buyGPButton.textContent = "Подтверди оплату в кошельке…";
-
-        await tonConnectUI.sendTransaction({
-            validUntil: Math.floor(Date.now() / 1000) + 600,
-            messages: [{
-                address: order.address,
-                amount: String(order.amount),
-                payload: order.payload
-            }]
-        });
-
-        showToast("⏳ Платёж отправлен. Проверяем блокчейн…");
-        buyGPButton.textContent = "Проверяем оплату…";
-
-        const paidOrder = await waitForOrderPayment(order.orderId);
-        const serverTotal = Number(paidOrder.gpTotal);
-
-        if(Number.isFinite(serverTotal) && serverTotal >= 0){
-            gp = Math.max(gp, serverTotal);
-        }else{
-            gp += Number(paidOrder.gpReward || 0);
-        }
-
-        SafeStorage.set("gp", String(gp));
-        updateGP();
-
-        window.Telegram?.WebApp?.HapticFeedback
-            ?.notificationOccurred("success");
-
-        showToast(`💎 Начислено ${Number(paidOrder.gpReward).toLocaleString()} GP`, "success");
-    }catch(error){
-        console.error(error);
-        const message = error?.message || "Не удалось выполнить покупку";
-
-        if(/reject|cancel/i.test(message)){
-            showToast("Оплата отменена", "warning");
-        }else{
-            showToast(message, "warning");
-        }
-    }finally{
-        paymentInProgress = false;
-        buyGPButton.disabled = false;
-        buyGPButton.textContent = "💎 Купить 100 000 GP — 10 TON";
-    }
-}
-
 // =======================
 // ПЛЕЕР
 // =======================
@@ -1545,6 +1450,8 @@ const trackCover = document.getElementById("trackCover");
 const musicPlayer = document.getElementById("musicPlayer");
 const likeButton = document.getElementById("likeButton");
 const playModeButton = document.getElementById("playModeButton");
+const licenseCard = document.getElementById("licenseCard");
+const licenseTitle = document.getElementById("licenseTitle");
 
 const toastContainer = document.getElementById("toastContainer");
 
@@ -1569,6 +1476,17 @@ function showToast(message, type = ""){
 function updatePlayerAccent(track){
     const rgb = track.accent || "212,175,55";
     document.documentElement.style.setProperty("--player-accent-rgb", rgb);
+}
+
+function updateLicenseCard(track){
+    if(!licenseCard || !licenseTitle) return;
+
+    if(track.meta === "INSTRUMENTAL"){
+        licenseCard.style.display = "block";
+        licenseTitle.textContent = track.title;
+    }else{
+        licenseCard.style.display = "none";
+    }
 }
 
 
@@ -1702,6 +1620,8 @@ async function loadTrack(index, options = {}){
     trackMeta.textContent = `${track.artist} • ${track.meta}`;
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
+
+    updateLicenseCard(track);
 
     const likedTracks = SafeStorage.getJSON("likedTracks", {});
     const isLiked = Boolean(likedTracks[track.file]);
@@ -2082,58 +2002,39 @@ const crown = document.getElementById("crown");
 let gp = Number(SafeStorage.get("gp")) || 0;
 
 const gpCounter = document.getElementById("gpCounter");
-const progressFill = document.getElementById("progressFill");
-const progressText = document.getElementById("progressText");
+async function buyLicense(type){
+    const licenses = {
+        mp3: { name: "MP3", price: 10 },
+        wav: { name: "WAV", price: 20 },
+        full: { name: "FULL", price: 40 }
+    };
 
-const progressPercent = document.getElementById("progressPercent");
-const licenseStatus = document.getElementById("licenseStatus");
-const claimLicenseButton = document.getElementById("claimLicenseButton");
-const buyGPButton = document.getElementById("buyGPButton");
+    const license = licenses[type];
+    const track = playlist[currentTrack];
 
-const LICENSE_COST = 100000;
-let goldLicenseClaimed =
-    SafeStorage.get("goldLicenseClaimed") === "true";
-
-function updateGP(){
-    gpCounter.textContent = gp.toLocaleString();
-}
-function claimLicense(){
-    if(gp < LICENSE_COST || goldLicenseClaimed){
+    if(!license){
+        showToast("Неизвестный тип лицензии", "warning");
         return;
     }
 
-    gp -= LICENSE_COST;
-    goldLicenseClaimed = true;
-
-    SafeStorage.set("gp", gp);
-    SafeStorage.set("goldLicenseClaimed", "true");
-
-    updateGP();
-
-    if(window.Telegram && Telegram.WebApp){
-        Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+    if(!track || track.meta !== "INSTRUMENTAL"){
+        showToast("Для этого трека лицензия недоступна", "warning");
+        return;
     }
 
-    showToast("⭐ Gold License активирована", "success");
-}
-    function buyLicense(type){
+    const confirmed = window.confirm(
+        `Купить ${license.name} License на бит «${track.title}» за ${license.price} GRAM?`
+    );
 
-    switch(type){
+    if(!confirmed) return;
 
-        case "mp3":
-            alert("Покупка MP3 License");
-            break;
+    window.Telegram?.WebApp?.HapticFeedback
+        ?.impactOccurred("light");
 
-        case "wav":
-            alert("Покупка WAV License");
-            break;
-
-        case "full":
-            alert("Покупка FULL License");
-            break;
-
-    }
-
+    showToast(
+        `Оплата ${license.price} GRAM будет подключена следующим шагом`,
+        "success"
+    );
 }
 
 updateGP();
