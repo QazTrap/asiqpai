@@ -1,0 +1,25 @@
+{
+  "name": "ASIQ",
+  "symbol": "ASIQ",
+  "description": "ASIQ is the native ecosystem token of the ASIQPAI platform. It powers rewards, digital music, creator tools and future ecosystem features inside Telegram.",
+  "image": "https://qaztrap.github.io/asiqpai/images/asiq-token.png",
+  "decimals": 9,
+  "attributes": [
+    {
+      "trait_type": "Blockchain",
+      "value": "TON"
+    },
+    {
+      "trait_type": "Total Supply",
+      "value": "1000000"
+    },
+    {
+      "trait_type": "Mintable",
+      "value": "No"
+    }
+  ],
+  "social": {
+    "website": "https://qaztrap.github.io/asiqpai/",
+    "telegram": "https://t.me/asiqpai_bot"
+  }
+}
