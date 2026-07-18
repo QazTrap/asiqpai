@@ -1170,6 +1170,154 @@ body{
     color:white;
 }
 
+
+
+/* ===== ASIQ JETTON BALANCE ===== */
+.asiq-wallet-card{
+    width:min(92vw,390px);
+    margin:0 auto 30px;
+    padding:18px;
+    box-sizing:border-box;
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(212,175,55,.32);
+    border-radius:20px;
+    background:
+        radial-gradient(circle at 85% 15%,rgba(255,215,0,.13),transparent 34%),
+        linear-gradient(145deg,rgba(26,26,26,.98),rgba(7,7,7,.98));
+    box-shadow:
+        0 18px 42px rgba(0,0,0,.42),
+        0 0 22px rgba(212,175,55,.10),
+        inset 0 1px 0 rgba(255,255,255,.04);
+    text-align:left;
+}
+
+.asiq-wallet-card::after{
+    content:"ASIQ";
+    position:absolute;
+    right:-7px;
+    bottom:-18px;
+    color:rgba(212,175,55,.055);
+    font-size:70px;
+    font-weight:900;
+    letter-spacing:3px;
+    pointer-events:none;
+}
+
+.asiq-wallet-head{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.asiq-wallet-label{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    color:#d4af37;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:1.8px;
+    text-transform:uppercase;
+}
+
+.asiq-wallet-dot{
+    width:8px;
+    height:8px;
+    flex:0 0 auto;
+    border-radius:50%;
+    background:#777;
+    box-shadow:none;
+    transition:.25s ease;
+}
+
+.asiq-wallet-card.connected .asiq-wallet-dot{
+    background:#45d483;
+    box-shadow:0 0 12px rgba(69,212,131,.65);
+}
+
+.asiq-refresh-button{
+    width:36px;
+    height:36px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:50%;
+    background:rgba(212,175,55,.06);
+    color:#d4af37;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.asiq-refresh-button:hover{
+    transform:rotate(18deg) scale(1.04);
+    background:rgba(212,175,55,.12);
+}
+
+.asiq-refresh-button:disabled{
+    opacity:.45;
+    cursor:wait;
+}
+
+.asiq-refresh-button.loading i{
+    animation:asiqSpin .8s linear infinite;
+}
+
+@keyframes asiqSpin{
+    to{transform:rotate(360deg);}
+}
+
+.asiq-balance-value{
+    position:relative;
+    z-index:1;
+    margin-top:15px;
+    color:#fff2b1;
+    font-size:clamp(29px,8vw,38px);
+    line-height:1.05;
+    font-weight:950;
+    letter-spacing:.3px;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 18px rgba(255,215,0,.15);
+    overflow-wrap:anywhere;
+}
+
+.asiq-balance-value.updated{
+    animation:asiqBalancePulse .42s ease;
+}
+
+@keyframes asiqBalancePulse{
+    0%{transform:scale(.97);opacity:.62;}
+    100%{transform:scale(1);opacity:1;}
+}
+
+.asiq-balance-symbol{
+    color:#d4af37;
+    font-size:.5em;
+    letter-spacing:1px;
+}
+
+.asiq-wallet-status{
+    position:relative;
+    z-index:1;
+    margin-top:9px;
+    color:#999;
+    font-size:12px;
+    line-height:1.4;
+}
+
+.asiq-wallet-address{
+    position:relative;
+    z-index:1;
+    margin-top:4px;
+    color:#666;
+    font-size:11px;
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+
 </style>
    
 
@@ -1188,6 +1336,33 @@ body{
 <canvas id="smokeCanvas"></canvas>
     <canvas id="sparkCanvas"></canvas>
 <div id="ton-connect"></div>
+
+<div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
+    <div class="asiq-wallet-head">
+        <div class="asiq-wallet-label">
+            <span class="asiq-wallet-dot" aria-hidden="true"></span>
+            <span>ASIQ Wallet</span>
+        </div>
+
+        <button
+            class="asiq-refresh-button"
+            id="asiqRefreshButton"
+            type="button"
+            aria-label="Обновить баланс ASIQ"
+            title="Обновить баланс"
+            disabled
+        >
+            <i class="fa-solid fa-rotate"></i>
+        </button>
+    </div>
+
+    <div class="asiq-balance-value" id="asiqBalanceValue">
+        — <span class="asiq-balance-symbol">ASIQ</span>
+    </div>
+    <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
+    <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
+</div>
+
     <img src="images/crow.png"
      class="logo"
      id="crown"
@@ -1341,6 +1516,114 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
     manifestUrl: "https://qaztrap.github.io/asiqpai/tonconnect-manifest.json",
     buttonRootId: "ton-connect"
 });
+
+// =======================
+// ASIQ JETTON BALANCE
+// =======================
+
+const asiqWalletCard = document.getElementById("asiqWalletCard");
+const asiqBalanceValue = document.getElementById("asiqBalanceValue");
+const asiqWalletStatus = document.getElementById("asiqWalletStatus");
+const asiqWalletAddress = document.getElementById("asiqWalletAddress");
+const asiqRefreshButton = document.getElementById("asiqRefreshButton");
+
+let asiqBalanceRequestId = 0;
+
+function shortenWalletAddress(address){
+    if(typeof address !== "string" || address.length < 12) return "";
+    return `${address.slice(0,6)}…${address.slice(-6)}`;
+}
+
+function setAsiqWalletState({ connected, loading = false, balanceText = null, message = "", address = "" }){
+    asiqWalletCard?.classList.toggle("connected", Boolean(connected));
+    asiqRefreshButton.disabled = !connected || loading;
+    asiqRefreshButton.classList.toggle("loading", loading);
+
+    if(balanceText !== null){
+        asiqBalanceValue.innerHTML = `${balanceText} <span class="asiq-balance-symbol">ASIQ</span>`;
+        asiqBalanceValue.classList.remove("updated");
+        void asiqBalanceValue.offsetWidth;
+        asiqBalanceValue.classList.add("updated");
+    }else if(!connected){
+        asiqBalanceValue.innerHTML = `— <span class="asiq-balance-symbol">ASIQ</span>`;
+    }
+
+    asiqWalletStatus.textContent = message;
+    asiqWalletAddress.textContent = address ? shortenWalletAddress(address) : "";
+}
+
+async function loadAsiqBalance(walletAddress, { notifyOnError = false } = {}){
+    if(!walletAddress){
+        setAsiqWalletState({
+            connected:false,
+            message:"Подключите TON-кошелёк"
+        });
+        return;
+    }
+
+    const requestId = ++asiqBalanceRequestId;
+
+    setAsiqWalletState({
+        connected:true,
+        loading:true,
+        message:"Загружаем баланс ASIQ…",
+        address:walletAddress
+    });
+
+    try{
+        const data = await apiRequest(`/api/asiq-balance/${encodeURIComponent(walletAddress)}`);
+
+        if(requestId !== asiqBalanceRequestId) return;
+
+        const rawBalance = Number(data.balance);
+        const balanceText = typeof data.balanceText === "string"
+            ? data.balanceText
+            : Number.isFinite(rawBalance)
+                ? rawBalance.toLocaleString("ru-RU", { maximumFractionDigits:9 })
+                : "0";
+
+        setAsiqWalletState({
+            connected:true,
+            balanceText,
+            message:"Кошелёк подключён",
+            address:walletAddress
+        });
+    }catch(error){
+        if(requestId !== asiqBalanceRequestId) return;
+
+        console.warn("Не удалось загрузить баланс ASIQ:", error.message);
+
+        setAsiqWalletState({
+            connected:true,
+            balanceText:"—",
+            message:"Не удалось получить баланс. Нажмите обновить",
+            address:walletAddress
+        });
+
+        if(notifyOnError){
+            showToast("Не удалось обновить баланс ASIQ", "warning");
+        }
+    }
+}
+
+asiqRefreshButton.addEventListener("click", () => {
+    loadAsiqBalance(tonConnectUI.account?.address || "", { notifyOnError:true });
+});
+
+tonConnectUI.onStatusChange(wallet => {
+    const walletAddress = wallet?.account?.address || "";
+    loadAsiqBalance(walletAddress);
+});
+
+if(tonConnectUI.account?.address){
+    loadAsiqBalance(tonConnectUI.account.address);
+}else{
+    setAsiqWalletState({
+        connected:false,
+        message:"Подключите TON-кошелёк"
+    });
+}
+
 
 // =======================
 // ПОКУПКА БИТА
