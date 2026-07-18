@@ -28,16 +28,38 @@ const TONCENTER_API_KEY = process.env.TONCENTER_API_KEY || "";
 const MERCHANT_WALLET = process.env.MERCHANT_WALLET;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
-const PAYMENT_AMOUNT_NANO =
-  process.env.PAYMENT_AMOUNT_NANO || "10000000000";
-
-const GP_REWARD = Number(
-  process.env.GP_REWARD || 100000
-);
-
 const AUTH_MAX_AGE = Number(
   process.env.TELEGRAM_AUTH_MAX_AGE_SECONDS || 86400
 );
+
+const ORDER_TTL_MS = 30 * 60 * 1000;
+
+const LICENSES = Object.freeze({
+  mp3: {
+    label: "MP3",
+    priceGram: 10,
+    amountNano: "10000000000"
+  },
+  wav: {
+    label: "WAV",
+    priceGram: 20,
+    amountNano: "20000000000"
+  },
+  full: {
+    label: "FULL",
+    priceGram: 40,
+    amountNano: "40000000000"
+  }
+});
+
+/*
+ * Пока в продаже находится только реальный инструментал.
+ * Добавляй сюда новые названия точно так же, как они указаны
+ * во frontend-плейлисте.
+ */
+const SELLABLE_TRACKS = new Set([
+  "Әңгіме"
+]);
 
 if (!BOT_TOKEN || !MERCHANT_WALLET || !process.env.DATABASE_URL) {
   throw new Error(
@@ -64,6 +86,15 @@ app.use(
 
 app.use(express.json({ limit: "32kb" }));
 
+function cleanTrackTitle(value) {
+  if (typeof value !== "string") return "";
+
+  return value
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 120);
+}
+
 async function sendTelegramNotification({
   telegramUser,
   order,
@@ -84,13 +115,12 @@ async function sendTelegramNotification({
   const fullName =
     `${firstName} ${lastName}`.trim() || "Не указано";
 
-  const amountTon = (
-    Number(order.amount_nano) / 1_000_000_000
-  ).toString();
-
   const transactionHash =
     payment.hash ||
     `${payment.lt}:${order.comment}`;
+
+  const license =
+    LICENSES[String(order.license_type).toLowerCase()];
 
   const message = [
     "🛒 Новая покупка ASIQPAI",
@@ -99,8 +129,9 @@ async function sendTelegramNotification({
     `🔗 Username: ${username}`,
     `🆔 Telegram ID: ${telegramUser.id}`,
     "",
-    `💎 Начислено GP: ${order.gp_reward}`,
-    `💰 Оплачено: ${amountTon} TON`,
+    `🎵 Инструментал: ${order.track_title}`,
+    `📄 Лицензия: ${license?.label || order.license_type}`,
+    `💰 Оплачено: ${order.price_gram} GRAM`,
     `📦 Заказ: ${order.id}`,
     "✅ Статус: подтверждено",
     "",
@@ -204,14 +235,44 @@ app.post(
         req.body.walletAddress
       );
 
+      const trackTitle = cleanTrackTitle(
+        req.body.trackTitle
+      );
+
+      const licenseType = String(
+        req.body.licenseType || ""
+      ).toLowerCase();
+
+      const license = LICENSES[licenseType];
+
       if (!walletAddress) {
         return res.status(400).json({
           error: "Wallet address is required"
         });
       }
 
+      if (!trackTitle) {
+        return res.status(400).json({
+          error: "Track title is required"
+        });
+      }
+
+      if (!SELLABLE_TRACKS.has(trackTitle)) {
+        return res.status(400).json({
+          error: "Этот трек не продаётся"
+        });
+      }
+
+      if (!license) {
+        return res.status(400).json({
+          error: "Unknown license type"
+        });
+      }
+
       const orderId = crypto.randomUUID();
-      const comment = `ASIQPAI-GP-${orderId}`;
+
+      const comment =
+        `ASIQPAI-${licenseType.toUpperCase()}-${orderId}`;
 
       await pool.query(
         `INSERT INTO payment_orders
@@ -220,24 +281,32 @@ app.post(
            telegram_id,
            wallet_address,
            comment,
+           track_title,
+           license_type,
+           price_gram,
            amount_nano,
-           gp_reward
+           status
          )
-         VALUES ($1, $2, $3, $4, $5, $6)`,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
         [
           orderId,
           req.telegramUser.id,
           walletAddress,
           comment,
-          PAYMENT_AMOUNT_NANO,
-          GP_REWARD
+          trackTitle,
+          licenseType,
+          license.priceGram,
+          license.amountNano
         ]
       );
 
       return res.status(201).json({
         orderId,
         address: MERCHANT_WALLET,
-        amount: PAYMENT_AMOUNT_NANO,
+        amount: license.amountNano,
+        amountGram: license.priceGram,
+        trackTitle,
+        licenseType,
         payload: createCommentPayload(comment),
         status: "pending"
       });
@@ -285,58 +354,26 @@ app.get(
 
       const order = result.rows[0];
 
-      /*
-       * Заказ уже был подтверждён ранее.
-       * Повторное уведомление в группу не отправляем.
-       */
       if (order.status === "paid") {
-        let gpTotal;
-
-        if (!order.credited_at) {
-          const creditResult =
-            await client.query(
-              `UPDATE users
-               SET gp = gp + $2,
-                   updated_at = NOW()
-               WHERE telegram_id = $1
-               RETURNING gp::text AS gp`,
-              [
-                req.telegramUser.id,
-                order.gp_reward
-              ]
-            );
-
-          await client.query(
-            `UPDATE payment_orders
-             SET credited_at = NOW()
-             WHERE id = $1
-               AND credited_at IS NULL`,
-            [order.id]
-          );
-
-          gpTotal =
-            creditResult.rows[0]?.gp;
-        } else {
-          const userResult =
-            await client.query(
-              `SELECT gp::text AS gp
-               FROM users
-               WHERE telegram_id = $1`,
-              [req.telegramUser.id]
-            );
-
-          gpTotal =
-            userResult.rows[0]?.gp;
-        }
-
         await client.query("COMMIT");
 
         return res.json({
           orderId: order.id,
           status: "paid",
-          gpReward: order.gp_reward,
-          gpTotal,
+          trackTitle: order.track_title,
+          licenseType: order.license_type,
+          priceGram: order.price_gram,
+          delivered: Boolean(order.delivered_at),
           txHash: order.tx_hash
+        });
+      }
+
+      if (order.status === "expired") {
+        await client.query("COMMIT");
+
+        return res.json({
+          orderId: order.id,
+          status: "expired"
         });
       }
 
@@ -344,7 +381,7 @@ app.get(
         Date.now() -
         new Date(order.created_at).getTime();
 
-      if (ageMs > 30 * 60 * 1000) {
+      if (ageMs > ORDER_TTL_MS) {
         await client.query(
           `UPDATE payment_orders
            SET status = 'expired'
@@ -395,32 +432,8 @@ app.get(
         ]
       );
 
-      const creditResult =
-        await client.query(
-          `UPDATE users
-           SET gp = gp + $2,
-               updated_at = NOW()
-           WHERE telegram_id = $1
-           RETURNING gp::text AS gp`,
-          [
-            req.telegramUser.id,
-            order.gp_reward
-          ]
-        );
-
-      await client.query(
-        `UPDATE payment_orders
-         SET credited_at = NOW()
-         WHERE id = $1`,
-        [order.id]
-      );
-
       await client.query("COMMIT");
 
-      /*
-       * Уведомление отправляется только при первом
-       * подтверждении новой оплаты.
-       */
       await sendTelegramNotification({
         telegramUser: req.telegramUser,
         order,
@@ -430,8 +443,10 @@ app.get(
       return res.json({
         orderId: order.id,
         status: "paid",
-        gpReward: order.gp_reward,
-        gpTotal: creditResult.rows[0]?.gp,
+        trackTitle: order.track_title,
+        licenseType: order.license_type,
+        priceGram: order.price_gram,
+        delivered: false,
         txHash: transactionHash
       });
     } catch (error) {
