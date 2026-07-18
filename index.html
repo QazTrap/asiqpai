@@ -2096,37 +2096,7 @@ let goldLicenseClaimed =
 
 function updateGP(){
     gpCounter.textContent = gp.toLocaleString();
-
-    const percent = Math.min((gp / LICENSE_COST) * 100, 100);
-
-    progressFill.style.width = percent + "%";
-    progressText.textContent =
-        Math.min(gp, LICENSE_COST).toLocaleString() +
-        " / " +
-        LICENSE_COST.toLocaleString() +
-        " GP";
-    progressPercent.textContent = Math.floor(percent) + "%";
-
-    if(goldLicenseClaimed){
-        licenseStatus.textContent = "✅ Gold License Claimed";
-        licenseStatus.classList.add("unlocked");
-        claimLicenseButton.classList.remove("show");
-        buyGPButton.style.display = "none";
-    }
-    else if(gp >= LICENSE_COST){
-        licenseStatus.textContent = "🔓 Gold License Unlocked";
-        licenseStatus.classList.add("unlocked");
-        claimLicenseButton.classList.add("show");
-        buyGPButton.style.display = "none";
-    }
-    else{
-        licenseStatus.textContent = "🔒 Gold License Locked";
-        licenseStatus.classList.remove("unlocked");
-        claimLicenseButton.classList.remove("show");
-        buyGPButton.style.display = "block";
-    }
 }
-
 function claimLicense(){
     if(gp < LICENSE_COST || goldLicenseClaimed){
         return;
