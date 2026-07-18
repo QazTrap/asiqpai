@@ -11,6 +11,7 @@ export function createCommentPayload(comment) {
 
 export function normalizeAddress(value) {
   if (!value) return "";
+
   try {
     return Address.parse(value).toRawString();
   } catch {
@@ -20,8 +21,12 @@ export function normalizeAddress(value) {
 
 function decodePossibleBase64(value) {
   if (!value || typeof value !== "string") return "";
+
   try {
-    return Buffer.from(value, "base64").toString("utf8").replace(/^\u0000{4}/, "");
+    return Buffer
+      .from(value, "base64")
+      .toString("utf8")
+      .replace(/^\u0000{4}/, "");
   } catch {
     return "";
   }
@@ -38,7 +43,10 @@ export function extractIncomingComment(inMessage) {
   ];
 
   for (const candidate of directCandidates) {
-    if (typeof candidate === "string" && candidate.trim()) {
+    if (
+      typeof candidate === "string" &&
+      candidate.trim()
+    ) {
       return candidate.trim();
     }
   }
@@ -51,12 +59,20 @@ export function extractIncomingComment(inMessage) {
 
   for (const candidate of encodedCandidates) {
     const decoded = decodePossibleBase64(candidate);
-    if (decoded.trim()) return decoded.trim();
+
+    if (decoded.trim()) {
+      return decoded.trim();
+    }
   }
 
   return "";
 }
 
+/*
+ * GRAM — нативная монета сети TON.
+ * В блокчейне сумма по-прежнему указывается в nanogram:
+ * 1 GRAM = 1 000 000 000 nanogram.
+ */
 export async function findPayment({
   merchantWallet,
   expectedSource,
@@ -64,33 +80,65 @@ export async function findPayment({
   comment,
   apiKey
 }) {
-  const url = new URL("https://toncenter.com/api/v2/getTransactions");
+  const url = new URL(
+    "https://toncenter.com/api/v2/getTransactions"
+  );
+
   url.searchParams.set("address", merchantWallet);
   url.searchParams.set("limit", "50");
   url.searchParams.set("archival", "true");
 
   const response = await fetch(url, {
-    headers: apiKey ? { "X-API-Key": apiKey } : {}
+    headers: apiKey
+      ? { "X-API-Key": apiKey }
+      : {}
   });
 
   if (!response.ok) {
-    throw new Error(`TON Center error ${response.status}`);
+    throw new Error(
+      `TON Center error ${response.status}`
+    );
   }
 
   const body = await response.json();
-  const transactions = Array.isArray(body.result) ? body.result : [];
 
-  const merchant = normalizeAddress(merchantWallet);
-  const sender = normalizeAddress(expectedSource);
+  const transactions =
+    Array.isArray(body.result)
+      ? body.result
+      : [];
+
+  const merchant = normalizeAddress(
+    merchantWallet
+  );
+
+  const sender = normalizeAddress(
+    expectedSource
+  );
 
   for (const tx of transactions) {
-    const incoming = tx.in_msg ?? tx.inMessage ?? tx.in_message;
+    const incoming =
+      tx.in_msg ??
+      tx.inMessage ??
+      tx.in_message;
+
     if (!incoming) continue;
 
-    const destination = normalizeAddress(incoming.destination);
-    const source = normalizeAddress(incoming.source);
-    const amount = BigInt(incoming.value ?? incoming.amount ?? "0");
-    const txComment = extractIncomingComment(incoming);
+    const destination = normalizeAddress(
+      incoming.destination
+    );
+
+    const source = normalizeAddress(
+      incoming.source
+    );
+
+    const amount = BigInt(
+      incoming.value ??
+      incoming.amount ??
+      "0"
+    );
+
+    const txComment =
+      extractIncomingComment(incoming);
 
     const successful =
       tx.aborted !== true &&
@@ -105,8 +153,14 @@ export async function findPayment({
       txComment === comment
     ) {
       return {
-        hash: tx.transaction_id?.hash ?? tx.hash ?? "",
-        lt: tx.transaction_id?.lt ?? tx.lt ?? "",
+        hash:
+          tx.transaction_id?.hash ??
+          tx.hash ??
+          "",
+        lt:
+          tx.transaction_id?.lt ??
+          tx.lt ??
+          "",
         amount: amount.toString(),
         source,
         destination,
