@@ -2100,7 +2100,9 @@ function claimLicense(){
 
     showToast("⭐ Gold License активирована", "success");
 }
-function buyLicense(type){
+async function buyLicense(type){
+    if(paymentInProgress) return;
+
     const licenses = {
         mp3: { name: "MP3", price: 10 },
         wav: { name: "WAV", price: 20 },
@@ -2116,11 +2118,25 @@ function buyLicense(type){
     }
 
     if(track.meta !== "INSTRUMENTAL"){
-        if(window.Telegram?.WebApp?.HapticFeedback){
-            Telegram.WebApp.HapticFeedback.notificationOccurred("warning");
-        }
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("warning");
 
         showToast("Этот трек не продаётся", "warning");
+        return;
+    }
+
+    if(!getTelegramInitData()){
+        showToast("Открой Mini App внутри Telegram", "warning");
+        return;
+    }
+
+    if(!tonConnectUI.account?.address){
+        showToast("Сначала подключи GRAM-кошелёк", "warning");
+
+        try{
+            await tonConnectUI.openModal();
+        }catch{}
+
         return;
     }
 
@@ -2130,14 +2146,84 @@ function buyLicense(type){
 
     if(!confirmed) return;
 
-    if(window.Telegram?.WebApp?.HapticFeedback){
-        Telegram.WebApp.HapticFeedback.impactOccurred("light");
-    }
-
-    showToast(
-        `Оплата ${license.price} GRAM будет подключена следующим шагом`,
-        "success"
+    const buyButtons = Array.from(
+        document.querySelectorAll("#licenseCard .buy-button")
     );
+
+    paymentInProgress = true;
+
+    buyButtons.forEach(button => {
+        button.disabled = true;
+    });
+
+    window.Telegram?.WebApp?.HapticFeedback
+        ?.impactOccurred("light");
+
+    try{
+        showToast("Создаём заказ…");
+
+        const order = await apiRequest("/api/orders", {
+            method: "POST",
+            body: JSON.stringify({
+                walletAddress: tonConnectUI.account.address,
+                trackTitle: track.title,
+                licenseType: type
+            })
+        });
+
+        showToast(
+            `Подтверди перевод ${order.amountGram} GRAM в кошельке`
+        );
+
+        await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 600,
+            messages: [{
+                address: order.address,
+                amount: String(order.amount),
+                payload: order.payload
+            }]
+        });
+
+        showToast("⏳ Платёж отправлен. Проверяем блокчейн…");
+
+        const paidOrder = await waitForOrderPayment(order.orderId);
+
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+
+        showToast(
+            `✅ ${license.name} License оплачена за ${paidOrder.priceGram} GRAM`,
+            "success"
+        );
+
+        window.Telegram?.WebApp?.showAlert?.(
+            `Оплата подтверждена!
+
+Бит: ${paidOrder.trackTitle}
+Лицензия: ${license.name}
+Сумма: ${paidOrder.priceGram} GRAM
+
+Информация о заказе отправлена администратору ASIQPAI.`
+        );
+    }catch(error){
+        console.error("Ошибка покупки лицензии:", error);
+
+        const message = error?.message || "Не удалось выполнить оплату";
+
+        if(/reject|cancel|declin/i.test(message)){
+            showToast("Оплата отменена", "warning");
+        }else if(/expired|истекло/i.test(message)){
+            showToast("Время оплаты истекло. Создай новый заказ", "warning");
+        }else{
+            showToast(message, "warning");
+        }
+    }finally{
+        paymentInProgress = false;
+
+        buyButtons.forEach(button => {
+            button.disabled = false;
+        });
+    }
 }
 
 updateGP();
