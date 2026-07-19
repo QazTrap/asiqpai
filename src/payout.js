@@ -34,11 +34,11 @@ const client = new TonClient({
 });
 
 export async function getPayoutWallet() {
-  ...
+  
 }
 
 export async function verifyPayoutWallet() {
-  ...
+  
 }
 function getExpectedAddress() {
   const value = String(process.env.PAYOUT_WALLET_ADDRESS || "").trim();
