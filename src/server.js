@@ -2,7 +2,10 @@ import "dotenv/config";
 import crypto from "node:crypto";
 import express from "express";
 import cors from "cors";
-import { verifyPayoutWallet } from "./payout.js";
+import {
+  verifyPayoutWallet,
+  sendAsiqJettons
+} from "./payout.js";
 
 import {
   pool,
