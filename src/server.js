@@ -678,7 +678,55 @@ app.post("/api/withdrawals", requireTelegramUser, async (req,res)=>{
     res.status(500).json({error:"Could not create withdrawal"});
   }finally{client.release()}
 });
+app.get("/api/admin/withdrawals", async (req, res) => {
+  const provided = Buffer.from(
+    req.get("X-Withdraw-Admin-Secret") || ""
+  );
 
+  const expected = Buffer.from(WITHDRAW_ADMIN_SECRET);
+
+  if (
+    !WITHDRAW_ADMIN_SECRET ||
+    provided.length !== expected.length ||
+    !crypto.timingSafeEqual(provided, expected)
+  ) {
+    return res.status(401).json({
+      error: "Unauthorized"
+    });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT
+        w.*,
+        u.username,
+        u.first_name,
+        u.last_name
+      FROM withdraw_requests w
+      LEFT JOIN users u
+      ON u.telegram_id = w.telegram_id
+      ORDER BY w.created_at DESC
+    `);
+
+    res.json({
+      ok: true,
+      withdrawals: result.rows.map(row => ({
+        ...serializeWithdrawal(row),
+        telegramId: row.telegram_id,
+        username: row.username,
+        firstName: row.first_name,
+        lastName: row.last_name
+      }))
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: "Could not load withdrawals"
+    });
+  }
+});
 app.patch("/api/admin/withdrawals/:id", async (req,res)=>{
   const provided = Buffer.from(req.get("X-Withdraw-Admin-Secret") || "");
   const expected = Buffer.from(WITHDRAW_ADMIN_SECRET);
