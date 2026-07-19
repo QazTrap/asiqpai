@@ -1,5 +1,5 @@
-import { Address } from "@ton/core";
-import { WalletContractV5R1 } from "@ton/ton";
+import { Address, beginCell, toNano } from "@ton/core";
+import { TonClient, WalletContractV5R1 } from "@ton/ton";
 import { mnemonicToPrivateKey } from "@ton/crypto";
 
 /**
