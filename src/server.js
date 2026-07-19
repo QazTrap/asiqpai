@@ -2,6 +2,7 @@ import "dotenv/config";
 import crypto from "node:crypto";
 import express from "express";
 import cors from "cors";
+import { verifyPayoutWallet } from "./payout.js";
 
 import {
   pool,
@@ -1014,8 +1015,19 @@ await initDatabase();
 await initDailyRewardTable();
 await initWithdrawalsTable();
 
-app.listen(PORT, () => {
-  console.log(
-    `ASIQPAI backend is running on port ${PORT}`
-  );
-});
+import { verifyPayoutWallet } from "./payout.js";
+
+// Проверяем payout-кошелёк перед запуском сервера
+verifyPayoutWallet()
+  .then((info) => {
+    console.log("✅ Payout wallet verified:", info.address);
+
+    app.listen(PORT, () => {
+      console.log(`ASIQPAI backend is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error("❌ Payout wallet verification failed:");
+    console.error(error.message);
+    process.exit(1);
+  });
