@@ -1015,7 +1015,6 @@ await initDatabase();
 await initDailyRewardTable();
 await initWithdrawalsTable();
 
-import { verifyPayoutWallet } from "./payout.js";
 
 // Проверяем payout-кошелёк перед запуском сервера
 verifyPayoutWallet()
