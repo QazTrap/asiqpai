@@ -745,7 +745,17 @@ app.patch("/api/admin/withdrawals/:id", async (req,res)=>{
 if (status === "sent" && !txHash) {
   console.log("Withdrawal confirmed without txHash (development mode)");
 }
+if (status === "sent") {
+  const payout = await sendAsiqJettons({
+    destination: row.wallet_address,
+    amount: String(row.amount),
+    queryId: row.id
+  });
 
+  console.log("ASIQ payout completed:", payout);
+
+  txHash = payout.queryId;
+}
   const client = await pool.connect();
   try{
     await client.query("BEGIN");
