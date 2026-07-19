@@ -33,13 +33,7 @@ const client = new TonClient({
   endpoint: process.env.TON_RPC || "https://toncenter.com/api/v2/jsonRPC"
 });
 
-export async function getPayoutWallet() {
-  
-}
 
-export async function verifyPayoutWallet() {
-  
-}
 function getExpectedAddress() {
   const value = String(process.env.PAYOUT_WALLET_ADDRESS || "").trim();
 
