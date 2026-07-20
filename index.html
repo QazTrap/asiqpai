@@ -1494,7 +1494,9 @@ body{
 
 <style>
 /* ===== ASIQPAI APP TABS ===== */
-:root{--nav-height:76px}
+:root{
+    --nav-height:90px;
+}
 body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))!important}
 .app-shell{width:100%;max-width:430px;margin:0 auto}
 .app-page{display:none;animation:appPageIn .22s ease}
@@ -1512,8 +1514,26 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 }
 #ton-connect{margin:4px 0 22px}
 .app-bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:15000;width:min(100%,430px);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-sizing:border-box;background:rgba(8,8,8,.94);border-top:1px solid rgba(212,175,55,.22);box-shadow:0 -14px 38px rgba(0,0,0,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
-.nav-tab{min-width:0;padding:7px 3px 5px;border:0;border-radius:14px;background:transparent;color:#777;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:850;cursor:pointer;transition:.2s ease}
-.nav-tab i{font-size:20px}.nav-tab.active{color:#f0c75e;background:rgba(212,175,55,.10);text-shadow:0 0 12px rgba(212,175,55,.24)}
+.nav-tab{
+    min-width:0;
+    padding:12px 6px 10px;
+    border:0;
+    border-radius:16px;
+    background:transparent;
+    color:#777;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:850;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.nav-tab i{
+    font-size:28px;
+}
 .home-hero{padding-top:8px}.home-hero .logo{margin:0 auto}.home-hero .subtitle{margin-bottom:22px}
 .community-card{width:min(92vw,390px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
 .community-card .button{max-width:none;width:100%;box-sizing:border-box;margin:10px 0}
