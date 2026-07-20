@@ -1491,197 +1491,150 @@ body{
 </style>
    
 
+
+<style>
+/* ===== ASIQPAI APP TABS ===== */
+:root{--nav-height:76px}
+body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))!important}
+.app-shell{width:100%;max-width:430px;margin:0 auto}
+.app-page{display:none;animation:appPageIn .22s ease}
+.app-page.active{display:block}
+@keyframes appPageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.page-heading{margin:7px auto 22px;color:#d4af37;font-size:25px;font-weight:950;letter-spacing:1.5px}
+.page-subheading{margin:-12px auto 24px;color:#777;font-size:12px;line-height:1.5}
+#gpPanel{position:relative;top:auto;left:auto;display:inline-block;margin:0 auto 14px;pointer-events:none}
+#ton-connect{margin:4px 0 22px}
+.app-bottom-nav{position:fixed;left:50%;bottom:0;transform:translateX(-50%);z-index:15000;width:min(100%,430px);display:grid;grid-template-columns:repeat(4,1fr);padding:8px 8px calc(8px + env(safe-area-inset-bottom));box-sizing:border-box;background:rgba(8,8,8,.94);border-top:1px solid rgba(212,175,55,.22);box-shadow:0 -14px 38px rgba(0,0,0,.55);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.nav-tab{min-width:0;padding:7px 3px 5px;border:0;border-radius:14px;background:transparent;color:#777;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:850;cursor:pointer;transition:.2s ease}
+.nav-tab i{font-size:20px}.nav-tab.active{color:#f0c75e;background:rgba(212,175,55,.10);text-shadow:0 0 12px rgba(212,175,55,.24)}
+.home-hero{padding-top:8px}.home-hero .logo{margin:0 auto}.home-hero .subtitle{margin-bottom:22px}
+.community-card{width:min(92vw,390px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
+.community-card .button{max-width:none;width:100%;box-sizing:border-box;margin:10px 0}
+.web3-footer{margin:26px 0 8px;color:#d4af37;font-weight:900}.web3-domain{margin:0;color:#8b8b8b;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:390px){.nav-tab{font-size:9px}.nav-tab i{font-size:18px}.page-heading{font-size:23px}}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     
     <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
-
-    <div id="gpPanel">
-    <div class="gpTitle">⭐ Gold Points</div>
-    <div id="gpCounter">0</div>
-</div>  
-    
 <canvas id="smokeCanvas"></canvas>
-    <canvas id="sparkCanvas"></canvas>
-<div id="ton-connect"></div>
+<canvas id="sparkCanvas"></canvas>
 
-<div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
-    <div class="asiq-wallet-head">
-        <div class="asiq-wallet-label">
-            <span class="asiq-wallet-dot" aria-hidden="true"></span>
-            <span>ASIQ Wallet</span>
+<main class="app-shell">
+    <section class="app-page active" id="page-home" data-page="home">
+        <div class="home-hero">
+            <div id="gpPanel">
+                <div class="gpTitle">⭐ Gold Points</div>
+                <div id="gpCounter">0</div>
+            </div>
+
+            <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">
+            <h1 class="title">ASIQPAI</h1>
+            <p class="subtitle">Music Artist • Producer • Beatmaker</p>
         </div>
 
-        <button
-            class="asiq-refresh-button"
-            id="asiqRefreshButton"
-            type="button"
-            aria-label="Обновить баланс ASIQ"
-            title="Обновить баланс"
-            disabled
-        >
-            <i class="fa-solid fa-rotate"></i>
-        </button>
-    </div>
+        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
+            <div class="daily-reward-icon">🎁</div>
+            <div class="daily-reward-title">Daily Reward</div>
+            <div class="daily-reward-amount">+25 ASIQ</div>
+            <p class="daily-reward-note">Получайте ежедневную награду во внутренний баланс приложения.</p>
+            <div class="daily-reward-balance" id="dailyRewardBalance">Награды в приложении: — ASIQ</div>
+            <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Загрузка…</button>
+            <div class="daily-reward-timer" id="dailyRewardTimer">Проверяем доступность награды</div>
+        </div>
+    </section>
 
-    <div class="asiq-balance-value" id="asiqBalanceValue">
-        — <span class="asiq-balance-symbol">ASIQ</span>
-    </div>
-    <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
-    <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
-</div>
+    <section class="app-page" id="page-music" data-page="music">
+        <h2 class="page-heading">🎵 MUSIC</h2>
+        <p class="page-subheading">Треки ASIQPAI и лицензии на инструменталы</p>
+        <audio id="player" preload="metadata"></audio>
 
-
-<div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
-    <div class="daily-reward-icon">🎁</div>
-    <div class="daily-reward-title">Daily Reward</div>
-    <div class="daily-reward-amount">+25 ASIQ</div>
-
-    <p class="daily-reward-note">
-        Награда записывается во внутренний баланс приложения.
-        Автоматический перевод Jetton в TON-кошелёк будет подключён отдельным безопасным модулем.
-    </p>
-
-    <div class="daily-reward-balance" id="dailyRewardBalance">
-        Награды в приложении: — ASIQ
-    </div>
-
-    <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>
-        Загрузка…
-    </button>
-
-    <div class="daily-reward-timer" id="dailyRewardTimer">
-        Проверяем доступность награды
-    </div>
-</div>
-
-
-<div class="withdraw-card" id="withdrawCard">
-    <div class="withdraw-head">
-        <div class="withdraw-title">💸 Withdraw ASIQ</div>
-        <div class="withdraw-badge">TON WALLET</div>
-    </div>
-    <div class="withdraw-balance" id="withdrawBalance">Доступно: — ASIQ</div>
-    <div class="withdraw-row">
-        <input class="withdraw-input" id="withdrawAmount" type="number" inputmode="decimal" min="25" step="25" placeholder="Количество ASIQ" disabled>
-        <button class="withdraw-max" id="withdrawMaxButton" type="button" disabled>MAX</button>
-    </div>
-    <button class="withdraw-button" id="withdrawButton" type="button" disabled>Подключите TON-кошелёк</button>
-    <p class="withdraw-note" id="withdrawNote">
-        Заявка резервирует внутренний ASIQ. После ручной проверки реальные Jetton отправляются на подключённый кошелёк.
-    </p>
-    
-
-
-
-    <img src="images/crow.png"
-     class="logo"
-     id="crown"
-     alt="ASIQPAI Logo"
-     draggable="false">
-<h1 class="title">ASIQPAI</h1>
-    
-
-<p class="subtitle">
-Music Artist • Producer • Beatmaker
-</p>
-
-<a class="button" href="https://t.me/asiqpaihub">Telegram Community</a>
-
-<a class="button" href="https://youtube.com/@asiqpai">YouTube Community</a>
-
-<a class="button" href="https://www.tiktok.com/@asiqpai">TikTok Community</a>
-
-<a class="button" href="https://www.instagram.com/asiqpai">Instagram Community</a>
-
-<div class="section-divider">
-    <span>NOW PLAYING</span>
-</div>
-                                     
-<audio id="player" preload="metadata"></audio>
-
-
-<div class="player" id="musicPlayer">
-
-    <div class="player-cover-wrap">
-        <img
-            id="trackCover"
-            class="player-cover"
-            src="images/dark-nights-cover.jpg"
-            alt="Обложка бита Dark Nights"
-        >
-        <div class="cover-shade"></div>
-        <div class="cover-badge">ASIQPAI ORIGINAL</div>
-    </div>
-
-    <div class="track-info">
-        <div class="track-copy">
-            <div id="trackName">Әңгіме</div>
-            <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
+        <div class="player" id="musicPlayer">
+            <div class="player-cover-wrap">
+                <img id="trackCover" class="player-cover" src="images/dark-nights-cover.jpg" alt="Обложка бита Dark Nights">
+                <div class="cover-shade"></div>
+                <div class="cover-badge">ASIQPAI ORIGINAL</div>
+            </div>
+            <div class="track-info">
+                <div class="track-copy">
+                    <div id="trackName">Әңгіме</div>
+                    <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
+                </div>
+                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
+            </div>
+            <div class="progress-container">
+                <span id="currentTime">0:00</span>
+                <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
+                <span id="duration">0:00</span>
+            </div>
+            <button id="playModeButton" class="play-mode-button" type="button" aria-label="Режим воспроизведения: по порядку" title="По порядку"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+            <div class="controls">
+                <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
+                <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
         </div>
 
-        <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное">
-            <i class="fa-regular fa-heart"></i>
-        </button>
-    </div>
-<div class="progress-container">
-        <span id="currentTime">0:00</span>
-        <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
-        <span id="duration">0:00</span>
-    </div>
+        <div class="section-divider"><span>LICENSE CENTER</span></div>
+        <div class="license-card" id="licenseCard">
+            <div class="license-icon">🎹</div>
+            <h2 class="license-title" id="licenseTitle">Әңгіме</h2>
+            <button class="buy-button" type="button" onclick="buyLicense('mp3')">MP3 <span>⭐ — 10 GRAM</span></button>
+            <button class="buy-button" type="button" onclick="buyLicense('wav')">WAV <span>⭐ — 20 GRAM</span></button>
+            <button class="buy-button" type="button" onclick="buyLicense('full')">FULL <span>⭐ — 40 GRAM</span></button>
+        </div>
+    </section>
 
+    <section class="app-page" id="page-wallet" data-page="wallet">
+        <h2 class="page-heading">💰 WALLET</h2>
+        <p class="page-subheading">Баланс ASIQ и автоматический вывод в TON-кошелёк</p>
+        <div id="ton-connect"></div>
 
-    <button id="playModeButton" class="play-mode-button" type="button"
-            aria-label="Режим воспроизведения: по порядку" title="По порядку">
-        <i class="fa-solid fa-arrow-right-arrow-left"></i>
-    </button>
+        <div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
+            <div class="asiq-wallet-head">
+                <div class="asiq-wallet-label"><span class="asiq-wallet-dot" aria-hidden="true"></span><span>ASIQ Wallet</span></div>
+                <button class="asiq-refresh-button" id="asiqRefreshButton" type="button" aria-label="Обновить баланс ASIQ" title="Обновить баланс" disabled><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div class="asiq-balance-value" id="asiqBalanceValue">— <span class="asiq-balance-symbol">ASIQ</span></div>
+            <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
+            <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
+        </div>
 
-    <div class="controls">
-        <button id="prevButton" type="button" aria-label="Предыдущий трек">
-            <i class="fa-solid fa-backward-step"></i>
-        </button>
+        <div class="withdraw-card" id="withdrawCard">
+            <div class="withdraw-head"><div class="withdraw-title">💸 Withdraw ASIQ</div><div class="withdraw-badge">TON WALLET</div></div>
+            <div class="withdraw-balance" id="withdrawBalance">Доступно: — ASIQ</div>
+            <div class="withdraw-row">
+                <input class="withdraw-input" id="withdrawAmount" type="number" inputmode="decimal" min="25" step="25" placeholder="Количество ASIQ" disabled>
+                <button class="withdraw-max" id="withdrawMaxButton" type="button" disabled>MAX</button>
+            </div>
+            <button class="withdraw-button" id="withdrawButton" type="button" disabled>Подключите TON-кошелёк</button>
+            <p class="withdraw-note" id="withdrawNote">Минимум 25 ASIQ. При отклонении сумма автоматически возвращается.</p>
+        </div>
+    </section>
 
-        <button id="playButton" type="button" aria-label="Воспроизвести">
-            <i class="fa-solid fa-play"></i>
-        </button>
+    <section class="app-page" id="page-community" data-page="community">
+        <h2 class="page-heading">🌐 COMMUNITY</h2>
+        <p class="page-subheading">Официальные страницы и сообщество ASIQPAI</p>
+        <div class="community-card">
+            <a class="button" href="https://t.me/asiqpaihub"><i class="fa-brands fa-telegram"></i> Telegram Community</a>
+            <a class="button" href="https://youtube.com/@asiqpai"><i class="fa-brands fa-youtube"></i> YouTube Community</a>
+            <a class="button" href="https://www.tiktok.com/@asiqpai"><i class="fa-brands fa-tiktok"></i> TikTok Community</a>
+            <a class="button" href="https://www.instagram.com/asiqpai"><i class="fa-brands fa-instagram"></i> Instagram Community</a>
+            <div class="web3-footer">Web3</div>
+            <p class="web3-domain">asiqpai.ton</p>
+        </div>
+    </section>
+</main>
 
-        <button id="nextButton" type="button" aria-label="Следующий трек">
-            <i class="fa-solid fa-forward-step"></i>
-        </button>
-    </div>
-
-</div>
-
-<div class="section-divider">
-    <span>LICENSE CENTER</span>
-</div>
-
-<div class="license-card" id="licenseCard">
-    <div class="license-icon">🎹</div>
-
-    <h2 class="license-title" id="licenseTitle">Әңгіме</h2>
-
-    <button class="buy-button" type="button" onclick="buyLicense('mp3')">
-        MP3
-        <span>⭐ — 10 GRAM</span>
-    </button>
-
-    <button class="buy-button" type="button" onclick="buyLicense('wav')">
-        WAV
-        <span>⭐ — 20 GRAM</span>
-    </button>
-
-    <button class="buy-button" type="button" onclick="buyLicense('full')">
-        FULL
-        <span>⭐ — 40 GRAM</span>
-    </button>
-</div>
-
-<p><b>Web3</b></p>
-
-<p>asiqpai.ton</p>
+<nav class="app-bottom-nav" aria-label="Навигация приложения">
+    <button class="nav-tab active" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
+    <button class="nav-tab" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
+    <button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
+    <button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
+</nav>
 
 <script>
 const fallbackPlaylist = [
@@ -2223,8 +2176,8 @@ async function buyGP(){
     }
 
     paymentInProgress = true;
-    buyGPButton.disabled = true;
-    buyGPButton.textContent = "Создание заказа…";
+    if(buyGPButton) buyGPButton.disabled = true;
+    if(buyGPButton) buyGPButton.textContent = "Создание заказа…";
 
     try{
         const order = await apiRequest("/api/orders", {
@@ -2234,7 +2187,7 @@ async function buyGP(){
             })
         });
 
-        buyGPButton.textContent = "Подтверди оплату в кошельке…";
+        if(buyGPButton) buyGPButton.textContent = "Подтверди оплату в кошельке…";
 
         await tonConnectUI.sendTransaction({
             validUntil: Math.floor(Date.now() / 1000) + 600,
@@ -2246,7 +2199,7 @@ async function buyGP(){
         });
 
         showToast("⏳ Платёж отправлен. Проверяем блокчейн…");
-        buyGPButton.textContent = "Проверяем оплату…";
+        if(buyGPButton) buyGPButton.textContent = "Проверяем оплату…";
 
         const paidOrder = await waitForOrderPayment(order.orderId);
         const serverTotal = Number(paidOrder.gpTotal);
@@ -2275,8 +2228,8 @@ async function buyGP(){
         }
     }finally{
         paymentInProgress = false;
-        buyGPButton.disabled = false;
-        buyGPButton.textContent = "💎 Купить 100 000 GP — 10 TON";
+        if(buyGPButton) buyGPButton.disabled = false;
+        if(buyGPButton) buyGPButton.textContent = "💎 Купить 100 000 GP — 10 TON";
     }
 }
 
@@ -3113,5 +3066,23 @@ setTimeout(() => plus.remove(), 900);
 
 });
 </script>
-    </body>
+    
+<script>
+(function(){
+    const pages = Array.from(document.querySelectorAll('.app-page'));
+    const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+
+    function openPage(name){
+        const target = pages.find(page => page.dataset.page === name) || pages[0];
+        pages.forEach(page => page.classList.toggle('active', page === target));
+        tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
+        window.scrollTo({top:0, behavior:'smooth'});
+        try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
+})();
+</script>
+
+</body>
 </html>
