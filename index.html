@@ -739,19 +739,15 @@ audio{
 
 /* ===== ASIQPAI DARK PLAYER ===== */
 .player{
-    width:100%;
+    width:min(92vw,340px);
     max-width:340px;
     margin:10px auto 15px;
-}
     padding:14px 14px 22px;
-    background:
-        linear-gradient(180deg,rgba(24,24,24,.98),rgba(8,8,8,.98));
+    background:linear-gradient(180deg,rgba(24,24,24,.98),rgba(8,8,8,.98));
     border:1px solid rgba(212,175,55,.16);
     border-radius:32px;
-    box-shadow:
-        0 22px 55px rgba(0,0,0,.55),
-        inset 0 1px 0 rgba(255,255,255,.035);
     overflow:hidden;
+    box-sizing:border-box;
 }
 
 .player-cover-wrap{
