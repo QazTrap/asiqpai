@@ -2107,16 +2107,6 @@ function renderWithdraw(){
     else withdrawButton.textContent = "💸 СОЗДАТЬ ЗАЯВКУ";
 
     withdrawNote.textContent = `Минимум ${min} ASIQ. При отклонении сумма автоматически возвращается.`;
-
-    const items = withdrawState?.withdrawals || [];
-    withdrawHistory.innerHTML = items.length ? items.map(item => `
-        <div class="withdraw-item">
-            <div class="withdraw-item-top">
-                <div class="withdraw-item-amount">${formatRewardNumber(item.amount)} ASIQ</div>
-                <div class="withdraw-status ${item.status}">${withdrawStatusText(item.status)}</div>
-            </div>
-            <div class="withdraw-meta">${withdrawDate(item.createdAt)} · ${shortenWalletAddress(item.walletAddress)}</div>
-        </div>`).join("") : '<div class="withdraw-empty">История пока пуста</div>';
 }
 async function loadWithdraw(){
     if(!getTelegramInitData()){ renderWithdraw(); return; }
