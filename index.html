@@ -296,7 +296,7 @@ body{
 }
 
 .license-icon{
-    font-size:28px;
+    font-size:34px;
     margin-bottom:4px;
     filter:drop-shadow(0 0 10px rgba(255,215,0,.35));
 }
@@ -1168,8 +1168,8 @@ body{
 
 /* ===== ASIQ JETTON BALANCE ===== */
 .asiq-wallet-card{
-    width:min(88vw,340px);
-    margin:0 auto 20px;
+    width:min(92vw,390px);
+    margin:0 auto 30px;
     padding:18px;
     box-sizing:border-box;
     position:relative;
@@ -1317,12 +1317,12 @@ body{
 .daily-reward-card{
     width:min(92vw,390px);
     margin:0 auto 30px;
-    padding:14px 14px;
+    padding:20px 18px;
     box-sizing:border-box;
     position:relative;
     overflow:hidden;
     border:1px solid rgba(212,175,55,.34);
-    border-radius:18px;
+    border-radius:22px;
     background:
         radial-gradient(circle at 88% 10%,rgba(255,215,0,.14),transparent 34%),
         linear-gradient(145deg,rgba(27,22,10,.96),rgba(8,8,8,.98));
@@ -1339,7 +1339,7 @@ body{
     right:-3px;
     bottom:-28px;
     color:rgba(255,215,0,.045);
-    font-size:82px;
+    font-size:105px;
     font-weight:950;
     pointer-events:none;
 }
@@ -1347,7 +1347,7 @@ body{
 .daily-reward-icon{
     position:relative;
     z-index:1;
-    font-size:30px;
+    font-size:38px;
     filter:drop-shadow(0 0 13px rgba(255,215,0,.28));
 }
 
@@ -1356,7 +1356,7 @@ body{
     z-index:1;
     margin:7px 0 3px;
     color:#ffe47a;
-    font-size:19px;
+    font-size:23px;
     font-weight:950;
     letter-spacing:.7px;
 }
@@ -1546,24 +1546,74 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 }
 
 .nav-tab i{
-    font-size:34px;
-    color:#d4af37;
-    text-shadow:0 0 8px rgba(212,175,55,.6),0 0 18px rgba(212,175,55,.35);
-    transition:.2s ease;
-}
-.nav-tab.active i{
-    color:#ffd700;
-    text-shadow:0 0 12px rgba(255,215,0,.9),0 0 28px rgba(255,215,0,.55);
-}
-.nav-tab:hover i{
-    transform:scale(1.08);
-    text-shadow:0 0 12px rgba(255,215,0,.8),0 0 24px rgba(255,215,0,.45);
+    font-size:28px;
 }
 .home-hero{padding-top:8px}.home-hero .logo{margin:0 auto}.home-hero .subtitle{margin-bottom:22px}
 .community-card{width:min(92vw,390px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
 .community-card .button{max-width:none;width:100%;box-sizing:border-box;margin:10px 0}
 .web3-footer{margin:26px 0 8px;color:#d4af37;font-weight:900}.web3-domain{margin:0;color:#8b8b8b;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 @media(max-width:390px){.nav-tab{font-size:9px}.nav-tab i{font-size:18px}.page-heading{font-size:23px}}
+</style>
+
+
+<style>
+.daily-reward-card{
+    width:min(82vw,300px);
+    margin:0 auto 18px;
+    padding:12px 12px 11px;
+    border-radius:16px;
+}
+.daily-reward-card::after{
+    right:-1px;
+    bottom:-20px;
+    font-size:68px;
+}
+.daily-reward-icon{font-size:25px;}
+.daily-reward-title{
+    margin:4px 0 1px;
+    font-size:17px;
+    letter-spacing:.45px;
+}
+.daily-reward-amount{
+    margin:5px 0 3px;
+    font-size:24px;
+}
+.daily-reward-note{
+    max-width:250px;
+    margin:0 auto 8px;
+    font-size:9px;
+    line-height:1.35;
+}
+.daily-reward-balance{
+    margin:7px 0 8px;
+    padding:6px 8px;
+    border-radius:9px;
+    font-size:10.5px;
+}
+.daily-reward-button{
+    padding:9px 10px;
+    border-radius:9px;
+    font-size:13px;
+    letter-spacing:.55px;
+}
+.daily-reward-timer{
+    min-height:14px;
+    margin-top:6px;
+    font-size:9.5px;
+}
+.nav-tab i{
+    font-size:34px;
+    color:#d4af37;
+    text-shadow:0 0 8px rgba(212,175,55,.62),0 0 18px rgba(212,175,55,.34);
+}
+.nav-tab.active i{
+    color:#ffd700;
+    text-shadow:0 0 12px rgba(255,215,0,.92),0 0 28px rgba(255,215,0,.58);
+}
+@media(max-width:390px){
+    .daily-reward-card{width:min(84vw,290px);}
+    .nav-tab i{font-size:30px;}
+}
 </style>
 
 </head>
@@ -1576,7 +1626,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 <canvas id="sparkCanvas"></canvas>
 
 <main class="app-shell">
-    <section class="app-page active" id="page-home" data-page="home">
+    <section class="app-page" id="page-home" data-page="home">
         <div class="home-hero">
             <div id="gpPanel">
                 <div class="gpTitle">⭐ Gold Points</div>
@@ -1599,7 +1649,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
         </div>
     </section>
 
-    <section class="app-page" id="page-music" data-page="music">
+    <section class="app-page active" id="page-music" data-page="music">
         <audio id="player" preload="metadata"></audio>
 
         <div class="player" id="musicPlayer">
@@ -1680,8 +1730,8 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 </main>
 
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
-    <button class="nav-tab active" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
-    <button class="nav-tab" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
+    <button class="nav-tab active" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
+    <button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
     <button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
     <button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
 </nav>
