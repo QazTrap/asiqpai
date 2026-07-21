@@ -1557,63 +1557,87 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 
 
 <style>
-.daily-reward-card{
-    width:min(82vw,300px);
-    margin:0 auto 18px;
-    padding:12px 12px 11px;
-    border-radius:16px;
+/* ===== UI 3.0 PREMIUM ===== */
+.player,
+.license-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card{
+ width:min(92vw,340px)!important;
+ max-width:340px!important;
+ margin:0 auto 22px!important;
+ padding:18px!important;
+ border-radius:24px!important;
+ border:1px solid rgba(212,175,55,.22)!important;
+ background:
+ radial-gradient(circle at top right,rgba(255,215,0,.08),transparent 35%),
+ linear-gradient(145deg,#181818,#090909)!important;
+ box-shadow:
+ 0 0 26px rgba(212,175,55,.12),
+ 0 20px 45px rgba(0,0,0,.45)!important;
+ transition:.35s ease;
 }
-.daily-reward-card::after{
-    right:-1px;
-    bottom:-20px;
-    font-size:68px;
+.player:hover,
+.license-card:hover,
+.daily-reward-card:hover,
+.asiq-wallet-card:hover,
+.withdraw-card:hover,
+.community-card:hover{
+ transform:translateY(-3px);
+ box-shadow:
+ 0 0 34px rgba(255,215,0,.22),
+ 0 26px 55px rgba(0,0,0,.55);
 }
-.daily-reward-icon{font-size:25px;}
-.daily-reward-title{
-    margin:4px 0 1px;
-    font-size:17px;
-    letter-spacing:.45px;
+.button,
+.buy-button,
+.withdraw-button,
+.daily-reward-button,
+.claim-button{
+ border-radius:14px!important;
+ transition:.25s;
 }
-.daily-reward-amount{
-    margin:5px 0 3px;
-    font-size:24px;
+.button:hover,
+.buy-button:hover,
+.withdraw-button:hover,
+.daily-reward-button:hover,
+.claim-button:hover{
+ transform:translateY(-2px);
+ box-shadow:0 0 18px rgba(255,215,0,.35);
 }
-.daily-reward-note{
-    max-width:250px;
-    margin:0 auto 8px;
-    font-size:9px;
-    line-height:1.35;
-}
-.daily-reward-balance{
-    margin:7px 0 8px;
-    padding:6px 8px;
-    border-radius:9px;
-    font-size:10.5px;
-}
-.daily-reward-button{
-    padding:9px 10px;
-    border-radius:9px;
-    font-size:13px;
-    letter-spacing:.55px;
-}
-.daily-reward-timer{
-    min-height:14px;
-    margin-top:6px;
-    font-size:9.5px;
+.nav-tab{
+ transition:.25s;
 }
 .nav-tab i{
-    font-size:34px;
-    color:#d4af37;
-    text-shadow:0 0 8px rgba(212,175,55,.62),0 0 18px rgba(212,175,55,.34);
+ font-size:34px;
+ color:#d4af37;
+ text-shadow:0 0 8px rgba(212,175,55,.55),0 0 18px rgba(212,175,55,.35);
+ transition:.25s;
 }
 .nav-tab.active i{
-    color:#ffd700;
-    text-shadow:0 0 12px rgba(255,215,0,.92),0 0 28px rgba(255,215,0,.58);
+ color:#ffd700;
+ transform:translateY(-4px) scale(1.12);
+ text-shadow:0 0 12px gold,0 0 30px gold;
 }
-@media(max-width:390px){
-    .daily-reward-card{width:min(84vw,290px);}
-    .nav-tab i{font-size:30px;}
+.title{
+ text-shadow:0 0 12px rgba(212,175,55,.4),0 0 28px rgba(212,175,55,.25);
 }
+.player-cover,
+.logo{
+ transition:.4s;
+}
+.player-cover:hover,
+.logo:hover{
+ transform:scale(1.03);
+}
+.daily-reward-card{
+ width:min(82vw,300px)!important;
+ padding:14px!important;
+}
+.daily-reward-title{font-size:18px!important;}
+.daily-reward-amount{font-size:25px!important;}
+.daily-reward-note{font-size:10px!important;}
+.daily-reward-icon{font-size:28px!important;}
 </style>
 
 </head>
@@ -1626,7 +1650,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 <canvas id="sparkCanvas"></canvas>
 
 <main class="app-shell">
-    <section class="app-page" id="page-home" data-page="home">
+    <section class="app-page active" id="page-home" data-page="home">
         <div class="home-hero">
             <div id="gpPanel">
                 <div class="gpTitle">⭐ Gold Points</div>
@@ -1649,7 +1673,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
         </div>
     </section>
 
-    <section class="app-page active" id="page-music" data-page="music">
+    <section class="app-page" id="page-music" data-page="music">
         <audio id="player" preload="metadata"></audio>
 
         <div class="player" id="musicPlayer">
@@ -1730,8 +1754,8 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 </main>
 
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
-    <button class="nav-tab active" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
-    <button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
+    <button class="nav-tab active" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
+    <button class="nav-tab" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
     <button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
     <button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
 </nav>
