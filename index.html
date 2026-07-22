@@ -1761,6 +1761,9 @@ body{
     filter: brightness(1.12) drop-shadow(0 0 10px rgba(255,215,0,.45)) !important;
     transition:transform .08s ease-out, filter .08s ease-out !important;
 }
+
+/* Gold Points полностью отключены */
+#gpPanel, #gpCounter, .gpTitle, .plusOne{display:none!important;}
 </style>
 
 </head>
@@ -1771,11 +1774,6 @@ body{
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
         <div class="home-hero">
-            <div id="gpPanel">
-                <div class="gpTitle">⭐ Gold Points</div>
-                <div id="gpCounter">0</div>
-            </div>
-
             <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">    
         </div>
 
@@ -2994,189 +2992,50 @@ loadPlaylist();
 </script>
     <script>
 const crown = document.getElementById("crown");
-        
-let gp = Number(SafeStorage.get("gp")) || 0;
 
-const gpCounter = document.getElementById("gpCounter");
-const progressFill = document.getElementById("progressFill");
-const progressText = document.getElementById("progressText");
-
-const progressPercent = document.getElementById("progressPercent");
-const licenseStatus = document.getElementById("licenseStatus");
-const claimLicenseButton = document.getElementById("claimLicenseButton");
-const buyGPButton = document.getElementById("buyGPButton");
-
-const LICENSE_COST = 100000;
-let goldLicenseClaimed =
-    SafeStorage.get("goldLicenseClaimed") === "true";
-
-function updateGP(){
-    gpCounter.textContent = gp.toLocaleString();
-}
-function claimLicense(){
-    if(gp < LICENSE_COST || goldLicenseClaimed){
-        return;
-    }
-
-    gp -= LICENSE_COST;
-    goldLicenseClaimed = true;
-
-    SafeStorage.set("gp", gp);
-    SafeStorage.set("goldLicenseClaimed", "true");
-
-    updateGP();
-
-    if(window.Telegram && Telegram.WebApp){
-        Telegram.WebApp.HapticFeedback.notificationOccurred("success");
-    }
-
-    showToast("⭐ Gold License активирована", "success");
-}
-updateGP();
+// Загружаем функции приложения, не связанные с Gold Points.
 loadDailyReward();
 loadWithdraw();
-syncServerProfile();
 
-/**
- * Чем ближе баланс к 100 000 GP, тем сложнее добыча.
- * Возвращает награду за один тап: 0, 1, 2, 3, 5 или 10 GP.
- */
-function calculateTapReward(currentGP){
-    const random = Math.random();
+// Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
+if(crown){
+    crown.addEventListener("pointerdown", () => {
+        crown.classList.add("crown-down");
 
-    if(random < 0.65) return 1;
-    if(random < 0.85) return 2;
-    if(random < 0.95) return 3;
-    if(random < 0.99) return 5;
-    return 10;
-}
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
+        }catch{}
+    });
 
-    if(currentGP < 50000){
-        if(random < 0.75) return 1;
-        if(random < 0.94) return 2;
-        if(random < 0.99) return 3;
-        return 5;
-    }
+    ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
+        crown.addEventListener(eventName, () => {
+            crown.classList.remove("crown-down");
+        });
+    });
 
-    if(currentGP < 75000){
-        if(random < 0.82) return 1;
-        if(random < 0.97) return 2;
-        return 3;
-    }
-
-    if(currentGP < 90000){
-        if(random < 0.25) return 0;
-        if(random < 0.92) return 1;
-        return 2;
-    }
-
-    if(random < 0.65) return 0;
-    return 1;
-}
-
-function applyRewardAppearance(plus, reward){
-    if(reward === 0){
-        plus.textContent = "TRY AGAIN";
-        plus.style.color = "#777";
-    }else if(reward === 1){
-        plus.textContent = "+1 GP";
-        plus.style.color = "#FFD700";
-    }else if(reward === 2){
-        plus.textContent = "+2 GP";
-        plus.style.color = "#FFD700";
-    }else if(reward === 3){
-        plus.textContent = "+3 GP";
-        plus.style.color = "#FFA500";
-    }else if(reward === 5){
-        plus.textContent = "⭐ +5 GP";
-        plus.style.color = "#FF8C00";
-    }else{
-        plus.textContent = "💎 +10 GP";
-        plus.style.color = "#00E5FF";
-    }
-}
-
-crown.addEventListener("pointerdown", () => {
-    if(crown._tapAnimation){
-        crown._tapAnimation.cancel();
-    }
-
-    crown.classList.add("crown-down");
-
-    try{
-        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
-    }catch{}
-});
-
-["pointerup","pointercancel","pointerleave"].forEach(eventName => {
-    crown.addEventListener(eventName, () => {
+    crown.addEventListener("click", () => {
         crown.classList.remove("crown-down");
+
+        if(crown._tapAnimation){
+            crown._tapAnimation.cancel();
+        }
+
+        crown._tapAnimation = crown.animate([
+            { transform:"scale(.90) translateY(3px)" },
+            { transform:"scale(1.06) translateY(-3px)", offset:.45 },
+            { transform:"scale(.94) translateY(1px)", offset:.72 },
+            { transform:"scale(1) translateY(0)" }
+        ], {
+            duration:460,
+            easing:"cubic-bezier(.22,1.35,.36,1)"
+        });
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+        }catch{}
     });
-});
-
-crown.addEventListener("click", () => {
-
-    const rect = crown.getBoundingClientRect();
-
-const plus = document.createElement("div");
-
-plus.className = "plusOne";
-    
-const reward = calculateTapReward(gp);
-applyRewardAppearance(plus, reward);
-
-gp += reward;
-SafeStorage.set("gp", gp);
-updateGP();
-
-if(reward >= 5){
-    showToast(
-        reward === 10 ? "🪙 +10 GP" : `⭐ +${reward} GP`,
-        reward === 10 ? "success" : ""
-    );
 }
 
-// Случайное появление по кругу вокруг короны
-const angle = Math.random() * Math.PI * 2;
-const distance = 30 + Math.random() * 90;
-
-const offsetX = Math.cos(angle) * distance;
-const offsetY = Math.sin(angle) * distance;
-
-plus.style.left = (rect.left + rect.width / 2 + offsetX - 42) + "px";
-plus.style.top = (rect.top + rect.height / 2 + offsetY) + "px";
-    
-    // Центрируем надпись относительно точки появления
-plus.style.transform = "translate(-50%, -50%)";
-
-document.body.appendChild(plus);
-
-setTimeout(() => plus.remove(), 900);
-
-    // Вибрация Telegram
-    if (window.Telegram && Telegram.WebApp) {
-        Telegram.WebApp.HapticFeedback.impactOccurred("light");
-    }
-
-    // Пружинящая отдача после отпускания
-    crown.classList.remove("crown-down");
-
-    if(crown._tapAnimation){
-        crown._tapAnimation.cancel();
-    }
-
-    crown._tapAnimation = crown.animate([
-        { transform:"scale(.90) translateY(3px)" },
-        { transform:"scale(1.06) translateY(-3px)", offset:.45 },
-        { transform:"scale(.94) translateY(1px)", offset:.72 },
-        { transform:"scale(1) translateY(0)" }
-    ], {
-        duration:460,
-        easing:"cubic-bezier(.22,1.35,.36,1)"
-    });
-
-
-});
 </script>
     
 <script>
