@@ -1747,7 +1747,7 @@ body{
             </div>
 
             <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">
-            <!-- <h1 class="title">ASIQPAI</h1> -->
+            <h1 class="title">ASIQPAI</h1>
             
         </div>
 
@@ -1763,7 +1763,7 @@ body{
     </section>
 
     <section class="app-page active" id="page-music" data-page="music">
-        <audio id="player" preload="metadata"></audio>
+        <audio id="player" preload="auto"></audio>
 
         <div class="player" id="musicPlayer">
             <div class="player-cover-wrap">
@@ -1794,12 +1794,14 @@ body{
     </section>
 
     <section class="app-page" id="page-library" data-page="library">
-    
+        <h2 class="page-heading">📚 LIBRARY</h2>
+        <p class="page-subheading">Выберите трек — он начнёт играть, а вкладка Library останется открытой</p>
         <div class="track-catalog" id="trackCatalog" aria-label="Библиотека треков"></div>
     </section>
 
     <section class="app-page" id="page-wallet" data-page="wallet">
-       
+        <h2 class="page-heading">💰 WALLET</h2>
+        <p class="page-subheading">Баланс ASIQ и автоматический вывод в TON-кошелёк</p>
         <div id="ton-connect"></div>
 
         <div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
@@ -2573,14 +2575,15 @@ function waitForAudioReady(timeout = 8000){
 
 async function playLoadedTrack(){
     try{
-        await waitForAudioReady();
+        // Запускаем воспроизведение сразу после нажатия.
+        // Браузер сам продолжит буферизацию без искусственного ожидания canplay/loadeddata.
         await player.play();
 
         playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
         musicPlayer.classList.add("playing");
         updateTrackCatalogState();
     }catch(error){
-        console.warn("Ошибка воспроизведения аудио");
+        console.warn("Ошибка воспроизведения аудио", error);
 
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
