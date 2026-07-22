@@ -1748,19 +1748,13 @@ body{
     touch-action:manipulation;
     transform-origin:center;
     -webkit-tap-highlight-color:transparent;
-    transition:transform .08s linear;
+    will-change:transform, filter;
 }
 
-#crown.crown-pressed{
-    animation:crownBounce .45s cubic-bezier(.34,1.56,.64,1);
-}
-
-@keyframes crownBounce{
-0%{transform:scale(1);}
-25%{transform:scale(.82);}
-55%{transform:scale(1.15);}
-75%{transform:scale(.96);}
-100%{transform:scale(1);}
+#crown.crown-down{
+    transform:scale(.72) translateY(8px) !important;
+    filter:brightness(1.25) drop-shadow(0 0 18px rgba(255,215,0,.7)) !important;
+    transition:transform .08s ease-out, filter .08s ease-out !important;
 }
 </style>
 
@@ -3098,6 +3092,19 @@ function applyRewardAppearance(plus, reward){
     }
 }
 
+crown.addEventListener("pointerdown", () => {
+    if(crown._tapAnimation){
+        crown._tapAnimation.cancel();
+    }
+    crown.classList.add("crown-down");
+});
+
+["pointerup","pointercancel","pointerleave"].forEach(eventName => {
+    crown.addEventListener(eventName, () => {
+        crown.classList.remove("crown-down");
+    });
+});
+
 crown.addEventListener("click", () => {
 
     const rect = crown.getBoundingClientRect();
@@ -3142,44 +3149,22 @@ setTimeout(() => plus.remove(), 900);
         Telegram.WebApp.HapticFeedback.impactOccurred("light");
     }
 
-    // Живая анимация кнопки: продавливание и мягкая отдача
-    crown.classList.add("crown-pressed");
+    // Пружинящая отдача после отпускания
+    crown.classList.remove("crown-down");
 
     if(crown._tapAnimation){
         crown._tapAnimation.cancel();
     }
 
     crown._tapAnimation = crown.animate([
-        {
-            transform:"translateY(0) scale(1)",
-            filter:"brightness(1) drop-shadow(0 0 0 rgba(255,215,0,0))"
-        },
-        {
-            transform:"translateY(9px) scale(.68)",
-            filter:"brightness(1.35) drop-shadow(0 0 22px rgba(255,215,0,.78))",
-            offset:.30
-        },
-        {
-            transform:"translateY(-4px) scale(1.12)",
-            filter:"brightness(1.18) drop-shadow(0 0 16px rgba(255,215,0,.55))",
-            offset:.68
-        },
-        {
-            transform:"translateY(0) scale(1)",
-            filter:"brightness(1) drop-shadow(0 0 0 rgba(255,215,0,0))"
-        }
+        { transform:"scale(.72) translateY(8px)" },
+        { transform:"scale(1.16) translateY(-4px)", offset:.45 },
+        { transform:"scale(.94) translateY(1px)", offset:.72 },
+        { transform:"scale(1) translateY(0)" }
     ], {
-        duration:420,
-        easing:"cubic-bezier(.2,.95,.25,1.25)"
+        duration:460,
+        easing:"cubic-bezier(.22,1.35,.36,1)"
     });
-
-    crown._tapAnimation.onfinish = () => {
-        crown.classList.remove("crown-pressed");
-    };
-
-    crown._tapAnimation.oncancel = () => {
-        crown.classList.remove("crown-pressed");
-    };
 
 
 });
