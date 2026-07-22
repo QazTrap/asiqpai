@@ -2752,6 +2752,9 @@ player.addEventListener("ended", async function(){
     playLoadedTrack();
 });
 
+player.addEventListener("play", updateTrackCatalogState);
+player.addEventListener("pause", updateTrackCatalogState);
+
 // =======================
 // ПРОГРЕСС
 // =======================
@@ -2826,7 +2829,7 @@ function updateTrackCatalogState(){
         const icon = button.querySelector(".track-item-icon");
         if(icon){
             icon.innerHTML = active && isPlaying
-                ? '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>'
+                ? '<i class="fa-solid fa-pause" aria-hidden="true"></i>'
                 : '<i class="fa-solid fa-play" aria-hidden="true"></i>';
         }
     });
@@ -2872,6 +2875,24 @@ function renderTrackCatalog(){
 
         button.append(cover,copy,icon);
         button.addEventListener("click", async () => {
+            try{
+                window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+            }catch{
+                if(navigator.vibrate) navigator.vibrate(15);
+            }
+
+            if(index === currentTrack){
+                if(player.paused){
+                    await playLoadedTrack();
+                }else{
+                    player.pause();
+                    playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                    musicPlayer.classList.remove("playing");
+                    updateTrackCatalogState();
+                }
+                return;
+            }
+
             currentTrack = index;
             await loadTrack(currentTrack);
             updateTrackCatalogState();
