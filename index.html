@@ -1743,11 +1743,24 @@ body{
     -webkit-tap-highlight-color:transparent;
 }
 
+#crown{
+    cursor:pointer;
+    touch-action:manipulation;
+    transform-origin:center;
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .08s linear;
+}
+
 #crown.crown-pressed{
-    filter:
-        brightness(1.18)
-        drop-shadow(0 0 12px rgba(255,215,0,.55))
-        drop-shadow(0 8px 12px rgba(0,0,0,.45));
+    animation:crownBounce .45s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes crownBounce{
+0%{transform:scale(1);}
+25%{transform:scale(.82);}
+55%{transform:scale(1.15);}
+75%{transform:scale(.96);}
+100%{transform:scale(1);}
 }
 </style>
 
