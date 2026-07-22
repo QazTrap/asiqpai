@@ -1710,6 +1710,11 @@ body{
     text-align:center;
 }
 
+
+.track-item.active .track-item-icon{
+    text-shadow:0 0 8px rgba(212,175,55,.35);
+}
+
 /* На телефоне hover не должен запускать лишние перерисовки. */
 @media (hover:none){
     .player:hover,.daily-reward-card:hover,.asiq-wallet-card:hover,
@@ -1790,7 +1795,7 @@ body{
 
     <section class="app-page" id="page-library" data-page="library">
         <h2 class="page-heading">📚 LIBRARY</h2>
-        <p class="page-subheading">Выберите трек — он сразу откроется в плеере</p>
+        <p class="page-subheading">Выберите трек — он начнёт играть, а вкладка Library останется открытой</p>
         <div class="track-catalog" id="trackCatalog" aria-label="Библиотека треков"></div>
     </section>
 
@@ -2575,11 +2580,13 @@ async function playLoadedTrack(){
 
         playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
         musicPlayer.classList.add("playing");
+        updateTrackCatalogState();
     }catch(error){
         console.warn("Ошибка воспроизведения аудио");
 
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
+        updateTrackCatalogState();
         showToast("Не удалось воспроизвести трек. Проверь путь к MP3", "warning");
     }
 }
@@ -2643,6 +2650,7 @@ playButton.onclick = async function(){
         player.pause();
         playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
         musicPlayer.classList.remove("playing");
+        updateTrackCatalogState();
     }
 };
 
@@ -2803,6 +2811,27 @@ function formatTime(seconds){
 // =======================
 
 
+function updateTrackCatalogState(){
+    const catalog = document.getElementById("trackCatalog");
+    if(!catalog) return;
+
+    const isPlaying = !player.paused && !player.ended;
+
+    catalog.querySelectorAll(".track-item").forEach(button => {
+        const index = Number(button.dataset.trackIndex);
+        const active = index === currentTrack;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "true" : "false");
+
+        const icon = button.querySelector(".track-item-icon");
+        if(icon){
+            icon.innerHTML = active && isPlaying
+                ? '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>'
+                : '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+        }
+    });
+}
+
 function renderTrackCatalog(){
     const catalog = document.getElementById("trackCatalog");
     if(!catalog) return;
@@ -2845,8 +2874,7 @@ function renderTrackCatalog(){
         button.addEventListener("click", async () => {
             currentTrack = index;
             await loadTrack(currentTrack);
-            renderTrackCatalog();
-            document.querySelector('.nav-tab[data-target="music"]')?.click();
+            updateTrackCatalogState();
             await playLoadedTrack();
         });
         fragment.appendChild(button);
