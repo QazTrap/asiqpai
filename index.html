@@ -3044,13 +3044,12 @@ syncServerProfile();
 function calculateTapReward(currentGP){
     const random = Math.random();
 
-    if(currentGP < 25000){
-        if(random < 0.65) return 1;
-        if(random < 0.85) return 2;
-        if(random < 0.95) return 3;
-        if(random < 0.99) return 5;
-        return 10;
-    }
+    if(random < 0.65) return 1;
+    if(random < 0.85) return 2;
+    if(random < 0.95) return 3;
+    if(random < 0.99) return 5;
+    return 10;
+}
 
     if(currentGP < 50000){
         if(random < 0.75) return 1;
