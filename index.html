@@ -3092,12 +3092,9 @@ function applyRewardAppearance(plus, reward){
     }
 }
 
-crown.addEventListener("pointerdown", () => {
-    if(crown._tapAnimation){
-        crown._tapAnimation.cancel();
-    }
-    crown.classList.add("crown-down");
-});
+crown.addEventListener("touchstart", () => {
+    Telegram.WebApp.HapticFeedback.impactOccurred("medium");
+}, { passive: true });
 
 ["pointerup","pointercancel","pointerleave"].forEach(eventName => {
     crown.addEventListener(eventName, () => {
