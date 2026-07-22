@@ -3092,9 +3092,17 @@ function applyRewardAppearance(plus, reward){
     }
 }
 
-crown.addEventListener("touchstart", () => {
-    Telegram.WebApp.HapticFeedback.impactOccurred("medium");
-}, { passive: true });
+crown.addEventListener("pointerdown", () => {
+    if(crown._tapAnimation){
+        crown._tapAnimation.cancel();
+    }
+
+    crown.classList.add("crown-down");
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
+    }catch{}
+});
 
 ["pointerup","pointercancel","pointerleave"].forEach(eventName => {
     crown.addEventListener(eventName, () => {
@@ -3154,8 +3162,8 @@ setTimeout(() => plus.remove(), 900);
     }
 
     crown._tapAnimation = crown.animate([
-        { transform:"scale(.72) translateY(8px)" },
-        { transform:"scale(1.16) translateY(-4px)", offset:.45 },
+        { transform:"scale(.90) translateY(3px)" },
+        { transform:"scale(1.06) translateY(-3px)", offset:.45 },
         { transform:"scale(.94) translateY(1px)", offset:.72 },
         { transform:"scale(1) translateY(0)" }
     ], {
