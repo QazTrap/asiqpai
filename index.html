@@ -1627,14 +1627,111 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
 .daily-reward-icon{font-size:28px!important;}
 </style>
 
+
+<style>
+/* ===== ASIQPAI PERFORMANCE PATCH ===== */
+html{background:#050505}
+body{
+    background:
+        radial-gradient(circle at 50% -10%,rgba(212,175,55,.08),transparent 34%),
+        #050505;
+}
+
+/* Постоянные canvas-анимации удалены: меньше нагрузки на GPU и батарею. */
+#smokeCanvas,#sparkCanvas{display:none!important}
+
+.track-catalog{
+    width:min(92vw,340px);
+    margin:0 auto 24px;
+    display:grid;
+    gap:10px;
+    content-visibility:auto;
+    contain-intrinsic-size:260px;
+}
+.track-catalog-title{
+    margin:4px 2px 2px;
+    color:#d4af37;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:2px;
+    text-align:left;
+    text-transform:uppercase;
+}
+.track-item{
+    width:100%;
+    min-height:68px;
+    display:grid;
+    grid-template-columns:52px 1fr 34px;
+    align-items:center;
+    gap:12px;
+    padding:8px;
+    box-sizing:border-box;
+    border:1px solid rgba(212,175,55,.13);
+    border-radius:16px;
+    background:rgba(18,18,18,.86);
+    color:#fff;
+    text-align:left;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+.track-item.active{
+    border-color:rgba(212,175,55,.48);
+    background:rgba(212,175,55,.08);
+}
+.track-item-cover{
+    width:52px;
+    height:52px;
+    border-radius:11px;
+    object-fit:cover;
+    background:#111;
+}
+.track-item-copy{min-width:0}
+.track-item-name{
+    overflow:hidden;
+    color:#f4f4f4;
+    font-size:14px;
+    font-weight:900;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.track-item-meta{
+    margin-top:5px;
+    overflow:hidden;
+    color:#8d8d8d;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.5px;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.track-item-icon{
+    color:#d4af37;
+    font-size:15px;
+    text-align:center;
+}
+
+/* На телефоне hover не должен запускать лишние перерисовки. */
+@media (hover:none){
+    .player:hover,.daily-reward-card:hover,.asiq-wallet-card:hover,
+    .withdraw-card:hover,.community-card:hover,.button:hover,
+    .daily-reward-button:hover,.withdraw-button:hover,.logo:hover,
+    .player-cover:hover{transform:none!important;box-shadow:inherit}
+}
+
+@media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Rubik+Glitch&display=swap" rel="stylesheet">
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
-<canvas id="smokeCanvas"></canvas>
-<canvas id="sparkCanvas"></canvas>
 
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
@@ -1689,14 +1786,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
             </div>
         </div>
 
-        <div class="section-divider"><span>LICENSE CENTER</span></div>
-        <div class="license-card" id="licenseCard">
-            <div class="license-icon">🎹</div>
-            <h2 class="license-title" id="licenseTitle">Әңгіме</h2>
-            <button class="buy-button" type="button" onclick="buyLicense('mp3')">MP3 <span>⭐ — 10 GRAM</span></button>
-            <button class="buy-button" type="button" onclick="buyLicense('wav')">WAV <span>⭐ — 20 GRAM</span></button>
-            <button class="buy-button" type="button" onclick="buyLicense('full')">FULL <span>⭐ — 40 GRAM</span></button>
-        </div>
+        <div class="track-catalog" id="trackCatalog" aria-label="Каталог треков"></div>
     </section>
 
     <section class="app-page" id="page-wallet" data-page="wallet">
@@ -2353,7 +2443,6 @@ const playButton = document.getElementById("playButton");
 const trackName = document.getElementById("trackName");
 const trackMeta = document.getElementById("trackMeta");
 const trackCover = document.getElementById("trackCover");
-const licenseTitle = document.getElementById("licenseTitle");
 const musicPlayer = document.getElementById("musicPlayer");
 const likeButton = document.getElementById("likeButton");
 const playModeButton = document.getElementById("playModeButton");
@@ -2515,7 +2604,6 @@ async function loadTrack(index, options = {}){
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
 
-    if(licenseTitle) licenseTitle.textContent = track.title;
 
     const likedTracks = SafeStorage.getJSON("likedTracks", {});
     const isLiked = Boolean(likedTracks[track.file]);
@@ -2565,6 +2653,7 @@ document.getElementById("nextButton").onclick = async function(){
         : (currentTrack + 1) % playlist.length;
 
     await loadTrack(currentTrack);
+    renderTrackCatalog();
     playLoadedTrack();
 };
 
@@ -2591,6 +2680,7 @@ document.getElementById("prevButton").onclick = async function(){
     }
 
     await loadTrack(currentTrack);
+    renderTrackCatalog();
     playLoadedTrack();
 };
 
@@ -2644,6 +2734,7 @@ player.addEventListener("ended", async function(){
         : (currentTrack + 1) % playlist.length;
 
     await loadTrack(currentTrack);
+    renderTrackCatalog();
     playLoadedTrack();
 });
 
@@ -2705,6 +2796,58 @@ function formatTime(seconds){
 // ЗАГРУЗКА ПЕРВОГО ТРЕКА
 // =======================
 
+
+function renderTrackCatalog(){
+    const catalog = document.getElementById("trackCatalog");
+    if(!catalog) return;
+
+    const fragment = document.createDocumentFragment();
+    const heading = document.createElement("div");
+    heading.className = "track-catalog-title";
+    heading.textContent = "Tracks";
+    fragment.appendChild(heading);
+
+    playlist.forEach((track,index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `track-item${index === currentTrack ? " active" : ""}`;
+        button.dataset.trackIndex = String(index);
+        button.setAttribute("aria-label", `Включить ${track.title}`);
+
+        const cover = document.createElement("img");
+        cover.className = "track-item-cover";
+        cover.src = encodeURI(track.cover).replace(/#/g,"%23");
+        cover.alt = "";
+        cover.loading = "lazy";
+        cover.decoding = "async";
+
+        const copy = document.createElement("span");
+        copy.className = "track-item-copy";
+        const name = document.createElement("span");
+        name.className = "track-item-name";
+        name.textContent = track.title;
+        const meta = document.createElement("span");
+        meta.className = "track-item-meta";
+        meta.textContent = `${track.artist} • ${track.meta}`;
+        copy.append(name,meta);
+
+        const icon = document.createElement("span");
+        icon.className = "track-item-icon";
+        icon.innerHTML = '<i class="fa-solid fa-play"></i>';
+
+        button.append(cover,copy,icon);
+        button.addEventListener("click", async () => {
+            currentTrack = index;
+            await loadTrack(currentTrack);
+            renderTrackCatalog();
+            await playLoadedTrack();
+        });
+        fragment.appendChild(button);
+    });
+
+    catalog.replaceChildren(fragment);
+}
+
 async function loadPlaylist(){
     try{
         const response = await fetch("tracks.json", {
@@ -2753,6 +2896,7 @@ async function loadPlaylist(){
 
     updatePlayModeButton();
     await loadTrack(currentTrack, { notify:false });
+    renderTrackCatalog();
 
     const isTelegramLaunch = Boolean(
         window.Telegram?.WebApp?.initData &&
@@ -2765,130 +2909,6 @@ async function loadPlaylist(){
 }
 
 loadPlaylist();
-</script>
-    <script>
-const sparkCanvas = document.getElementById("sparkCanvas");
-const sctx = sparkCanvas.getContext("2d");
-
-function resizeSpark(){
-    sparkCanvas.width = window.innerWidth;
-    sparkCanvas.height = window.innerHeight;
-}
-resizeSpark();
-window.addEventListener("resize", resizeSpark);
-
-const sparks=[];
-
-function createSpark(){
-
-    sparks.push({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        size:1+Math.random()*3,
-        speed:0.3+Math.random()*0.8,
-        alpha:0.6+Math.random()*0.4
-    });
-
-}
-
-setInterval(createSpark,250);
-
-function animateSpark(){
-
-    sctx.clearRect(0,0,sparkCanvas.width,sparkCanvas.height);
-
-    for(let i=sparks.length-1;i>=0;i--){
-
-        const p=sparks[i];
-
-        sctx.beginPath();
-
-        sctx.fillStyle=`rgba(255,210,70,${p.alpha})`;
-
-        sctx.shadowBlur=15;
-        sctx.shadowColor="#FFD54A";
-
-        sctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-
-        sctx.fill();
-
-        p.y-=p.speed;
-
-        p.alpha-=0.003;
-
-        if(p.alpha<=0){
-            sparks.splice(i,1);
-        }
-
-    }
-
-    requestAnimationFrame(animateSpark);
-
-}
-
-animateSpark();
-</script>
- <script>
-const canvas = document.getElementById("smokeCanvas");
-const ctx = canvas.getContext("2d");
-
-function resize(){
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
-
-const particles = [];
-
-for(let i=0;i<60;i++){
-    particles.push({
-        x:Math.random()*canvas.width,
-        y:Math.random()*canvas.height,
-        r:40+Math.random()*100,
-        vx:(Math.random()-0.5)*0.15,
-        vy:-0.15-Math.random()*0.25,
-        alpha:0.12+Math.random()*0.10
-    });
-}
-
-function draw(){
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    particles.forEach(p=>{
-
-        const g = ctx.createRadialGradient(
-            p.x,p.y,0,
-            p.x,p.y,p.r
-        );
-
-        g.addColorStop(0,`rgba(255,255,255,${p.alpha})`);
-        g.addColorStop(1,"rgba(255,255,255,0)");
-
-        ctx.fillStyle=g;
-        ctx.beginPath();
-        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-        ctx.fill();
-
-        p.x+=p.vx;
-        p.y+=p.vy;
-
-        if(p.y<-p.r){
-            p.y=canvas.height+p.r;
-            p.x=Math.random()*canvas.width;
-        }
-
-        if(p.x<-p.r)p.x=canvas.width+p.r;
-        if(p.x>canvas.width+p.r)p.x=-p.r;
-
-    });
-
-    requestAnimationFrame(draw);
-}
-
-draw();
-     
 </script>
     <script>
 const crown = document.getElementById("crown");
@@ -2930,132 +2950,6 @@ function claimLicense(){
 
     showToast("⭐ Gold License активирована", "success");
 }
-async function buyLicense(type){
-    if(paymentInProgress) return;
-
-    const licenses = {
-        mp3: { name: "MP3", price: 10 },
-        wav: { name: "WAV", price: 20 },
-        full: { name: "FULL", price: 40 }
-    };
-
-    const license = licenses[type];
-    const track = playlist[currentTrack];
-
-    if(!license || !track){
-        showToast("Не удалось определить лицензию", "warning");
-        return;
-    }
-
-    if(track.meta !== "INSTRUMENTAL"){
-        window.Telegram?.WebApp?.HapticFeedback
-            ?.notificationOccurred("warning");
-
-        showToast("Этот трек не продаётся", "warning");
-        return;
-    }
-
-    if(!getTelegramInitData()){
-        showToast("Открой Mini App внутри Telegram", "warning");
-        return;
-    }
-
-    if(!tonConnectUI.account?.address){
-        showToast("Сначала подключи GRAM-кошелёк", "warning");
-
-        try{
-            await tonConnectUI.openModal();
-        }catch{}
-
-        return;
-    }
-
-    const confirmed = window.confirm(
-        `Купить ${license.name} License на бит «${track.title}» за ${license.price} GRAM?`
-    );
-
-    if(!confirmed) return;
-
-    const buyButtons = Array.from(
-        document.querySelectorAll("#licenseCard .buy-button")
-    );
-
-    paymentInProgress = true;
-
-    buyButtons.forEach(button => {
-        button.disabled = true;
-    });
-
-    window.Telegram?.WebApp?.HapticFeedback
-        ?.impactOccurred("light");
-
-    try{
-        showToast("Создаём заказ…");
-
-        const order = await apiRequest("/api/orders", {
-            method: "POST",
-            body: JSON.stringify({
-                walletAddress: tonConnectUI.account.address,
-                trackTitle: track.title,
-                licenseType: type
-            })
-        });
-
-        showToast(
-            `Подтверди перевод ${order.amountGram} GRAM в кошельке`
-        );
-
-        await tonConnectUI.sendTransaction({
-            validUntil: Math.floor(Date.now() / 1000) + 600,
-            messages: [{
-                address: order.address,
-                amount: String(order.amount),
-                payload: order.payload
-            }]
-        });
-
-        showToast("⏳ Платёж отправлен. Проверяем блокчейн…");
-
-        const paidOrder = await waitForOrderPayment(order.orderId);
-
-        window.Telegram?.WebApp?.HapticFeedback
-            ?.notificationOccurred("success");
-
-        showToast(
-            `✅ ${license.name} License оплачена за ${paidOrder.priceGram} GRAM`,
-            "success"
-        );
-
-        window.Telegram?.WebApp?.showAlert?.(
-            `Оплата подтверждена!
-
-Бит: ${paidOrder.trackTitle}
-Лицензия: ${license.name}
-Сумма: ${paidOrder.priceGram} GRAM
-
-Информация о заказе отправлена администратору ASIQPAI.`
-        );
-    }catch(error){
-        console.error("Ошибка покупки лицензии:", error);
-
-        const message = error?.message || "Не удалось выполнить оплату";
-
-        if(/reject|cancel|declin/i.test(message)){
-            showToast("Оплата отменена", "warning");
-        }else if(/expired|истекло/i.test(message)){
-            showToast("Время оплаты истекло. Создай новый заказ", "warning");
-        }else{
-            showToast(message, "warning");
-        }
-    }finally{
-        paymentInProgress = false;
-
-        buyButtons.forEach(button => {
-            button.disabled = false;
-        });
-    }
-}
-
 updateGP();
 loadDailyReward();
 loadWithdraw();
@@ -3187,7 +3081,7 @@ setTimeout(() => plus.remove(), 900);
         const target = pages.find(page => page.dataset.page === name) || pages[0];
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
-        window.scrollTo({top:0, behavior:'smooth'});
+        window.scrollTo({top:0, behavior:'auto'});
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
 
