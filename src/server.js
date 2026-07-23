@@ -1278,6 +1278,9 @@ app.get(
           firstName: row.first_name,
           lastName: row.last_name,
           walletAddress: row.wallet_address || null,
+walletFriendly: row.wallet_address
+  ? Address.parse(row.wallet_address).toString()
+  : null,
           rewardBalance: String(row.reward_balance),
           streak: Number(row.streak || 0),
           totalClaims: Number(row.total_claims || 0),
