@@ -22,7 +22,7 @@ import {
   findPayment,
   normalizeAddress
 } from "./ton.js";
-
+import { Address } from "@ton/core";
 const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
