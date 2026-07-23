@@ -1276,10 +1276,14 @@ app.get(
           telegramId: row.telegram_id,
           username: row.username,
           firstName: row.first_name,
-          lastName: row.last_name,
-          walletAddress: row.wallet_address || null,
-walletFriendly: row.wallet_address
-  ? Address.parse(row.wallet_address).toString()
+          lastName: row.last_name, 
+          
+         walletFriendly: row.wallet_address
+        ? Address.parse(row.wallet_address).toString({
+           urlSafe: true,
+           bounceable: false,
+        testOnly: false
+    })
   : null,
           rewardBalance: String(row.reward_balance),
           streak: Number(row.streak || 0),
