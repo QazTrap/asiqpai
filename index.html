@@ -1433,20 +1433,45 @@ body{
     position:fixed;
     left:50%;
     top:50%;
-    z-index:20000;
+    z-index:30000;
+    width:88px;
+    height:88px;
+    display:grid;
+    place-items:center;
     transform:translate(-50%,-50%);
     pointer-events:none;
-    color:#ffe66d;
-    font-size:34px;
+    border-radius:50%;
+    background:rgba(18,92,54,.94);
+    border:2px solid rgba(112,255,171,.72);
+    color:#b8ffd3;
+    font-size:52px;
     font-weight:950;
-    text-shadow:0 0 18px rgba(255,215,0,.65);
-    animation:dailyRewardFloat 1.25s ease-out forwards;
+    line-height:1;
+    box-shadow:
+        0 0 24px rgba(69,212,131,.48),
+        0 18px 45px rgba(0,0,0,.5);
+    animation:dailyRewardFloat 1.15s ease-out forwards;
 }
 
 @keyframes dailyRewardFloat{
-    0%{opacity:0;transform:translate(-50%,-10%) scale(.72);}
-    20%{opacity:1;}
-    100%{opacity:0;transform:translate(-50%,-150%) scale(1.18);}
+    0%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.55);
+    }
+    18%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1.08);
+    }
+    32%{
+        transform:translate(-50%,-50%) scale(1);
+    }
+    78%{
+        opacity:1;
+    }
+    100%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.9);
+    }
 }
 
 
@@ -2305,10 +2330,12 @@ function startDailyRewardTimer(){
 function showDailyRewardAnimation(){
     const element = document.createElement("div");
     element.className = "daily-reward-float";
-    element.textContent = "+25 ASIQ";
+    element.textContent = "✓";
+    element.setAttribute("role", "status");
+    element.setAttribute("aria-label", "Награда получена");
     document.body.appendChild(element);
 
-    setTimeout(() => element.remove(), 1400);
+    setTimeout(() => element.remove(), 1250);
 
     try{
         window.Telegram?.WebApp?.HapticFeedback
@@ -2361,15 +2388,11 @@ async function claimDailyReward(){
 
         showDailyRewardAnimation();
         if(withdrawState){ withdrawState.rewardBalance = dailyRewardState.rewardBalance; renderWithdraw(); }
-        showToast("🎁 +25 ASIQ начислено во внутренний баланс", "success");
         renderDailyReward();
         startDailyRewardTimer();
     }catch(error){
-        showToast(
-            error.message || "Не удалось получить награду",
-            "warning"
-        );
-
+        console.warn("Daily Reward claim error:", error.message);
+        dailyRewardTimer.textContent = "Не удалось получить награду. Попробуйте ещё раз.";
         await loadDailyReward();
     }finally{
         dailyRewardBusy = false;
