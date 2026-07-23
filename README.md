@@ -75,7 +75,9 @@ The ASIQPAI project is being developed as a music-focused Telegram ecosystem fea
 - **YouTube:** [@asiqpai](https://youtube.com/@asiqpai)
 - **TikTok:** [@asiqpai](https://www.tiktok.com/@asiqpai)
 - **Instagram:** [@asiqpai](https://www.instagram.com/asiqpai)
+## Buy ASIQ
 
+[![Buy / Sell ASIQ](https://img.shields.io/badge/Buy%20%2F%20Sell-ASIQ-gold?style=for-the-badge)](https://app.dedust.io/swap/GRAM/EQDtaiYQRMlcGHXVkcK873McLzx-JQUZtyR8W1O6e2XISp52)
 ## Roadmap
 
 ### Available
