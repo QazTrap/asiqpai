@@ -129,7 +129,8 @@ function switchTab(tab){
 function usersFiltered(){
   const q=el.usersSearchInput.value.trim().toLowerCase();
   return state.users.filter(i=>!q||[
-    i.username,i.firstName,i.lastName,i.telegramId,i.walletAddress
+    i.username,i.firstName,i.lastName,i.telegramId,
+    i.walletFriendly,i.walletAddress
   ].filter(Boolean).join(" ").toLowerCase().includes(q));
 }
 function usersStats(){
@@ -147,7 +148,7 @@ function renderUsers(){
   }
   el.usersList.innerHTML=items.map(i=>{
     const display=i.username?`@${i.username}`:([i.firstName,i.lastName].filter(Boolean).join(" ")||"Без username");
-    const wallet=i.walletAddress||"Кошелёк не подключён";
+    const wallet=i.walletFriendly||i.walletAddress||"Кошелёк не подключён";
     return `<article class="user-card">
       <div class="user-card-top">
         <div>
@@ -159,7 +160,7 @@ function renderUsers(){
       </div>
       <div class="user-meta">TON-кошелёк</div>
       <div class="user-wallet">${esc(wallet)}</div>
-      ${i.walletAddress?`<button class="btn btn-outline copy-btn" data-copy-user-wallet="${esc(i.walletAddress)}">Копировать кошелёк</button>`:""}
+      ${i.walletAddress?`<button class="btn btn-outline copy-btn" data-copy-user-wallet="${esc(wallet)}">Копировать кошелёк</button>`:""}
       <div class="user-stats">
         <div class="user-stat"><strong>${esc(i.streak||0)}</strong><span>Streak</span></div>
         <div class="user-stat"><strong>${esc(i.totalClaims||0)}</strong><span>Наград</span></div>
