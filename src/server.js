@@ -1278,12 +1278,19 @@ app.get(
           firstName: row.first_name,
           lastName: row.last_name, 
           
-         walletFriendly: row.wallet_address
-        ? Address.parse(row.wallet_address).toString({
-           urlSafe: true,
-           bounceable: false,
-        testOnly: false
-    })
+         walletFriendly: (() => {
+  if (!row.wallet_address) return null;
+
+  try {
+    return Address.parse(row.wallet_address).toString({
+      urlSafe: true,
+      bounceable: false,
+      testOnly: false
+    });
+  } catch {
+    return row.wallet_address;
+  }
+})(),
   : null,
           rewardBalance: String(row.reward_balance),
           streak: Number(row.streak || 0),
