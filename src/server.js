@@ -247,21 +247,23 @@ app.post(
   requireTelegramUser,
   async (req, res) => {
     try {
-      const walletAddress = String(
-        req.body?.walletAddress || ""
-      ).trim();
+      const walletAddress = normalizeAddress(
+        req.body?.walletAddress
+      );
 
       if (!walletAddress) {
         return res.status(400).json({
-          error: "Wallet address is required"
+          error: "Invalid wallet address"
         });
       }
 
-      await pool.query(
+      const result = await pool.query(
         `
         UPDATE users
-        SET wallet_address = $1
+        SET wallet_address = $1,
+            updated_at = NOW()
         WHERE telegram_id = $2
+        RETURNING wallet_address
         `,
         [
           walletAddress,
@@ -269,9 +271,21 @@ app.post(
         ]
       );
 
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          error: "User not found"
+        });
+      }
+
+      console.log(
+        "✅ Wallet saved:",
+        req.telegramUser.id,
+        walletAddress
+      );
+
       return res.json({
         success: true,
-        walletAddress
+        walletAddress: result.rows[0].wallet_address
       });
     } catch (error) {
       console.error(
