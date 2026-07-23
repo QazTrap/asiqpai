@@ -1278,7 +1278,9 @@ app.get(
           firstName: row.first_name,
           lastName: row.last_name, 
           
-         walletFriendly: (() => {
+         walletAddress: row.wallet_address || null,
+
+walletFriendly: (() => {
   if (!row.wallet_address) return null;
 
   try {
@@ -1291,12 +1293,12 @@ app.get(
     return row.wallet_address;
   }
 })(),
-  : null,
-          rewardBalance: String(row.reward_balance),
-          streak: Number(row.streak || 0),
-          totalClaims: Number(row.total_claims || 0),
-          createdAt: row.created_at,
-          updatedAt: row.updated_at
+
+rewardBalance: String(row.reward_balance),
+streak: Number(row.streak || 0),
+totalClaims: Number(row.total_claims || 0),
+createdAt: row.created_at,
+updatedAt: row.updated_at
         }))
       });
     } catch (error) {
