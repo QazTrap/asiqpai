@@ -242,7 +242,49 @@ async function requireTelegramUser(req, res, next) {
     });
   }
 }
+app.post(
+  "/api/wallet/connect",
+  requireTelegramUser,
+  async (req, res) => {
+    try {
+      const walletAddress = String(
+        req.body?.walletAddress || ""
+      ).trim();
 
+      if (!walletAddress) {
+        return res.status(400).json({
+          error: "Wallet address is required"
+        });
+      }
+
+      await pool.query(
+        `
+        UPDATE users
+        SET wallet_address = $1
+        WHERE telegram_id = $2
+        `,
+        [
+          walletAddress,
+          req.telegramUser.id
+        ]
+      );
+
+      return res.json({
+        success: true,
+        walletAddress
+      });
+    } catch (error) {
+      console.error(
+        "Wallet save error:",
+        error
+      );
+
+      return res.status(500).json({
+        error: "Failed to save wallet"
+      });
+    }
+  }
+);
 app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
