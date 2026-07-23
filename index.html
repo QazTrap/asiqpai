@@ -2127,8 +2127,22 @@ asiqRefreshButton.addEventListener("click", () => {
     loadAsiqBalance(tonConnectUI.account?.address || "", { notifyOnError:true });
 });
 
-tonConnectUI.onStatusChange(wallet => {
+tonConnectUI.onStatusChange(async wallet => {
     const walletAddress = wallet?.account?.address || "";
+
+    if (walletAddress) {
+        try {
+            await apiRequest("/api/wallet/connect", {
+                method: "POST",
+                body: JSON.stringify({
+                    walletAddress
+                })
+            });
+        } catch (error) {
+            console.warn("Не удалось сохранить кошелек:", error);
+        }
+    }
+
     loadAsiqBalance(walletAddress);
     renderWithdraw();
 });
