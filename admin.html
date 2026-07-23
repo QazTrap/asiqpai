@@ -4,16 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#090909" />
-  <title>ASIQPAI Admin — Withdrawals</title>
+  <title>ASIQPAI Admin</title>
   <style>
     :root{--bg:#090909;--panel:#131313;--panel2:#191919;--line:rgba(212,175,55,.24);--gold:#d4af37;--gold2:#f4d675;--text:#f7f7f7;--muted:#979797;--green:#36d17c;--red:#ff5c67;--yellow:#f6c453}
     *{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at top,rgba(212,175,55,.09),transparent 35%),var(--bg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.55}.app{width:min(1050px,calc(100% - 24px));margin:auto;padding:24px 0 60px}.header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:13px}.logo{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;color:#050505;background:linear-gradient(145deg,var(--gold2),var(--gold));font-weight:900}.title{margin:0;font-size:clamp(21px,4vw,30px)}.subtitle{margin:4px 0 0;color:var(--muted);font-size:13px}.header-actions{display:flex;gap:8px}.btn{min-height:42px;padding:10px 15px;border:1px solid transparent;border-radius:12px;color:var(--text);background:var(--panel2);font-weight:750}.btn-gold{color:#080808;background:linear-gradient(145deg,var(--gold2),var(--gold))}.btn-outline{border-color:var(--line);background:transparent}.btn-success{color:#071b10;background:var(--green)}.btn-danger{color:#240408;background:var(--red)}.panel{padding:18px;border:1px solid var(--line);border-radius:20px;background:rgba(19,19,19,.94);box-shadow:0 18px 50px rgba(0,0,0,.38)}.login-panel{max-width:570px;margin:70px auto 0}.field{display:grid;gap:8px;margin:14px 0}.field label{color:var(--muted);font-size:13px;font-weight:700}.input{width:100%;min-height:46px;padding:11px 13px;border:1px solid rgba(255,255,255,.1);border-radius:12px;outline:none;color:var(--text);background:#0e0e0e}.input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.1)}textarea.input{min-height:90px;resize:vertical}.notice{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.5}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat{padding:16px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:var(--panel)}.stat-label{color:var(--muted);font-size:12px}.stat-value{margin-top:6px;font-size:25px;font-weight:900}.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;margin-bottom:16px}.requests{display:grid;gap:13px}.request{padding:17px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:var(--panel)}.request-top{display:flex;justify-content:space-between;gap:12px;margin-bottom:14px}.user{font-weight:850;font-size:17px}.meta{margin-top:4px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}.amount{color:var(--gold2);font-size:23px;font-weight:950;white-space:nowrap}.badge{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:900;text-transform:uppercase}.badge-pending{color:#2d2104;background:var(--yellow)}.badge-sent{color:#061b0f;background:var(--green)}.badge-rejected{color:#260408;background:var(--red)}.wallet-box{margin:12px 0;padding:11px;border-radius:12px;background:#0c0c0c;color:#d8d8d8;font-family:ui-monospace,monospace;font-size:12px;overflow-wrap:anywhere}.request-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.empty,.loading,.error{padding:28px 14px;text-align:center;color:var(--muted)}.error{color:var(--red)}.hidden{display:none!important}.modal-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}.modal{width:min(500px,100%);padding:20px;border:1px solid var(--line);border-radius:20px;background:#121212}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}.toast{position:fixed;right:16px;bottom:16px;z-index:200;max-width:min(380px,calc(100% - 32px));padding:13px 15px;border:1px solid var(--line);border-radius:14px;background:#181818}.copy-btn{width:100%;margin-top:8px}.status-line{text-align:right;margin-top:7px}@media(max-width:700px){.header{align-items:flex-start}.header-actions{flex-direction:column}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.summary{grid-template-columns:1fr}.request-top{flex-direction:column}.request-actions{grid-template-columns:1fr}.status-line{text-align:left}}
-  </style>
+  
+.tabs{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.tab-btn{min-height:42px;padding:10px 16px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--text);font-weight:800}
+.tab-btn.active{color:#080808;background:linear-gradient(145deg,var(--gold2),var(--gold))}
+.users-grid{display:grid;gap:12px}
+.user-card{padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:17px;background:var(--panel)}
+.user-card-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.user-card-name{font-size:17px;font-weight:900}
+.user-card-balance{color:var(--gold2);font-size:20px;font-weight:950;white-space:nowrap}
+.user-meta{margin-top:5px;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.user-wallet{margin:12px 0;padding:11px;border-radius:12px;background:#0c0c0c;font-family:ui-monospace,monospace;font-size:12px;overflow-wrap:anywhere}
+.user-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.user-stat{padding:10px;border-radius:12px;background:#0e0e0e;text-align:center}
+.user-stat strong{display:block;font-size:16px}
+.user-stat span{color:var(--muted);font-size:11px}
+@media(max-width:700px){.user-card-top{flex-direction:column}.user-stats{grid-template-columns:1fr}}
+
+</style>
 </head>
 <body>
 <main class="app">
   <header class="header">
-    <div class="brand"><div class="logo">A</div><div><h1 class="title">ASIQPAI Admin</h1><p class="subtitle">Заявки на вывод ASIQ</p></div></div>
+    <div class="brand"><div class="logo">A</div><div><h1 class="title">ASIQPAI Admin</h1><p class="subtitle">Пользователи и выводы ASIQ</p></div></div>
     <div id="headerActions" class="header-actions hidden"><button id="refreshButton" class="btn btn-outline">Обновить</button><button id="logoutButton" class="btn">Выйти</button></div>
   </header>
 
@@ -25,6 +42,12 @@
   </section>
 
   <section id="adminPanel" class="hidden">
+    <div class="tabs">
+      <button id="withdrawalsTabButton" class="tab-btn active">Выводы</button>
+      <button id="usersTabButton" class="tab-btn">Пользователи</button>
+    </div>
+
+    <div id="withdrawalsView">
     <div class="summary">
       <article class="stat"><div class="stat-label">В обработке</div><div id="pendingCount" class="stat-value">0</div></article>
       <article class="stat"><div class="stat-label">Отправлено</div><div id="sentCount" class="stat-value">0</div></article>
@@ -37,6 +60,22 @@
         <button id="reloadButton" class="btn btn-gold">Загрузить</button>
       </div>
       <div id="requestsList" class="requests"><div class="loading">Загрузка…</div></div>
+    </div>
+    </div>
+
+    <div id="usersView" class="hidden">
+      <div class="summary">
+        <article class="stat"><div class="stat-label">Всего пользователей</div><div id="usersCount" class="stat-value">0</div></article>
+        <article class="stat"><div class="stat-label">Подключено кошельков</div><div id="walletsCount" class="stat-value">0</div></article>
+        <article class="stat"><div class="stat-label">Баланс внутри приложения</div><div id="usersBalanceTotal" class="stat-value">0</div></article>
+      </div>
+      <div class="panel">
+        <div class="toolbar">
+          <input id="usersSearchInput" class="input search" type="search" placeholder="Username, Telegram ID или кошелёк" />
+          <button id="loadUsersButton" class="btn btn-gold">Загрузить</button>
+        </div>
+        <div id="usersList" class="users-grid"><div class="loading">Нажмите «Загрузить»</div></div>
+      </div>
     </div>
   </section>
 </main>
@@ -53,9 +92,19 @@
 "use strict";
 const API_BASE="https://asiqpai-production.up.railway.app";
 const KEY="asiqpai_withdraw_admin_secret";
-const state={secret:sessionStorage.getItem(KEY)||"",withdrawals:[],selectedId:null,selectedStatus:null};
+const state={secret:sessionStorage.getItem(KEY)||"",withdrawals:[],users:[],activeTab:"withdrawals",selectedId:null,selectedStatus:null};
 const $=id=>document.getElementById(id);
-const el={loginPanel:$("loginPanel"),adminPanel:$("adminPanel"),headerActions:$("headerActions"),secretInput:$("secretInput"),loginButton:$("loginButton"),logoutButton:$("logoutButton"),refreshButton:$("refreshButton"),reloadButton:$("reloadButton"),searchInput:$("searchInput"),statusFilter:$("statusFilter"),requestsList:$("requestsList"),pendingCount:$("pendingCount"),sentCount:$("sentCount"),rejectedCount:$("rejectedCount"),modalBackdrop:$("modalBackdrop"),modalTitle:$("modalTitle"),txHashField:$("txHashField"),txHashInput:$("txHashInput"),adminNoteInput:$("adminNoteInput"),cancelModalButton:$("cancelModalButton"),confirmModalButton:$("confirmModalButton"),toast:$("toast")};
+const el={loginPanel:$("loginPanel"),adminPanel:$("adminPanel"),headerActions:$("headerActions"),secretInput:$("secretInput"),loginButton:$("loginButton"),logoutButton:$("logoutButton"),refreshButton:$("refreshButton"),reloadButton:$("reloadButton"),searchInput:$("searchInput"),statusFilter:$("statusFilter"),requestsList:$("requestsList"),pendingCount:$("pendingCount"),sentCount:$("sentCount"),rejectedCount:$("rejectedCount"),modalBackdrop:$("modalBackdrop"),modalTitle:$("modalTitle"),txHashField:$("txHashField"),txHashInput:$("txHashInput"),adminNoteInput:$("adminNoteInput"),cancelModalButton:$("cancelModalButton"),confirmModalButton:$("confirmModalButton"),toast:$("toast"),
+withdrawalsTabButton:$("withdrawalsTabButton"),
+usersTabButton:$("usersTabButton"),
+withdrawalsView:$("withdrawalsView"),
+usersView:$("usersView"),
+usersSearchInput:$("usersSearchInput"),
+loadUsersButton:$("loadUsersButton"),
+usersList:$("usersList"),
+usersCount:$("usersCount"),
+walletsCount:$("walletsCount"),
+usersBalanceTotal:$("usersBalanceTotal")};
 function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function toast(m,err=false){el.toast.textContent=m;el.toast.style.borderColor=err?"rgba(255,92,103,.45)":"rgba(54,209,124,.4)";el.toast.classList.remove("hidden");clearTimeout(toast.t);toast.t=setTimeout(()=>el.toast.classList.add("hidden"),3500)}
 function logged(v){el.loginPanel.classList.toggle("hidden",v);el.adminPanel.classList.toggle("hidden",!v);el.headerActions.classList.toggle("hidden",!v)}
@@ -67,12 +116,92 @@ function label(s){return({pending:"В обработке",sent:"Отправле
 function stats(){el.pendingCount.textContent=state.withdrawals.filter(x=>x.status==="pending").length;el.sentCount.textContent=state.withdrawals.filter(x=>x.status==="sent").length;el.rejectedCount.textContent=state.withdrawals.filter(x=>x.status==="rejected").length}
 function filtered(){const q=el.searchInput.value.trim().toLowerCase(),s=el.statusFilter.value;return state.withdrawals.filter(i=>(s==="all"||i.status===s)&&(!q||[i.username,i.firstName,i.lastName,i.telegramId,i.walletAddress,i.id,i.txHash].filter(Boolean).join(" ").toLowerCase().includes(q)))}
 function render(){stats();const items=filtered();if(!items.length){el.requestsList.innerHTML='<div class="empty">Заявок нет.</div>';return}el.requestsList.innerHTML=items.map(i=>`<article class="request"><div class="request-top"><div><div class="user">${esc(user(i))}</div><div class="meta">Telegram ID: ${esc(i.telegramId||"—")}</div></div><div><div class="amount">${esc(i.amount)} ASIQ</div><div class="status-line"><span class="badge badge-${esc(i.status)}">${esc(label(i.status))}</span></div></div></div><div class="meta">TON-кошелёк</div><div class="wallet-box">${esc(i.walletAddress)}</div><button class="btn btn-outline copy-btn" data-copy="${esc(i.walletAddress)}">Копировать кошелёк</button><div class="meta">Создано: ${esc(fmt(i.createdAt))}</div>${i.processedAt?`<div class="meta">Обработано: ${esc(fmt(i.processedAt))}</div>`:""}${i.txHash?`<div class="meta">TxHash: ${esc(i.txHash)}</div>`:""}${i.adminNote?`<div class="meta">Комментарий: ${esc(i.adminNote)}</div>`:""}${i.status==="pending"?`<div class="request-actions"><button class="btn btn-success" data-action="sent" data-id="${esc(i.id)}">✅ Отправлено</button><button class="btn btn-danger" data-action="rejected" data-id="${esc(i.id)}">❌ Отклонить и вернуть</button></div>`:""}</article>`).join("")}
+
+function switchTab(tab){
+  state.activeTab=tab;
+  const users=tab==="users";
+  el.withdrawalsView.classList.toggle("hidden",users);
+  el.usersView.classList.toggle("hidden",!users);
+  el.withdrawalsTabButton.classList.toggle("active",!users);
+  el.usersTabButton.classList.toggle("active",users);
+  if(users && !state.users.length) loadUsers();
+}
+function usersFiltered(){
+  const q=el.usersSearchInput.value.trim().toLowerCase();
+  return state.users.filter(i=>!q||[
+    i.username,i.firstName,i.lastName,i.telegramId,i.walletAddress
+  ].filter(Boolean).join(" ").toLowerCase().includes(q));
+}
+function usersStats(){
+  el.usersCount.textContent=state.users.length;
+  el.walletsCount.textContent=state.users.filter(i=>i.walletAddress).length;
+  const total=state.users.reduce((sum,i)=>sum+(Number(i.rewardBalance)||0),0);
+  el.usersBalanceTotal.textContent=`${total.toLocaleString("ru-RU")} ASIQ`;
+}
+function renderUsers(){
+  usersStats();
+  const items=usersFiltered();
+  if(!items.length){
+    el.usersList.innerHTML='<div class="empty">Пользователи не найдены.</div>';
+    return;
+  }
+  el.usersList.innerHTML=items.map(i=>{
+    const display=i.username?`@${i.username}`:([i.firstName,i.lastName].filter(Boolean).join(" ")||"Без username");
+    const wallet=i.walletAddress||"Кошелёк не подключён";
+    return `<article class="user-card">
+      <div class="user-card-top">
+        <div>
+          <div class="user-card-name">${esc(display)}</div>
+          <div class="user-meta">Telegram ID: ${esc(i.telegramId||"—")}</div>
+          <div class="user-meta">Регистрация: ${esc(fmt(i.createdAt))}</div>
+        </div>
+        <div class="user-card-balance">${esc(i.rewardBalance||"0")} ASIQ</div>
+      </div>
+      <div class="user-meta">TON-кошелёк</div>
+      <div class="user-wallet">${esc(wallet)}</div>
+      ${i.walletAddress?`<button class="btn btn-outline copy-btn" data-copy-user-wallet="${esc(i.walletAddress)}">Копировать кошелёк</button>`:""}
+      <div class="user-stats">
+        <div class="user-stat"><strong>${esc(i.streak||0)}</strong><span>Streak</span></div>
+        <div class="user-stat"><strong>${esc(i.totalClaims||0)}</strong><span>Наград</span></div>
+        <div class="user-stat"><strong>${i.walletAddress?"Да":"Нет"}</strong><span>Кошелёк</span></div>
+      </div>
+    </article>`;
+  }).join("");
+}
+async function loadUsers(){
+  el.usersList.innerHTML='<div class="loading">Загрузка пользователей…</div>';
+  try{
+    const d=await parse(await fetch(`${API_BASE}/api/admin/users`,{headers:headers()}));
+    state.users=Array.isArray(d.users)?d.users:[];
+    renderUsers();
+  }catch(e){
+    if(e.status===401){logout(false);toast("Неверный секрет",true);return}
+    el.usersList.innerHTML=`<div class="error">${esc(e.message)}</div>`;
+    toast(e.message,true);
+  }
+}
+
 async function load(){el.requestsList.innerHTML='<div class="loading">Загрузка…</div>';try{const d=await parse(await fetch(`${API_BASE}/api/admin/withdrawals`,{headers:headers()}));state.withdrawals=Array.isArray(d.withdrawals)?d.withdrawals:[];logged(true);render()}catch(e){if(e.status===401){logout(false);toast("Неверный секрет",true);return}el.requestsList.innerHTML=`<div class="error">${esc(e.message)}</div>`;toast(e.message,true)}}
 async function login(){const s=el.secretInput.value.trim();if(!s)return toast("Введите секрет",true);state.secret=s;sessionStorage.setItem(KEY,s);el.loginButton.disabled=true;try{await load()}finally{el.loginButton.disabled=false}}
 function logout(msg=true){state.secret="";state.withdrawals=[];sessionStorage.removeItem(KEY);el.secretInput.value="";logged(false);if(msg)toast("Вы вышли")}
 function openModal(id,status){state.selectedId=id;state.selectedStatus=status;const sent=status==="sent";el.modalTitle.textContent=sent?"Подтвердить отправку ASIQ":"Отклонить и вернуть ASIQ";el.txHashField.classList.toggle("hidden",!sent);el.txHashInput.value="";el.adminNoteInput.value="";el.confirmModalButton.className=sent?"btn btn-success":"btn btn-danger";el.confirmModalButton.textContent=sent?"✅ Подтвердить":"❌ Отклонить";el.modalBackdrop.classList.remove("hidden")}
 function closeModal(){state.selectedId=null;state.selectedStatus=null;el.modalBackdrop.classList.add("hidden")}
 async function process(){if(!state.selectedId)return;const status=state.selectedStatus,txHash=el.txHashInput.value.trim(),adminNote=el.adminNoteInput.value.trim();if(status==="sent"&&!txHash)return toast("Нужен txHash",true);el.confirmModalButton.disabled=true;try{await parse(await fetch(`${API_BASE}/api/admin/withdrawals/${encodeURIComponent(state.selectedId)}`,{method:"PATCH",headers:headers(),body:JSON.stringify({status,txHash,adminNote})}));closeModal();toast(status==="sent"?"Заявка отмечена как отправленная":"ASIQ возвращены пользователю");await load()}catch(e){toast(e.message,true)}finally{el.confirmModalButton.disabled=false}}
+el.withdrawalsTabButton.onclick=()=>switchTab("withdrawals");
+el.usersTabButton.onclick=()=>switchTab("users");
+el.loadUsersButton.onclick=loadUsers;
+el.usersSearchInput.oninput=renderUsers;
+el.usersList.onclick=async e=>{
+  const c=e.target.closest("[data-copy-user-wallet]");
+  if(c){
+    try{
+      await navigator.clipboard.writeText(c.dataset.copyUserWallet);
+      toast("Кошелёк скопирован");
+    }catch{
+      toast("Не удалось скопировать",true);
+    }
+  }
+};
 el.loginButton.onclick=login;el.logoutButton.onclick=()=>logout(true);el.refreshButton.onclick=load;el.reloadButton.onclick=load;el.searchInput.oninput=render;el.statusFilter.onchange=render;el.cancelModalButton.onclick=closeModal;el.confirmModalButton.onclick=process;el.secretInput.onkeydown=e=>{if(e.key==="Enter")login()};el.modalBackdrop.onclick=e=>{if(e.target===el.modalBackdrop)closeModal()};el.requestsList.onclick=async e=>{const b=e.target.closest("[data-action][data-id]");if(b)return openModal(b.dataset.id,b.dataset.action);const c=e.target.closest("[data-copy]");if(c){try{await navigator.clipboard.writeText(c.dataset.copy);toast("Кошелёк скопирован")}catch{toast("Не удалось скопировать",true)}}};
 if(state.secret){el.secretInput.value=state.secret;load()}else logged(false);
 </script>
