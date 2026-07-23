@@ -1766,6 +1766,93 @@ body{
 #gpPanel, #gpCounter, .gpTitle, .plusOne{display:none!important;}
 </style>
 
+
+<style>
+/* ===== AUTOMATIC TRACKS / INSTRUMENTALS ===== */
+.catalog-tabs{
+    width:min(92vw,340px);
+    margin:0 auto 15px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.catalog-tab{
+    min-width:0;
+    min-height:48px;
+    padding:10px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:1px solid rgba(212,175,55,.16);
+    border-radius:14px;
+    background:rgba(18,18,18,.88);
+    color:#858585;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:
+        color .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.catalog-tab i{
+    color:#a98b3c;
+    font-size:14px;
+}
+
+.catalog-tab small{
+    min-width:20px;
+    padding:3px 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.055);
+    color:#777;
+    font-size:9px;
+    font-weight:950;
+    font-variant-numeric:tabular-nums;
+}
+
+.catalog-tab.active{
+    border-color:rgba(255,215,0,.55);
+    background:rgba(212,175,55,.11);
+    color:#ffe58a;
+    box-shadow:0 0 18px rgba(212,175,55,.10);
+}
+
+.catalog-tab.active i,
+.catalog-tab.active small{
+    color:#ffd966;
+}
+
+.catalog-tab:active{
+    transform:scale(.97);
+}
+
+.catalog-empty{
+    padding:24px 14px;
+    border:1px dashed rgba(212,175,55,.20);
+    border-radius:16px;
+    background:rgba(18,18,18,.52);
+    color:#777;
+    font-size:12px;
+    line-height:1.55;
+    text-align:center;
+}
+
+@media(max-width:360px){
+    .catalog-tab{
+        gap:5px;
+        padding-left:5px;
+        padding-right:5px;
+        font-size:10px;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -1821,6 +1908,35 @@ body{
 
     <section class="app-page" id="page-library" data-page="library">
         <p class="page-subheading">Медиатека</p>
+
+        <div class="catalog-tabs" role="tablist" aria-label="Категории музыки">
+            <button
+                class="catalog-tab active"
+                id="catalogTracksTab"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                data-category="tracks"
+            >
+                <i class="fa-solid fa-microphone-lines" aria-hidden="true"></i>
+                <span>Tracks</span>
+                <small id="tracksCount">0</small>
+            </button>
+
+            <button
+                class="catalog-tab"
+                id="catalogInstrumentalsTab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-category="instrumentals"
+            >
+                <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
+                <span>Instrumentals</span>
+                <small id="instrumentalsCount">0</small>
+            </button>
+        </div>
+
         <div class="track-catalog" id="trackCatalog" aria-label="Библиотека треков"></div>
     </section>
 
@@ -2859,74 +2975,171 @@ function updateTrackCatalogState(){
     });
 }
 
+let activeCatalogCategory = "tracks";
+
+function getTrackCategory(track){
+    const meta = String(track?.meta || "").trim().toUpperCase();
+
+    /*
+     * Автоматическое распределение:
+     * INSTRUMENTAL, BEAT, TYPE BEAT, БИТ, ИНСТРУМЕНТАЛ -> Instrumentals
+     * Всё остальное -> Tracks
+     */
+    const instrumentalMarkers = [
+        "INSTRUMENTAL",
+        "BEAT",
+        "TYPE BEAT",
+        "БИТ",
+        "ИНСТРУМЕНТАЛ"
+    ];
+
+    return instrumentalMarkers.some(marker => meta.includes(marker))
+        ? "instrumentals"
+        : "tracks";
+}
+
+function updateCatalogTabs(){
+    const tracksCount = playlist.filter(
+        track => getTrackCategory(track) === "tracks"
+    ).length;
+
+    const instrumentalsCount = playlist.filter(
+        track => getTrackCategory(track) === "instrumentals"
+    ).length;
+
+    const tracksCountElement = document.getElementById("tracksCount");
+    const instrumentalsCountElement = document.getElementById("instrumentalsCount");
+
+    if(tracksCountElement){
+        tracksCountElement.textContent = String(tracksCount);
+    }
+
+    if(instrumentalsCountElement){
+        instrumentalsCountElement.textContent = String(instrumentalsCount);
+    }
+
+    document.querySelectorAll(".catalog-tab").forEach(button => {
+        const active = button.dataset.category === activeCatalogCategory;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+}
+
+function createCatalogTrackButton(track, index){
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `track-item${index === currentTrack ? " active" : ""}`;
+    button.dataset.trackIndex = String(index);
+    button.setAttribute("aria-label", `Включить ${track.title}`);
+
+    const cover = document.createElement("img");
+    cover.className = "track-item-cover";
+    cover.src = encodeURI(track.cover).replace(/#/g,"%23");
+    cover.alt = "";
+    cover.loading = "lazy";
+    cover.decoding = "async";
+
+    const copy = document.createElement("span");
+    copy.className = "track-item-copy";
+
+    const name = document.createElement("span");
+    name.className = "track-item-name";
+    name.textContent = track.title;
+
+    const meta = document.createElement("span");
+    meta.className = "track-item-meta";
+    meta.textContent = `${track.artist} • ${track.meta}`;
+
+    copy.append(name, meta);
+
+    const icon = document.createElement("span");
+    icon.className = "track-item-icon";
+    icon.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+
+    button.append(cover, copy, icon);
+
+    button.addEventListener("click", async () => {
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+        }catch{
+            if(navigator.vibrate) navigator.vibrate(15);
+        }
+
+        if(index === currentTrack){
+            if(player.paused){
+                await playLoadedTrack();
+            }else{
+                player.pause();
+                playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                musicPlayer.classList.remove("playing");
+                updateTrackCatalogState();
+            }
+            return;
+        }
+
+        currentTrack = index;
+        await loadTrack(currentTrack);
+        updateTrackCatalogState();
+        await playLoadedTrack();
+    });
+
+    return button;
+}
+
 function renderTrackCatalog(){
     const catalog = document.getElementById("trackCatalog");
     if(!catalog) return;
 
+    updateCatalogTabs();
+
     const fragment = document.createDocumentFragment();
+
     const heading = document.createElement("div");
     heading.className = "track-catalog-title";
-    heading.textContent = "Tracks";
+    heading.textContent = activeCatalogCategory === "instrumentals"
+        ? "Instrumentals"
+        : "Tracks";
+
     fragment.appendChild(heading);
 
-    playlist.forEach((track,index) => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `track-item${index === currentTrack ? " active" : ""}`;
-        button.dataset.trackIndex = String(index);
-        button.setAttribute("aria-label", `Включить ${track.title}`);
+    const filteredTracks = playlist
+        .map((track, index) => ({ track, index }))
+        .filter(({ track }) => getTrackCategory(track) === activeCatalogCategory);
 
-        const cover = document.createElement("img");
-        cover.className = "track-item-cover";
-        cover.src = encodeURI(track.cover).replace(/#/g,"%23");
-        cover.alt = "";
-        cover.loading = "lazy";
-        cover.decoding = "async";
-
-        const copy = document.createElement("span");
-        copy.className = "track-item-copy";
-        const name = document.createElement("span");
-        name.className = "track-item-name";
-        name.textContent = track.title;
-        const meta = document.createElement("span");
-        meta.className = "track-item-meta";
-        meta.textContent = `${track.artist} • ${track.meta}`;
-        copy.append(name,meta);
-
-        const icon = document.createElement("span");
-        icon.className = "track-item-icon";
-        icon.innerHTML = '<i class="fa-solid fa-play"></i>';
-
-        button.append(cover,copy,icon);
-        button.addEventListener("click", async () => {
-            try{
-                window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
-            }catch{
-                if(navigator.vibrate) navigator.vibrate(15);
-            }
-
-            if(index === currentTrack){
-                if(player.paused){
-                    await playLoadedTrack();
-                }else{
-                    player.pause();
-                    playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
-                    musicPlayer.classList.remove("playing");
-                    updateTrackCatalogState();
-                }
-                return;
-            }
-
-            currentTrack = index;
-            await loadTrack(currentTrack);
-            updateTrackCatalogState();
-            await playLoadedTrack();
+    if(filteredTracks.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "catalog-empty";
+        empty.textContent = activeCatalogCategory === "instrumentals"
+            ? "Инструменталы пока не добавлены."
+            : "Треки пока не добавлены.";
+        fragment.appendChild(empty);
+    }else{
+        filteredTracks.forEach(({ track, index }) => {
+            fragment.appendChild(createCatalogTrackButton(track, index));
         });
-        fragment.appendChild(button);
-    });
+    }
 
     catalog.replaceChildren(fragment);
+    updateTrackCatalogState();
 }
+
+document.querySelectorAll(".catalog-tab").forEach(button => {
+    button.addEventListener("click", () => {
+        const category = button.dataset.category;
+
+        if(!["tracks", "instrumentals"].includes(category)){
+            return;
+        }
+
+        activeCatalogCategory = category;
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+        }catch{}
+
+        renderTrackCatalog();
+    });
+});
 
 async function loadPlaylist(){
     try{
