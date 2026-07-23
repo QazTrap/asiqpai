@@ -2343,6 +2343,22 @@ function showDailyRewardAnimation(){
     }catch{}
 }
 
+function showWithdrawAnimation(){
+    const element = document.createElement("div");
+    element.className = "daily-reward-float";
+    element.textContent = "✓";
+    element.setAttribute("role", "status");
+    element.setAttribute("aria-label", "Заявка на вывод создана");
+    document.body.appendChild(element);
+
+    setTimeout(() => element.remove(), 1250);
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+    }catch{}
+}
+
 async function loadDailyReward(){
     if(!getTelegramInitData()){
         dailyRewardButton.disabled = true;
@@ -2475,7 +2491,7 @@ async function createWithdraw(){
             dailyRewardState.rewardBalance = withdrawState.rewardBalance;
             renderDailyReward();
         }
-        showToast("✅ Заявка на вывод создана","success");
+        showWithdrawAnimation();
     }catch(error){
         showToast(error.message || "Ошибка вывода","warning");
         await loadWithdraw();
