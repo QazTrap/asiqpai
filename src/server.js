@@ -1237,7 +1237,73 @@ app.post(
       const walletAddress = normalizeAddress(
         req.body.walletAddress
       );
+app.get(
+  "/api/admin/users",
+  async (req, res) => {
+    const provided = Buffer.from(
+      req.get("X-Withdraw-Admin-Secret") || ""
+    );
 
+    const expected = Buffer.from(
+      WITHDRAW_ADMIN_SECRET
+    );
+
+    if (
+      !WITHDRAW_ADMIN_SECRET ||
+      provided.length !== expected.length ||
+      !crypto.timingSafeEqual(provided, expected)
+    ) {
+      return res.status(401).json({
+        error: "Unauthorized"
+      });
+    }
+
+    try {
+      const result = await pool.query(`
+        SELECT
+          u.telegram_id,
+          u.username,
+          u.first_name,
+          u.last_name,
+          u.wallet_address,
+          u.created_at,
+          u.updated_at,
+          COALESCE(d.reward_balance, 0) AS reward_balance,
+          COALESCE(d.streak, 0) AS streak,
+          COALESCE(d.total_claims, 0) AS total_claims
+        FROM users u
+        LEFT JOIN daily_rewards d
+          ON d.telegram_id = u.telegram_id
+        ORDER BY u.created_at DESC
+      `);
+
+      return res.json({
+        ok: true,
+        users: result.rows.map((row) => ({
+          telegramId: row.telegram_id,
+          username: row.username,
+          firstName: row.first_name,
+          lastName: row.last_name,
+          walletAddress: row.wallet_address || null,
+          rewardBalance: String(row.reward_balance),
+          streak: Number(row.streak || 0),
+          totalClaims: Number(row.total_claims || 0),
+          createdAt: row.created_at,
+          updatedAt: row.updated_at
+        }))
+      });
+    } catch (error) {
+      console.error(
+        "Admin users load error:",
+        error
+      );
+
+      return res.status(500).json({
+        error: "Could not load users"
+      });
+    }
+  }
+);
       const trackTitle = cleanTrackTitle(
         req.body.trackTitle
       );
