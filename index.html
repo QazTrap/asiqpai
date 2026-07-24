@@ -1,0 +1,3667 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="icon" type="image/png" href="images/logo.png">
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="
+    default-src 'self' https: data: blob:;
+    script-src 'self' 'unsafe-inline' https://unpkg.com https://telegram.org;
+    style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+    font-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com;
+    img-src 'self' data: blob: https:;
+    media-src 'self' blob: https:;
+    connect-src 'self' https: wss:;
+    frame-src https:;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    upgrade-insecure-requests;
+">
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<title>Asiqpai Official</title>
+
+<script>
+"use strict";
+
+const API_URL = "https://asiqpai-production.up.railway.app";
+
+const SafeStorage = (() => {
+    const allowedKeys = new Set([
+        "currentTrack",
+        "playMode",
+        "likedTracks",
+        "gp",
+        "goldLicenseClaimed"
+    ]);
+
+    const maxValueLength = 20000;
+
+    function validKey(key){
+        return typeof key === "string" && allowedKeys.has(key);
+    }
+
+    function get(key, fallback = null){
+        if(!validKey(key)) return fallback;
+
+        try{
+            const value = window.localStorage.getItem(key);
+            if(value === null || value.length > maxValueLength) return fallback;
+            return value;
+        }catch{
+            return fallback;
+        }
+    }
+
+    function set(key, value){
+        if(!validKey(key)) return false;
+
+        const stringValue = String(value);
+        if(stringValue.length > maxValueLength) return false;
+
+        try{
+            window.localStorage.setItem(key, stringValue);
+            return true;
+        }catch{
+            return false;
+        }
+    }
+
+    function getJSON(key, fallback = {}){
+        const raw = get(key, null);
+        if(raw === null) return fallback;
+
+        try{
+            const parsed = JSON.parse(raw);
+            return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed
+                : fallback;
+        }catch{
+            return fallback;
+        }
+    }
+
+    function setJSON(key, value){
+        try{
+            return set(key, JSON.stringify(value));
+        }catch{
+            return false;
+        }
+    }
+
+    return Object.freeze({ get, set, getJSON, setJSON });
+})();
+
+function cleanText(value, maxLength = 80){
+    if(typeof value !== "string") return "";
+
+    return value
+        .replace(/[\u0000-\u001F\u007F]/g, "")
+        .trim()
+        .slice(0, maxLength);
+}
+
+function isSafeAssetPath(path, type){
+    if(typeof path !== "string" || path.length < 1 || path.length > 220) return false;
+    if(path.includes("..") || path.includes("\\") || path.startsWith("/")) return false;
+    if(/^[a-z][a-z0-9+.-]*:/i.test(path) || path.startsWith("//")) return false;
+
+    const normalized = path.split("?")[0].split("#")[0];
+
+    if(type === "audio"){
+        return /^music\/[^/]+\.(mp3|m4a|ogg|wav)$/iu.test(normalized);
+    }
+
+    if(type === "image"){
+        return /^images\/[^/]+\.(png|jpe?g|webp|gif)$/iu.test(normalized);
+    }
+
+    return false;
+}
+
+function normalizeAccent(value){
+    if(typeof value !== "string") return "212,175,55";
+    const match = value.match(/^(\d{1,3}),(\d{1,3}),(\d{1,3})$/);
+    if(!match) return "212,175,55";
+
+    const values = match.slice(1).map(Number);
+    return values.every(number => number >= 0 && number <= 255)
+        ? values.join(",")
+        : "212,175,55";
+}
+
+function normalizeTrack(track){
+    if(!track || typeof track !== "object") return null;
+    if(!isSafeAssetPath(track.file, "audio")) return null;
+    if(!isSafeAssetPath(track.cover, "image")) return null;
+
+    const title = cleanText(track.title, 80);
+    if(!title) return null;
+
+    return Object.freeze({
+        title,
+        artist: cleanText(track.artist || "ASIQPAI", 50) || "ASIQPAI",
+        meta: cleanText(track.meta || "TRACK", 50) || "TRACK",
+        cover: track.cover,
+        file: track.file,
+        accent: normalizeAccent(track.accent)
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('a[href^="http"]').forEach(link => {
+        link.setAttribute("rel", "noopener noreferrer");
+    });
+
+    if(window.Telegram?.WebApp){
+        try{
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+        }catch{}
+    }
+});
+</script>
+
+<!-- TON Connect -->
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<!-- Telegram Web App -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+    #smokeCanvas{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:-1;
+    pointer-events:none;
+}
+
+body{
+    background:#000;
+    overflow-x:hidden;
+}
+    .section-divider{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+
+    margin:35px auto 25px;
+
+    color:#d4af37;
+
+    font-size:14px;
+    font-weight:700;
+
+    letter-spacing:4px;
+
+    text-transform:uppercase;
+}
+
+.section-divider::before,
+.section-divider::after{
+
+    content:"";
+
+    flex:1;
+
+    max-width:120px;
+
+    height:1px;
+
+    background:linear-gradient(
+        to right,
+        transparent,
+        rgba(212,175,55,.8),
+        transparent
+    );
+}
+
+.section-divider span{
+    text-shadow:0 0 8px rgba(212,175,55,.5);
+}
+.progressBar{
+
+    width:100%;
+    height:14px;
+
+    background:#141414;
+
+    border-radius:30px;
+
+    overflow:hidden;
+
+    margin:16px 0 10px;
+
+    box-shadow:
+        inset 0 0 8px rgba(0,0,0,.7),
+        0 0 8px rgba(212,175,55,.12);
+}
+
+#progressFill{
+
+    width:0%;
+
+    height:100%;
+
+    border-radius:30px;
+
+    background:linear-gradient(
+        90deg,
+        #7a5a00 0%,
+        #FFD700 40%,
+        #FFF4A3 50%,
+        #FFD700 60%,
+        #B8860B 100%
+    );
+
+    box-shadow:
+        0 0 12px rgba(255,215,0,.6),
+        0 0 24px rgba(255,215,0,.25);
+
+    transition:width .35s ease;
+}
+
+#progressText{
+
+    color:#FFD700;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    text-align:center;
+
+    letter-spacing:1px;
+
+    margin-top:8px;
+
+    text-shadow:0 0 8px rgba(255,215,0,.35);
+}
+.license-card{
+    width:100%;
+    max-width:340px;
+    margin:30px auto;
+    padding:24px 18px 20px;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,#1d1d1d 0%,#151515 100%);
+    border-radius:18px;
+    box-shadow:
+        0 0 22px rgba(212,175,55,.18),
+        inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.license-icon{
+    font-size:34px;
+    margin-bottom:4px;
+    filter:drop-shadow(0 0 10px rgba(255,215,0,.35));
+}
+
+.license-title{
+    margin:4px 0 10px;
+    color:#FFD700;
+    font-size:24px;
+    letter-spacing:1px;
+}
+
+.license-description{
+    max-width:280px;
+    margin:0 auto 20px;
+    color:#bdbdbd;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.license-progress-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+    color:#d4af37;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+
+.license-status{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    margin:4px auto 14px;
+    padding:7px 12px;
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:999px;
+    background:rgba(212,175,55,.07);
+    color:#bdbdbd;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.5px;
+}
+
+.license-status.unlocked{
+    color:#FFD700;
+    border-color:rgba(255,215,0,.55);
+    background:rgba(255,215,0,.12);
+    box-shadow:0 0 16px rgba(255,215,0,.16);
+}
+
+.claim-button{
+    display:none;
+    width:100%;
+    padding:12px;
+    margin-top:12px;
+    border:1px solid #FFD700;
+    border-radius:10px;
+    background:transparent;
+    color:#FFD700;
+    font-size:15px;
+    font-weight:800;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.claim-button.show{
+    display:block;
+}
+
+.claim-button:hover{
+    background:#FFD700;
+    color:#111;
+    transform:scale(1.02);
+}
+
+.buy-button{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border:none;
+    border-radius:10px;
+    background:#d4af37;
+    color:#111;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.buy-button:hover{
+    background:#c59d2c;
+    transform:scale(1.03);
+}
+
+.buy-button:disabled{
+    opacity:.58;
+    cursor:wait;
+    transform:none;
+}
+
+.buy-button.coming-soon{
+    background:linear-gradient(135deg,#6f5b1d,#3f3518);
+    color:#f4d76b;
+    border:1px solid rgba(212,175,55,.55);
+    cursor:pointer;
+    opacity:.9;
+}
+
+.buy-button.coming-soon:hover{
+    background:linear-gradient(135deg,#7b651f,#4a3e1b);
+    transform:scale(1.01);
+}
+    .title{
+    font-size:40px;
+    margin:10px 0;
+    font-weight:900;
+    letter-spacing:3px;
+    color:#d4af37;
+    text-shadow:0 0 18px rgba(212,175,55,.4);
+
+    animation: floatText 3s ease-in-out infinite;
+}
+
+.subtitle{
+    font-size:18px;
+    color:#bdbdbd;
+    margin-bottom:35px;
+    letter-spacing:1px;
+}
+  .logo{
+    width:220px;
+    height:auto;
+
+    display:block;
+    margin:-20px auto 0;
+
+    object-fit:cover;
+    border-radius:50%;
+
+    box-shadow:none;
+
+    transition:.4s;
+    animation:glow 3s ease-in-out infinite;
+
+    -webkit-user-select: none;
+    user-select: none;
+
+    -webkit-user-drag: none;
+
+    -webkit-touch-callout: none;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+.logo:hover{
+    transform:scale(1.05);
+}
+body{ background:#060505; 
+     color:white; 
+     font-family:Arial, sans-serif; 
+     text-align:center; padding:30px; 
+     margin:0; 
+}   
+h1{
+    font-size:50px;
+}
+
+.button{
+
+    display:block;
+
+    max-width:300px;
+    width:90%;
+
+    margin:15px auto;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    text-decoration:none;
+
+    background:#1b1b1b;
+
+    color:#d4af37;
+
+    border:1px solid #d4af37;
+
+    transition:.3s;
+}
+
+.button:hover{
+
+    background:#d4af37;
+
+    color:#111;
+}
+
+#ton-connect{
+    display:flex;
+    justify-content:center;
+    margin-bottom:30px;
+}
+
+audio{
+    width:280px;
+    margin-top:60px;
+}
+.player{
+    margin:-1px auto 28px;
+}
+
+    padding:18px;
+
+    box-sizing:border-box;
+
+    background:#1b1b1b;
+
+    border-radius:18px;
+
+    box-shadow:0 0 20px rgba(212,175,55,.18);
+
+}
+#playButton{
+
+    width:54px;
+    height:54px;
+
+    border-radius:50%;
+
+    background:#d4af37;
+
+    color:black;
+
+    font-size:22px;
+
+}
+
+#trackName{
+
+    display:block;
+
+    margin-top:15px;
+
+    color:white;
+
+    font-size:18px;
+
+    font-weight:bold;
+
+}
+.controls{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:25px;
+
+    margin-top:20px;
+
+}
+
+#prevButton,
+#nextButton{
+
+    background:none;
+    border:none;
+
+    width:auto;
+    height:auto;
+
+    color:#d4af37;
+
+    font-size:28px;
+
+    box-shadow:none;
+
+}
+
+.controls button:hover{
+
+    transform:scale(1.1);
+
+    background:#c59d2c;
+
+}
+
+#playButton{
+
+    width:50px;
+
+    height:50px;
+
+    font-size:18px;
+
+}
+
+.progress-container{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    margin-top:20px;
+
+}
+
+#progress{
+
+    flex:1;
+
+    height:4px;      /* С‚РѕР»С‰РёРЅР° РїРѕР»РѕСЃС‹ */
+    cursor:pointer;
+
+    accent-color:#d4af37; /* Р·РѕР»РѕС‚РѕР№ С†РІРµС‚ */
+
+}
+
+#currentTime,
+#duration{
+
+    color:white;
+
+    font-size:14px;
+
+    width:40px;
+}
+  
+    @keyframes glow{
+
+    0%{
+        filter:brightness(1);
+    }
+
+    50%{
+        filter:brightness(1.2);
+    }
+
+    100%{
+        filter:brightness(1);
+    }
+}         
+.plusOne{
+    position:fixed;
+    transform:translate(-50%, -50%);
+    color:#FFD700;
+    font-size:28px;
+    font-weight:bold;
+    pointer-events:none;
+    text-shadow:0 0 10px gold;
+    animation:plusAnim .9s ease-out forwards;
+    z-index:9999;
+}
+
+@keyframes plusAnim{
+
+    0%{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+
+    100%{
+        opacity:0;
+        transform:translateY(-80px) scale(1.4);
+    }
+
+}
+
+
+    @keyframes floatText{
+
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-8px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+}
+    #sparkCanvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+    z-index:-1;
+}
+   
+
+#gpPanel{
+    position:absolute;
+    top:max(12px, env(safe-area-inset-top));
+    left:max(4px, env(safe-area-inset-left));
+
+    background:rgba(15,15,15,.62);
+    border:1px solid rgba(212,175,55,.30);
+    border-radius:10px;
+    padding:6px 9px;
+
+    -webkit-backdrop-filter:blur(9px);
+    backdrop-filter:blur(9px);
+
+    box-shadow:
+        0 6px 18px rgba(0,0,0,.28),
+        0 0 12px rgba(212,175,55,.08);
+
+    z-index:1000;
+    pointer-events:none;
+} 
+    
+
+.gpTitle{
+    color:#FFD700;
+    font-size:9px;
+    opacity:.7;
+    margin-bottom:1px;
+}
+
+#gpCounter{
+    color:#FFD700;
+    font-size:18px;
+    font-weight:900;
+    text-shadow:0 0 8px rgba(255,215,0,.5);
+    line-height:1;
+}
+
+/* ===== ASIQPAI DARK PLAYER ===== */
+.player{
+    width:min(92vw,340px);
+    max-width:340px;
+    margin:10px auto 15px;
+    padding:14px 14px 22px;
+    background:linear-gradient(180deg,rgba(24,24,24,.98),rgba(8,8,8,.98));
+    border:1px solid rgba(212,175,55,.16);
+    border-radius:32px;
+    overflow:hidden;
+    box-sizing:border-box;
+}
+
+.player-cover-wrap{
+    position:relative;
+    width:100%;
+    aspect-ratio:1/1;
+    overflow:hidden;
+    border-radius:24px;
+    background:#111;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.035),
+        0 14px 34px rgba(0,0,0,.38);
+}
+
+.player-cover{
+    width:100%;
+    height:100%;
+    display:block;
+    object-fit:cover;
+}
+
+
+.cover-shade{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to top,rgba(0,0,0,.34),transparent 34%);
+    pointer-events:none;
+}
+
+.cover-badge{
+    position:absolute;
+    left:14px;
+    bottom:13px;
+    padding:6px 10px;
+    border-radius:999px;
+    background:rgba(5,5,5,.64);
+    border:1px solid rgba(222,185,101,.35);
+    color:#e0b965;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:1.8px;
+    backdrop-filter:blur(8px);
+}
+
+.track-info{
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+    gap:12px;
+    margin:18px 5px 4px;
+    text-align:left;
+}
+
+.track-copy{
+    min-width:0;
+}
+
+#trackName{
+    display:block;
+    margin:0;
+    color:#f5f5f5;
+    font-size:22px;
+    line-height:1.15;
+    font-weight:900;
+    letter-spacing:.7px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+#trackMeta{
+    display:block;
+    margin-top:7px;
+    color:#cfaa5b;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.8px;
+}
+
+.like-button{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    background:transparent;
+    color:#d5ad58;
+    font-size:22px;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.like-button.active{
+    color:#f1c55f;
+    transform:scale(1.08);
+    text-shadow:0 0 15px rgba(241,197,95,.45);
+}
+
+.progress-container{
+    display:grid;
+    grid-template-columns:38px 1fr 38px;
+    align-items:center;
+    gap:9px;
+    margin:17px 4px 0;
+}
+
+#progress{
+    width:100%;
+    height:4px;
+    margin:0;
+    cursor:pointer;
+    accent-color:#d8b05c;
+}
+
+#currentTime,
+#duration{
+    width:auto;
+    color:#d8d8d8;
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+}
+
+.controls{
+    display:grid;
+    grid-template-columns:1fr 66px 1fr;
+    align-items:center;
+    gap:26px;
+    margin:21px auto 2px;
+    max-width:255px;
+}
+
+#prevButton,
+#nextButton{
+    width:45px;
+    height:45px;
+    justify-self:center;
+    padding:0;
+    border:none;
+    border-radius:50%;
+    background:transparent;
+    color:#f2f2f2;
+    font-size:25px;
+    cursor:pointer;
+}
+
+#playButton{
+    width:66px;
+    height:66px;
+
+    display:grid;
+    place-items:center;
+
+    padding:0;
+    border:none;
+    border-radius:0;
+
+    background:none;
+    box-shadow:none;
+
+    color:#e2ba66;
+    font-size:34px;
+    line-height:1;
+
+    cursor:pointer;
+    outline:none;
+
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        transform .15s ease,
+        color .15s ease;
+}
+
+.controls button:hover{
+    background:rgba(216,176,92,.09);
+    color:#f1ca75;
+    transform:scale(1.06);
+}
+
+#playButton:hover{
+    background:none;
+    box-shadow:none;
+    color:#f1ca75;
+}
+
+#playButton:active{
+    transform:scale(.88);
+    background:none;
+    box-shadow:none;
+}
+
+@media (max-width:390px){
+    body{
+        padding-left:12px;
+        padding-right:12px;
+    }
+
+    .player{
+        width:100%;
+        border-radius:27px;
+    }
+
+    #trackName{
+        font-size:20px;
+    }
+}
+
+
+.player{position:relative;}
+
+.play-mode-button{
+    position:absolute;
+    left:18px;
+    bottom:28px;
+
+    width:36px;
+    height:36px;
+
+    display:grid;
+    place-items:center;
+
+    padding:0;
+    border:none;
+    border-radius:0;
+    outline:none;
+
+    background:none;
+    box-shadow:none;
+
+    color:#8d8d8d;
+    font-size:20px;
+    line-height:1;
+    cursor:pointer;
+
+    -webkit-tap-highlight-color:transparent;
+
+    transition:
+        color .2s ease,
+        transform .2s ease,
+        text-shadow .2s ease;
+}
+.play-mode-button:hover{
+    background:none;
+    box-shadow:none;
+    color:#d8b05c;
+    transform:scale(1.06);
+}
+.play-mode-button.active{
+    background:none;
+    box-shadow:none;
+    color:#e2ba66;
+    text-shadow:0 0 12px rgba(226,186,102,.38);
+}
+.play-mode-button.mode-flash{
+    animation:modeFlash .28s ease;
+}
+@keyframes modeFlash{
+    0%{transform:scale(.86);opacity:.55;}
+    100%{transform:scale(1);opacity:1;}
+}
+@media (max-width:390px){
+    .play-mode-button{left:14px;bottom:25px;}
+}
+
+
+.play-mode-button:focus,
+.play-mode-button:active{
+    border:none;
+    outline:none;
+    background:none;
+    box-shadow:none;
+}
+
+
+/* ===== ASIQPAI PLAYER V3 ===== */
+:root{
+    --player-accent:#d4af37;
+    --player-accent-rgb:212,175,55;
+}
+
+.player{
+    isolation:isolate;
+    transition:
+        box-shadow .55s ease,
+        border-color .55s ease;
+}
+
+.player::before{
+    content:"";
+    position:absolute;
+    left:12%;
+    right:12%;
+    top:4%;
+    height:62%;
+    z-index:-1;
+    border-radius:40%;
+    background:radial-gradient(
+        circle,
+        rgba(var(--player-accent-rgb),.28) 0%,
+        rgba(var(--player-accent-rgb),.08) 42%,
+        transparent 72%
+    );
+    filter:blur(35px);
+    opacity:.78;
+    pointer-events:none;
+    transition:background .6s ease, opacity .35s ease;
+}
+
+
+#progress{
+    transition:filter .2s ease;
+}
+
+#progress:active{
+    filter:brightness(1.22);
+}
+
+#prevButton:active,
+#nextButton:active,
+.like-button:active,
+.play-mode-button:active{
+    transform:scale(.86);
+}
+
+/* Toast-СѓРІРµРґРѕРјР»РµРЅРёСЏ */
+#toastContainer{
+    position:fixed;
+    left:50%;
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    width:min(92vw,380px);
+    transform:translateX(-50%);
+    z-index:10000;
+    pointer-events:none;
+}
+
+.app-toast{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    width:max-content;
+    max-width:100%;
+    margin:8px auto 0;
+    padding:11px 15px;
+    box-sizing:border-box;
+    border:1px solid rgba(226,186,102,.36);
+    border-radius:14px;
+    background:rgba(13,13,13,.91);
+    color:#f5f5f5;
+    font-size:14px;
+    font-weight:700;
+    line-height:1.3;
+    text-align:left;
+    box-shadow:
+        0 12px 32px rgba(0,0,0,.48),
+        0 0 18px rgba(var(--player-accent-rgb),.12);
+    -webkit-backdrop-filter:blur(14px);
+    backdrop-filter:blur(14px);
+    opacity:0;
+    transform:translateY(18px) scale(.96);
+    animation:toastIn .28s ease forwards;
+}
+
+.app-toast.hide{
+    animation:toastOut .24s ease forwards;
+}
+
+.app-toast.success{
+    border-color:rgba(255,215,0,.52);
+}
+
+.app-toast.warning{
+    border-color:rgba(255,166,0,.45);
+}
+
+@keyframes toastIn{
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+@keyframes toastOut{
+    to{
+        opacity:0;
+        transform:translateY(12px) scale(.97);
+    }
+}
+
+@media (prefers-reduced-motion:reduce){
+    .app-toast{
+        animation:none !important;
+        transition:none !important;
+    }
+}
+
+
+/* Home cards aligned to music player width */
+#page-home .artist-card,
+#page-home .daily-reward-card{
+    width:min(92vw,340px);
+    max-width:340px;
+    box-sizing:border-box;
+    margin-left:auto;
+    margin-right:auto;
+}
+#page-home .artist-card{
+    margin-top:14px;
+    margin-bottom:16px;
+}
+#page-home .daily-reward-card{
+    margin-top:0;
+    margin-bottom:30px;
+}
+
+</style>
+ <style>
+
+html,
+body{
+    touch-action:manipulation;
+}
+
+button{
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
+
+/* РґР°Р»СЊС€Рµ РёРґС‘С‚ С‚РІРѕР№ РѕСЃС‚Р°Р»СЊРЅРѕР№ CSS */
+
+body{
+    margin:0;
+    background:#050505;
+    color:white;
+}
+
+
+
+/* ===== ASIQ JETTON BALANCE ===== */
+.asiq-wallet-card{
+position:relative;
+overflow:hidden;
+width:min(92vw,340px)!important;
+max-width:340px!important;
+margin:0 auto 22px!important;
+padding:20px!important;
+box-sizing:border-box;
+border-radius:24px;
+border:1px solid rgba(255,236,170,.55);
+background:
+linear-gradient(135deg,#f8df8b 0%,#d4af37 25%,#b8850a 62%,#f5d06d 100%);
+box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 25px rgba(255,215,0,.25);
+color:#111;
+}
+.asiq-wallet-card::before{
+content:"";
+position:absolute;
+inset:0;
+background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.35) 22%,transparent 45%);
+pointer-events:none;
+}
+.asiq-wallet-card::after{
+content:"";
+position:absolute;
+right:-35px;
+bottom:-25px;
+width:180px;
+height:180px;
+background:url('images/crow.png') center/contain no-repeat;
+opacity:.12;
+pointer-events:none;
+}
+.asiq-wallet-head,.asiq-balance-value,.asiq-wallet-status,.asiq-wallet-address{position:relative;z-index:2}
+.asiq-wallet-label{color:#3b2b00;font-weight:900}
+.asiq-balance-value{color:#111;font-size:38px;font-weight:950;text-shadow:none}
+.asiq-balance-symbol{color:#3b2b00}
+.asiq-wallet-status,.asiq-wallet-address{color:#3f3320}
+.asiq-wallet-dot{background:#31d85c;box-shadow:0 0 10px #31d85c}
+.asiq-refresh-button{
+background:rgba(255,255,255,.18);
+border:1px solid rgba(60,40,0,.25);
+color:#3b2b00;
+}
+.asiq-refresh-button:hover{background:rgba(255,255,255,.28);}
+/* ===== ASIQPAI DAILY REWARD =====/* ===== ASIQPAI DAILY REWARD ===== */
+.daily-reward-card{
+ width:min(92vw,340px)!important;
+ max-width:340px!important;
+ padding:12px 18px!important;
+}
+
+.daily-reward-card::after{
+    content:none!important;
+    display:none!important;
+}
+
+.daily-reward-icon{
+    position:relative;
+    z-index:1;
+    font-size:38px;
+    filter:drop-shadow(0 0 13px rgba(255,215,0,.28));
+}
+
+.daily-reward-title{
+    position:relative;
+    z-index:1;
+    margin:7px 0 3px;
+    color:#ffe47a;
+    font-size:23px;
+    font-weight:950;
+    letter-spacing:.7px;
+}
+
+.daily-reward-amount{
+    position:relative;
+    z-index:1;
+    color:#fff6c6;
+    font-size:34px;
+    font-weight:950;
+    margin:9px 0 5px;
+    text-shadow:0 0 18px rgba(255,215,0,.18);
+}
+
+.daily-reward-note{
+    position:relative;
+    z-index:1;
+    color:#908875;
+    font-size:11px;
+    line-height:1.45;
+    margin:0 auto 14px;
+    max-width:310px;
+}
+
+.daily-reward-balance{
+    position:relative;
+    z-index:1;
+    margin:10px 0 14px;
+    padding:9px 12px;
+    border-radius:12px;
+    background:rgba(255,215,0,.055);
+    border:1px solid rgba(255,215,0,.14);
+    color:#d8c377;
+    font-size:13px;
+    font-weight:800;
+}
+
+.daily-reward-button{
+    position:relative;
+    z-index:1;
+    width:100%;
+    padding:13px 16px;
+    border:none;
+    border-radius:12px;
+    background:linear-gradient(135deg,#f1cf59,#b98c13);
+    color:#111;
+    font-size:16px;
+    font-weight:950;
+    letter-spacing:.8px;
+    cursor:pointer;
+    box-shadow:0 8px 22px rgba(212,175,55,.17);
+    transition:.2s ease;
+}
+
+.daily-reward-button:hover{
+    transform:translateY(-1px) scale(1.01);
+    filter:brightness(1.05);
+}
+
+.daily-reward-button:disabled{
+    opacity:.58;
+    cursor:not-allowed;
+    transform:none;
+    filter:none;
+}
+
+.daily-reward-timer{
+    position:relative;
+    z-index:1;
+    min-height:18px;
+    margin-top:11px;
+    color:#aaa08a;
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+}
+
+.daily-reward-card.claimed{
+    border-color:rgba(69,212,131,.30);
+}
+
+.daily-reward-card.claimed .daily-reward-button{
+    background:linear-gradient(135deg,#2b6d48,#183d2a);
+    color:#baf4d0;
+}
+
+.daily-reward-float{
+    position:fixed;
+    left:50%;
+    top:50%;
+    z-index:30000;
+
+    width:54px;
+    height:54px;
+
+    display:grid;
+    place-items:center;
+
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+
+    border-radius:50%;
+    background:rgba(18,92,54,.94);
+
+    border:1.5px solid rgba(112,255,171,.72);
+
+    color:#b8ffd3;
+
+    font-size:32px;
+
+    font-weight:950;
+    line-height:1;
+
+    box-shadow:
+        0 0 18px rgba(69,212,131,.48),
+        0 12px 30px rgba(0,0,0,.45);
+
+    animation:dailyRewardFloat 1.15s ease-out forwards;
+}
+@keyframes dailyRewardFloat{
+    0%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.55);
+    }
+    18%{
+        opacity:1;
+        transform:translate(-50%,-50%) scale(1.08);
+    }
+    32%{
+        transform:translate(-50%,-50%) scale(1);
+    }
+    78%{
+        opacity:1;
+    }
+    100%{
+        opacity:0;
+        transform:translate(-50%,-50%) scale(.9);
+    }
+}
+
+
+/* ===== WITHDRAW ASIQ ===== */
+.withdraw-card{width:min(92vw,390px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(105,175,255,.25);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(50,145,255,.13),transparent 34%),linear-gradient(145deg,rgba(12,20,30,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.withdraw-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.withdraw-title{color:#d9ecff;font-size:21px;font-weight:950}
+.withdraw-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(105,175,255,.22);background:rgba(105,175,255,.07);color:#8fc7ff;font-size:10px;font-weight:900}
+.withdraw-balance{margin:0 0 13px;padding:11px 12px;border-radius:13px;border:1px solid rgba(105,175,255,.14);background:rgba(105,175,255,.045);color:#c8ddf1;font-size:13px;font-weight:850}
+.withdraw-row{display:flex;gap:9px}
+.withdraw-input{flex:1;min-width:0;padding:13px 12px;border:1px solid rgba(255,255,255,.10);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:16px;font-weight:850}
+.withdraw-max{width:62px;border:1px solid rgba(105,175,255,.20);border-radius:12px;background:rgba(105,175,255,.08);color:#8fc7ff;font-size:12px;font-weight:950;cursor:pointer}
+.withdraw-button{width:100%;margin-top:10px;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#8dc9ff,#407fc0);color:#07111d;font-size:15px;font-weight:950;cursor:pointer}
+.withdraw-button:disabled,.withdraw-max:disabled,.withdraw-input:disabled{opacity:.52;cursor:not-allowed}
+.withdraw-note{margin:10px 1px 0;color:#7f8a96;font-size:10.5px;line-height:1.48}
+.withdraw-history-title{margin:17px 0 8px;color:#b9cce0;font-size:12px;font-weight:950;text-transform:uppercase}
+.withdraw-history{display:grid;gap:8px}
+.withdraw-empty,.withdraw-item{padding:10px 11px;border-radius:12px;border:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.025);color:#747f89;font-size:11px}
+.withdraw-item-top{display:flex;justify-content:space-between;gap:10px}.withdraw-item-amount{color:#eaf5ff;font-weight:950}
+.withdraw-status{font-size:10px;font-weight:950;text-transform:uppercase}.withdraw-status.pending{color:#ffd36b}.withdraw-status.sent{color:#6ce6a1}.withdraw-status.rejected{color:#ff7c7c}
+.withdraw-meta{margin-top:5px;font-size:9.5px;word-break:break-word}
+
+</style>
+   
+
+
+<style>
+/* ===== ASIQPAI APP TABS ===== */
+:root{
+    --nav-height:90px;
+}
+body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))!important}
+.app-shell{width:100%;max-width:430px;margin:0 auto}
+.app-page{display:none;animation:appPageIn .22s ease}
+.app-page.active{display:block}
+@keyframes appPageIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.page-heading{margin:7px auto 22px;color:#d4af37;font-size:25px;font-weight:950;letter-spacing:1.5px}
+.page-subheading{margin:-12px auto 24px;color:#777;font-size:12px;line-height:1.5}
+#gpPanel{
+    position:absolute;
+    top:max(12px, env(safe-area-inset-top));
+    left:max(12px, env(safe-area-inset-left));
+    margin:0;
+    display:block;
+    pointer-events:none;
+}
+#ton-connect{margin:4px 0 22px}
+.app-bottom-nav{
+    position:fixed;
+    left:50%;
+    bottom:0;
+    transform:translateX(-50%);
+    z-index:15000;
+    width:min(100%,430px);
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+    box-sizing:border-box;
+
+    background:transparent;
+
+    border-top:none;
+
+    box-shadow:none;
+
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+}
+
+.artist-card{width:min(92vw,340px);max-width:340px;margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.artist-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.artist-title{font-size:20px;font-weight:950;color:#f4d67a}.artist-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.08);color:#e9c75d;font-size:10px;font-weight:950}.artist-copy{margin:11px 0;color:#a99d7c;font-size:12px;line-height:1.55}.artist-benefits{display:grid;gap:7px;margin:13px 0}.artist-benefit{padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.025);color:#d8d0b8;font-size:11px}.artist-input{width:100%;box-sizing:border-box;margin:4px 0 10px;padding:13px 12px;border:1px solid rgba(212,175,55,.18);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:15px;font-weight:850}.artist-button{width:100%;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104;font-size:14px;font-weight:950;cursor:pointer}.artist-button:disabled,.artist-input:disabled{opacity:.5;cursor:not-allowed}.artist-status{margin-top:10px;color:#8b826c;font-size:10.5px;line-height:1.45}.artist-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.artist-stat,.artist-action{padding:13px 10px;border:1px solid rgba(212,175,55,.13);border-radius:13px;background:rgba(212,175,55,.045);text-align:center}.artist-stat strong{display:block;color:#fff0b4;font-size:18px}.artist-stat span,.artist-action{color:#bcae87;font-size:10px;font-weight:850}.artist-action{cursor:not-allowed;opacity:.65}.artist-number{margin-top:10px;color:#f2d171;font-size:12px;font-weight:950}.artist-next-step{margin-top:14px;padding:13px;border:1px solid rgba(212,175,55,.18);border-radius:13px;background:rgba(212,175,55,.055);color:#d8d0b8;font-size:11px;line-height:1.55}.artist-next-step strong{display:block;margin-bottom:4px;color:#f2d171;font-size:12px}.artist-contact-button{display:block;width:100%;box-sizing:border-box;margin-top:10px;padding:12px 14px;border:1px solid rgba(212,175,55,.26);border-radius:12px;background:rgba(212,175,55,.1);color:#f4d67a;text-align:center;text-decoration:none;font-size:12px;font-weight:950}.artist-contact-button[hidden]{display:none}
+
+.nav-tab{
+    min-width:0;
+    padding:12px 6px 10px;
+    border:0;
+    border-radius:16px;
+    background:transparent;
+    color:#777;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    font-size:13px;
+    font-weight:850;
+    cursor:pointer;
+    transition:.2s ease;
+}
+
+.nav-tab i{
+    font-size:28px;
+}
+.home-hero{padding-top:8px}.home-hero .logo{margin:0 auto}.home-hero .subtitle{margin-bottom:22px}
+.community-card{width:min(92vw,390px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
+.community-card .button{max-width:none;width:100%;box-sizing:border-box;margin:10px 0}
+.web3-footer{margin:26px 0 8px;color:#d4af37;font-weight:900}.web3-domain{margin:0;color:#8b8b8b;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:390px){.nav-tab{padding:10px 2px 9px;font-size:8px}.nav-tab i{font-size:18px}.page-heading{font-size:23px}}
+</style>
+
+
+<style>
+/* ===== UI 3.0 PREMIUM ===== */
+.player,
+.license-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card{
+ width:min(92vw,340px)!important;
+ max-width:340px!important;
+ margin:0 auto 22px!important;
+ padding:18px!important;
+ border-radius:24px!important;
+ border:1px solid rgba(212,175,55,.22)!important;
+ background:
+ radial-gradient(circle at top right,rgba(255,215,0,.08),transparent 35%),
+ linear-gradient(145deg,#181818,#090909)!important;
+ box-shadow:
+ 0 0 26px rgba(212,175,55,.12),
+ 0 20px 45px rgba(0,0,0,.45)!important;
+ transition:.35s ease;
+}
+.player:hover,
+.license-card:hover,
+.daily-reward-card:hover,
+.asiq-wallet-card:hover,
+.withdraw-card:hover,
+.community-card:hover{
+ transform:translateY(-3px);
+ box-shadow:
+ 0 0 34px rgba(255,215,0,.22),
+ 0 26px 55px rgba(0,0,0,.55);
+}
+.button,
+.buy-button,
+.withdraw-button,
+.daily-reward-button,
+.claim-button{
+ border-radius:14px!important;
+ transition:.25s;
+}
+.button:hover,
+.buy-button:hover,
+.withdraw-button:hover,
+.daily-reward-button:hover,
+.claim-button:hover{
+ transform:translateY(-2px);
+ box-shadow:0 0 18px rgba(255,215,0,.35);
+}
+.nav-tab{
+ transition:.25s;
+}
+.nav-tab i{
+ font-size:34px;
+ color:#d4af37;
+ text-shadow:0 0 8px rgba(212,175,55,.55),0 0 18px rgba(212,175,55,.35);
+ transition:.25s;
+}
+.nav-tab.active i{
+ color:#ffd700;
+ transform:translateY(-4px) scale(1.12);
+ text-shadow:0 0 12px gold,0 0 30px gold;
+}
+.title{
+ text-shadow:0 0 12px rgba(212,175,55,.4),0 0 28px rgba(212,175,55,.25);
+}
+.player-cover,
+.logo{
+ transition:.4s;
+}
+.player-cover:hover,
+.logo:hover{
+ transform:scale(1.03);
+}
+.daily-reward-card{
+ width:min(82vw,300px)!important;
+ padding:14px!important;
+}
+.daily-reward-title{font-size:18px!important;}
+.daily-reward-amount{font-size:25px!important;}
+.daily-reward-note{font-size:10px!important;}
+.daily-reward-icon{font-size:28px!important;}
+</style>
+
+
+<style>
+/* ===== ASIQPAI PERFORMANCE PATCH ===== */
+html{background:#050505}
+body{
+    background:
+        radial-gradient(circle at 50% -10%,rgba(212,175,55,.08),transparent 34%),
+        #050505;
+}
+
+/* РџРѕСЃС‚РѕСЏРЅРЅС‹Рµ canvas-Р°РЅРёРјР°С†РёРё СѓРґР°Р»РµРЅС‹: РјРµРЅСЊС€Рµ РЅР°РіСЂСѓР·РєРё РЅР° GPU Рё Р±Р°С‚Р°СЂРµСЋ. */
+#smokeCanvas,#sparkCanvas{display:none!important}
+
+.track-catalog{
+    width:min(92vw,340px);
+    margin:0 auto 24px;
+    display:grid;
+    gap:10px;
+    content-visibility:auto;
+    contain-intrinsic-size:260px;
+}
+.track-catalog-title{
+    margin:4px 2px 2px;
+    color:#d4af37;
+    font-size:13px;
+    font-weight:900;
+    letter-spacing:2px;
+    text-align:left;
+    text-transform:uppercase;
+}
+.track-item{
+    width:100%;
+    min-height:68px;
+    display:grid;
+    grid-template-columns:52px 1fr 34px;
+    align-items:center;
+    gap:12px;
+    padding:8px;
+    box-sizing:border-box;
+    border:1px solid rgba(212,175,55,.13);
+    border-radius:16px;
+    background:rgba(18,18,18,.86);
+    color:#fff;
+    text-align:left;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+.track-item.active{
+    border-color:rgba(212,175,55,.48);
+    background:rgba(212,175,55,.08);
+}
+.track-item-cover{
+    width:52px;
+    height:52px;
+    border-radius:11px;
+    object-fit:cover;
+    background:#111;
+}
+.track-item-copy{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+.track-item-name{
+    overflow:hidden;
+    color:#f4f4f4;
+    font-size:14px;
+    font-weight:900;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.track-item-meta{
+    margin-top:5px;
+    overflow:hidden;
+    color:#8d8d8d;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.5px;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.track-item-icon{
+    color:#d4af37;
+    font-size:15px;
+    text-align:center;
+}
+
+
+.track-item.active .track-item-icon{
+    text-shadow:0 0 8px rgba(212,175,55,.35);
+}
+
+/* РќР° С‚РµР»РµС„РѕРЅРµ hover РЅРµ РґРѕР»Р¶РµРЅ Р·Р°РїСѓСЃРєР°С‚СЊ Р»РёС€РЅРёРµ РїРµСЂРµСЂРёСЃРѕРІРєРё. */
+@media (hover:none){
+    .player:hover,.daily-reward-card:hover,.asiq-wallet-card:hover,
+    .withdraw-card:hover,.community-card:hover,.button:hover,
+    .daily-reward-button:hover,.withdraw-button:hover,.logo:hover,
+    .player-cover:hover{transform:none!important;box-shadow:inherit}
+}
+
+@media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        animation-iteration-count:1!important;
+        transition-duration:.01ms!important;
+    }
+}
+</style>
+
+
+<style>
+/* ===== CROWN TAP BUTTON EFFECT ===== */
+#crown{
+    cursor:pointer;
+    touch-action:manipulation;
+    transform-origin:center;
+    -webkit-tap-highlight-color:transparent;
+}
+
+#crown{
+    cursor:pointer;
+    touch-action:manipulation;
+    transform-origin:center;
+    -webkit-tap-highlight-color:transparent;
+    will-change:transform, filter;
+}
+
+#crown.crown-down{
+   transform:scale(.90) translateY(3px) !important;
+    filter: brightness(1.12) drop-shadow(0 0 10px rgba(255,215,0,.45)) !important;
+    transition:transform .08s ease-out, filter .08s ease-out !important;
+}
+
+/* Gold Points РїРѕР»РЅРѕСЃС‚СЊСЋ РѕС‚РєР»СЋС‡РµРЅС‹ */
+#gpPanel, #gpCounter, .gpTitle, .plusOne{display:none!important;}
+</style>
+
+
+<style>
+/* ===== AUTOMATIC TRACKS / INSTRUMENTALS ===== */
+.catalog-tabs{
+    width:min(92vw,340px);
+    margin:0 auto 15px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+}
+
+.catalog-tab{
+    min-width:0;
+    min-height:48px;
+    padding:10px 8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    border:1px solid rgba(212,175,55,.16);
+    border-radius:14px;
+    background:rgba(18,18,18,.88);
+    color:#858585;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+    touch-action:manipulation;
+    transition:
+        color .2s ease,
+        border-color .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.catalog-tab i{
+    color:#a98b3c;
+    font-size:14px;
+}
+
+.catalog-tab small{
+    min-width:20px;
+    padding:3px 6px;
+    border-radius:999px;
+    background:rgba(255,255,255,.055);
+    color:#777;
+    font-size:9px;
+    font-weight:950;
+    font-variant-numeric:tabular-nums;
+}
+
+.catalog-tab.active{
+    border-color:rgba(255,215,0,.55);
+    background:rgba(212,175,55,.11);
+    color:#ffe58a;
+    box-shadow:0 0 18px rgba(212,175,55,.10);
+}
+
+.catalog-tab.active i,
+.catalog-tab.active small{
+    color:#ffd966;
+}
+
+.catalog-tab:active{
+    transform:scale(.97);
+}
+
+.catalog-empty{
+    padding:24px 14px;
+    border:1px dashed rgba(212,175,55,.20);
+    border-radius:16px;
+    background:rgba(18,18,18,.52);
+    color:#777;
+    font-size:12px;
+    line-height:1.55;
+    text-align:center;
+}
+
+@media(max-width:360px){
+    .catalog-tab{
+        gap:5px;
+        padding-left:5px;
+        padding-right:5px;
+        font-size:10px;
+    }
+}
+</style>
+
+
+<style>
+/* ===== BUY / SELL ASIQ BUTTON ===== */
+.asiq-swap-button{
+    width:min(92vw,340px);
+    max-width:340px;
+    margin:0 auto 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 18px;
+    box-sizing:border-box;
+    border:1px solid rgba(212,175,55,.42);
+    border-radius:14px;
+    background:linear-gradient(135deg,#f0cc55,#b98a12);
+    color:#111;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:950;
+    letter-spacing:.7px;
+    box-shadow:
+        0 10px 26px rgba(212,175,55,.18),
+        0 0 18px rgba(255,215,0,.10);
+    transition:.22s ease;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
+.asiq-swap-button:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.05);
+    box-shadow:
+        0 14px 30px rgba(212,175,55,.24),
+        0 0 24px rgba(255,215,0,.16);
+}
+.asiq-swap-button:active{
+    transform:scale(.98);
+}
+.asiq-swap-button i{
+    font-size:16px;
+}
+@media (hover:none){
+    .asiq-swap-button:hover{
+        transform:none;
+    }
+}
+</style>
+
+<style>
+/* ===== WALLET CLEAN BRIGHT FINAL PATCH ===== */
+#page-wallet{
+    width:100%;
+    max-width:390px;
+    margin:0 auto;
+    padding-left:14px;
+    padding-right:14px;
+    box-sizing:border-box;
+}
+
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .daily-reward-card,
+#page-wallet .withdraw-card{
+    width:100%!important;
+    max-width:none!important;
+    margin:0 0 18px!important;
+    box-sizing:border-box!important;
+}
+
+/* Brighter background and cleaner contrast */
+#page-wallet .asiq-wallet-card{
+    background:
+        linear-gradient(115deg,rgba(255,255,255,.42),transparent 28%),
+        radial-gradient(circle at 80% 18%,rgba(255,244,174,.72),transparent 26%),
+        linear-gradient(135deg,#f7df88 0%,#d8ad2a 30%,#b9830c 64%,#f0ce69 100%)!important;
+    border:1px solid rgba(255,235,150,.80)!important;
+    box-shadow:
+        0 15px 34px rgba(0,0,0,.44),
+        0 0 28px rgba(255,197,41,.24),
+        inset 0 1px 0 rgba(255,255,255,.62)!important;
+}
+
+#page-wallet .asiq-wallet-label,
+#page-wallet .asiq-wallet-status,
+#page-wallet .asiq-wallet-address,
+#page-wallet .asiq-balance-value,
+#page-wallet .asiq-balance-symbol{
+    color:#1a1407!important;
+    text-shadow:none!important;
+}
+
+#page-wallet .asiq-balance-value{
+    font-size:clamp(42px,12vw,58px)!important;
+    line-height:1!important;
+    font-weight:950!important;
+    letter-spacing:-1.5px!important;
+}
+
+#page-wallet .asiq-balance-symbol{
+    display:block;
+    margin-top:7px;
+    font-size:.42em!important;
+    letter-spacing:1.4px!important;
+}
+
+#page-wallet .asiq-swap-button{
+    min-height:72px;
+    border-radius:20px!important;
+    background:linear-gradient(135deg,#ffd95d,#c89410)!important;
+    color:#161105!important;
+    border:1px solid rgba(255,231,133,.75)!important;
+    box-shadow:
+        0 12px 26px rgba(0,0,0,.34),
+        0 0 22px rgba(255,202,45,.22)!important;
+}
+
+#page-wallet .daily-reward-card,
+#page-wallet .withdraw-card{
+    background:
+        radial-gradient(circle at 88% 12%,rgba(255,204,65,.15),transparent 32%),
+        linear-gradient(145deg,#242118,#11100d)!important;
+    border:1px solid rgba(222,177,53,.55)!important;
+    box-shadow:
+        0 14px 30px rgba(0,0,0,.42),
+        0 0 22px rgba(212,175,55,.14)!important;
+}
+
+#page-wallet .daily-reward-card{
+    padding:20px!important;
+}
+
+#page-wallet .daily-reward-card::after{
+    content:none!important;
+    display:none!important;
+}
+
+#page-wallet .daily-reward-title,
+#page-wallet .daily-reward-amount,
+#page-wallet .withdraw-title{
+    color:#ffe08a!important;
+    text-shadow:0 0 14px rgba(255,211,88,.12)!important;
+}
+
+#page-wallet .daily-reward-note,
+#page-wallet .daily-reward-timer,
+#page-wallet .withdraw-note{
+    color:#c6bfae!important;
+}
+
+#page-wallet .daily-reward-balance,
+#page-wallet .withdraw-balance{
+    background:rgba(255,205,65,.09)!important;
+    border-color:rgba(255,205,65,.28)!important;
+    color:#f0d98c!important;
+}
+
+#page-wallet .withdraw-card{
+    padding:20px!important;
+}
+
+#page-wallet .withdraw-badge{
+    color:#f1d274!important;
+    border-color:rgba(241,210,116,.32)!important;
+    background:rgba(241,210,116,.08)!important;
+}
+
+#page-wallet .withdraw-input{
+    background:#12100a!important;
+    border-color:rgba(255,214,89,.24)!important;
+}
+
+#page-wallet .withdraw-max{
+    color:#f4d36d!important;
+    background:rgba(244,211,109,.10)!important;
+    border-color:rgba(244,211,109,.30)!important;
+}
+
+#page-wallet .withdraw-button{
+    background:linear-gradient(135deg,#f4cf57,#ad7b0c)!important;
+    color:#171105!important;
+}
+
+/* Keep bottom nav above content without covering Withdraw */
+body{
+    padding-bottom:calc(118px + env(safe-area-inset-bottom))!important;
+}
+
+@media(max-width:360px){
+    #page-wallet{
+        padding-left:10px;
+        padding-right:10px;
+    }
+}
+</style>
+
+</head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+<body>
+<div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<main class="app-shell">
+    <section class="app-page" id="page-home" data-page="home">
+        <div class="home-hero">
+            <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">    
+        </div>
+
+        <div class="artist-card" id="artistCard" aria-live="polite">
+                    <div id="artistMembershipView">
+                        <div class="artist-card-head"><div class="artist-title">рџ‘‘ ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
+                        <p class="artist-copy">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚РµСЃСЊ РєР°Рє Р°СЂС‚РёСЃС‚ Рё РѕС‚РєСЂРѕР№С‚Рµ Artist Studio.</p>
+                        <div class="artist-benefits">
+                            <div class="artist-benefit">рџЋµ Р”Рѕ 10 РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅС‹С… С‚СЂРµРєРѕРІ РёР»Рё Р±РёС‚РѕРІ</div>
+                            <div class="artist-benefit">рџ›Ў РњРѕРґРµСЂР°С†РёСЏ Рё РїСѓР±Р»РёРєР°С†РёСЏ РІ РєР°С‚Р°Р»РѕРіРµ</div>
+                            <div class="artist-benefit">рџЏ† РџРµСЂРІС‹Рµ 100 вЂ” Founding Artist</div>
+                        </div>
+                        <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Р’Р°С€Рµ РёРјСЏ Р°СЂС‚РёСЃС‚Р°" autocomplete="off" disabled>
+                        <button class="artist-button" id="artistRegisterButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
+                        <div class="artist-status" id="artistStatus">РџСЂРѕРІРµСЂСЏРµРј СЃС‚Р°С‚СѓСЃ Artist Membership</div>
+                    </div>
+                    <div id="artistStudioView" hidden>
+                        <div class="artist-card-head"><div class="artist-title">рџЋ¤ Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
+                        <div class="artist-number" id="artistStudioName">вЂ”</div>
+                        <div class="artist-studio-grid">
+                            <div class="artist-stat"><strong id="artistPublishedCount">0 / 10</strong><span>Published</span></div>
+                            <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
+                            <div class="artist-stat"><strong id="artistFilesStatus">РћР–РР”РђРќРР•</strong><span>Files Status</span></div>
+                            <div class="artist-stat"><strong>MP3 + COVER</strong><span>Р§С‚Рѕ РѕС‚РїСЂР°РІРёС‚СЊ</span></div>
+                        </div>
+                        <div class="artist-next-step">
+                            <strong>Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°</strong>
+                            РћС‚РїСЂР°РІСЊС‚Рµ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ MP3-С„Р°Р№Р» Рё РєРІР°РґСЂР°С‚РЅСѓСЋ РѕР±Р»РѕР¶РєСѓ JPG РёР»Рё PNG. РџРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё СЂРµР»РёР· Р±СѓРґРµС‚ РґРѕР±Р°РІР»РµРЅ РІ РєР°С‚Р°Р»РѕРі РІСЂСѓС‡РЅСѓСЋ.
+                        </div>
+                        <a class="artist-contact-button" id="artistContactButton" href="#" target="_blank" rel="noopener noreferrer">РћС‚РїСЂР°РІРёС‚СЊ С„Р°Р№Р»С‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ</a>
+                    </div>
+                </div>
+
+        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
+                    <div class="daily-reward-icon">рџЋЃ</div>
+                    <div class="daily-reward-title">Daily Reward</div>
+                    <div class="daily-reward-amount">+25 ASIQ</div>
+                    <p class="daily-reward-note">РџРѕР»СѓС‡Р°Р№С‚Рµ РµР¶РµРґРЅРµРІРЅСѓСЋ РЅР°РіСЂР°РґСѓ РІРѕ РІРЅСѓС‚СЂРµРЅРЅРёР№ Р±Р°Р»Р°РЅСЃ РїСЂРёР»РѕР¶РµРЅРёСЏ.</p>
+                    <div class="daily-reward-balance" id="dailyRewardBalance">РќР°РіСЂР°РґС‹ РІ РїСЂРёР»РѕР¶РµРЅРёРё: вЂ” ASIQ</div>
+                    <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
+                    <div class="daily-reward-timer" id="dailyRewardTimer">РџСЂРѕРІРµСЂСЏРµРј РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РЅР°РіСЂР°РґС‹</div>
+                </div>
+
+
+
+    </section>
+
+    <section class="app-page active" id="page-music" data-page="music">
+        <audio id="player" preload="auto"></audio>
+
+        <div class="player" id="musicPlayer">
+            <div class="player-cover-wrap">
+                <img id="trackCover" class="player-cover" src="images/dark-nights-cover.jpg" alt="РћР±Р»РѕР¶РєР° Р±РёС‚Р° Dark Nights">
+                <div class="cover-shade"></div>
+                <div class="cover-badge">ASIQPAI ORIGINAL</div>
+            </div>
+            <div class="track-info">
+                <div class="track-copy">
+                    <div id="trackName">УТЈРіС–РјРµ</div>
+                    <span id="trackMeta">ASIQPAI вЂў INSTRUMENTAL</span>
+                </div>
+                <button id="likeButton" class="like-button" type="button" aria-label="Р”РѕР±Р°РІРёС‚СЊ РІ РёР·Р±СЂР°РЅРЅРѕРµ"><i class="fa-regular fa-heart"></i></button>
+            </div>
+            <div class="progress-container">
+                <span id="currentTime">0:00</span>
+                <input type="range" id="progress" value="0" min="0" max="100" aria-label="РџРѕР·РёС†РёСЏ С‚СЂРµРєР°">
+                <span id="duration">0:00</span>
+            </div>
+            <button id="playModeButton" class="play-mode-button" type="button" aria-label="Р РµР¶РёРј РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ: РїРѕ РїРѕСЂСЏРґРєСѓ" title="РџРѕ РїРѕСЂСЏРґРєСѓ"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
+            <div class="controls">
+                <button id="prevButton" type="button" aria-label="РџСЂРµРґС‹РґСѓС‰РёР№ С‚СЂРµРє"><i class="fa-solid fa-backward-step"></i></button>
+                <button id="playButton" type="button" aria-label="Р’РѕСЃРїСЂРѕРёР·РІРµСЃС‚Рё"><i class="fa-solid fa-play"></i></button>
+                <button id="nextButton" type="button" aria-label="РЎР»РµРґСѓСЋС‰РёР№ С‚СЂРµРє"><i class="fa-solid fa-forward-step"></i></button>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="app-page" id="page-library" data-page="library">
+        <p class="page-subheading">РњРµРґРёР°С‚РµРєР°</p>
+
+        <div class="catalog-tabs" role="tablist" aria-label="РљР°С‚РµРіРѕСЂРёРё РјСѓР·С‹РєРё">
+            <button
+                class="catalog-tab active"
+                id="catalogTracksTab"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                data-category="tracks"
+            >
+                <i class="fa-solid fa-microphone-lines" aria-hidden="true"></i>
+                <span>Tracks</span>
+                <small id="tracksCount">0</small>
+            </button>
+
+            <button
+                class="catalog-tab"
+                id="catalogInstrumentalsTab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-category="instrumentals"
+            >
+                <i class="fa-solid fa-wave-square" aria-hidden="true"></i>
+                <span>Instrumentals</span>
+                <small id="instrumentalsCount">0</small>
+            </button>
+        </div>
+
+        <div class="track-catalog" id="trackCatalog" aria-label="Р‘РёР±Р»РёРѕС‚РµРєР° С‚СЂРµРєРѕРІ"></div>
+    </section>
+
+    <section class="app-page" id="page-wallet" data-page="wallet">
+        <div id="ton-connect"></div>
+
+        <div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
+            <div class="asiq-wallet-head">
+                <div class="asiq-wallet-label"><span class="asiq-wallet-dot" aria-hidden="true"></span><span>ASIQ Wallet</span></div>
+                <button class="asiq-refresh-button" id="asiqRefreshButton" type="button" aria-label="РћР±РЅРѕРІРёС‚СЊ Р±Р°Р»Р°РЅСЃ ASIQ" title="РћР±РЅРѕРІРёС‚СЊ Р±Р°Р»Р°РЅСЃ" disabled><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div class="asiq-balance-value" id="asiqBalanceValue">вЂ” <span class="asiq-balance-symbol">ASIQ</span></div>
+            <div class="asiq-wallet-status" id="asiqWalletStatus">РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє</div>
+            <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
+        </div>
+
+        <a
+            class="asiq-swap-button"
+            href="https://app.dedust.io/swap/GRAM/EQDtaiYQRMlcGHXVkcK873McLzx-JQUZtyR8W1O6e2XISp52"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buy or sell ASIQ on DeDust"
+        >
+            <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+            <span>BUY / SELL ASIQ</span>
+        </a>
+
+
+        
+
+        
+
+        <div class="withdraw-card" id="withdrawCard">
+            <div class="withdraw-head"><div class="withdraw-title">рџ’ё Withdraw ASIQ</div><div class="withdraw-badge">TON WALLET</div></div>
+            <div class="withdraw-balance" id="withdrawBalance">Р”РѕСЃС‚СѓРїРЅРѕ: вЂ” ASIQ</div>
+            <div class="withdraw-row">
+                <input class="withdraw-input" id="withdrawAmount" type="number" inputmode="decimal" min="25" step="25" placeholder="РљРѕР»РёС‡РµСЃС‚РІРѕ ASIQ" disabled>
+                <button class="withdraw-max" id="withdrawMaxButton" type="button" disabled>MAX</button>
+            </div>
+            <button class="withdraw-button" id="withdrawButton" type="button" disabled>РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє</button>
+            <p class="withdraw-note" id="withdrawNote">РњРёРЅРёРјСѓРј 25 ASIQ. РџСЂРё РѕС‚РєР»РѕРЅРµРЅРёРё СЃСѓРјРјР° Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ.</p>
+        </div>
+    </section>
+
+    <section class="app-page" id="page-community" data-page="community">
+        <h2 class="page-heading">рџЊђ COMMUNITY</h2>
+        <p class="page-subheading">РћС„РёС†РёР°Р»СЊРЅС‹Рµ СЃС‚СЂР°РЅРёС†С‹ Рё СЃРѕРѕР±С‰РµСЃС‚РІРѕ ASIQPAI</p>
+        <div class="community-card">
+            <a class="button" href="https://t.me/asiqpaihub"><i class="fa-brands fa-telegram"></i> Telegram Community</a>
+            <a class="button" href="https://youtube.com/@asiqpai"><i class="fa-brands fa-youtube"></i> YouTube Community</a>
+            <a class="button" href="https://www.tiktok.com/@asiqpai"><i class="fa-brands fa-tiktok"></i> TikTok Community</a>
+            <a class="button" href="https://www.instagram.com/asiqpai"><i class="fa-brands fa-instagram"></i> Instagram Community</a>
+            <div class="web3-footer">Web3</div>
+            <p class="web3-domain">asiqpai.ton</p>
+        </div>
+    </section>
+</main>
+
+<nav class="app-bottom-nav" aria-label="РќР°РІРёРіР°С†РёСЏ РїСЂРёР»РѕР¶РµРЅРёСЏ">
+<button class="nav-tab active" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
+<button class="nav-tab" type="button" data-target="library"><i class="fa-solid fa-book-open"></i><span>Library</span></button>
+<button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
+<button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
+<button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
+</nav>
+
+<script>
+const fallbackPlaylist = [
+    {
+        title: "УТЈРіС–РјРµ",
+        artist: "ASIQPAI",
+        meta: "INSTRUMENTAL",
+        cover: "images/dark-nights-cover.jpg",
+        file: "music/track.mp3",
+        accent: "212,175,55"
+    },
+    {
+        title: "Р”РµРјРѕРЅ",
+        artist: "ASIQPAI",
+        meta: "TRACK",
+        cover: "images/Р”РµРјРѕРЅ.jpg",
+        file: "music/Р”РµРјРѕРЅ.mp3",
+        accent: "175,42,42"
+    },
+    {
+        title: "Baby",
+        artist: "ASIQPAI",
+        meta: "TRACK",
+        cover: "images/Baby.jpg",
+        file: "music/Baby.mp3",
+        accent: "184,134,255"
+    }
+];
+
+let playlist = [];
+let currentTrack = Number.parseInt(SafeStorage.get("currentTrack", "0"), 10);
+if(!Number.isSafeInteger(currentTrack) || currentTrack < 0 || currentTrack > 999){
+    currentTrack = 0;
+}
+let playMode = SafeStorage.get("playMode", "sequence");
+if(!["sequence", "repeat", "shuffle"].includes(playMode)){
+    playMode = "sequence";
+}
+
+// =======================
+// TON CONNECT
+// =======================
+
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+    manifestUrl: "https://qaztrap.github.io/asiqpai/tonconnect-manifest.json",
+    buttonRootId: "ton-connect"
+});
+
+// =======================
+// ASIQ JETTON BALANCE
+// =======================
+
+const asiqWalletCard = document.getElementById("asiqWalletCard");
+const asiqBalanceValue = document.getElementById("asiqBalanceValue");
+const asiqWalletStatus = document.getElementById("asiqWalletStatus");
+const asiqWalletAddress = document.getElementById("asiqWalletAddress");
+const asiqRefreshButton = document.getElementById("asiqRefreshButton");
+
+let asiqBalanceRequestId = 0;
+
+function shortenWalletAddress(address){
+    if(typeof address !== "string" || address.length < 12) return "";
+    return `${address.slice(0,6)}вЂ¦${address.slice(-6)}`;
+}
+
+
+function formatCompactAsiq(value){
+    const number = Number(value);
+    if(!Number.isFinite(number)) return "0";
+
+    const absolute = Math.abs(number);
+    const sign = number < 0 ? "-" : "";
+
+    const trim = formatted => formatted.replace(/\.0+$|(\.\d*[1-9])0+$/,"$1");
+
+    if(absolute >= 1_000_000_000){
+        return `${sign}${trim((absolute / 1_000_000_000).toFixed(1))}B`;
+    }
+    if(absolute >= 1_000_000){
+        return `${sign}${trim((absolute / 1_000_000).toFixed(1))}M`;
+    }
+    if(absolute >= 1_000){
+        return `${sign}${trim((absolute / 1_000).toFixed(1))}k`;
+    }
+
+    return `${Math.round(number)}`;
+}
+
+function setAsiqWalletState({ connected, loading = false, balanceText = null, message = "", address = "" }){
+    asiqWalletCard?.classList.toggle("connected", Boolean(connected));
+    asiqRefreshButton.disabled = !connected || loading;
+    asiqRefreshButton.classList.toggle("loading", loading);
+
+    if(balanceText !== null){
+        asiqBalanceValue.innerHTML = `${balanceText} <span class="asiq-balance-symbol">ASIQ</span>`;
+        asiqBalanceValue.classList.remove("updated");
+        void asiqBalanceValue.offsetWidth;
+        asiqBalanceValue.classList.add("updated");
+    }else if(!connected){
+        asiqBalanceValue.innerHTML = `вЂ” <span class="asiq-balance-symbol">ASIQ</span>`;
+    }
+
+    asiqWalletStatus.textContent = message;
+    asiqWalletAddress.textContent = address ? shortenWalletAddress(address) : "";
+}
+
+async function loadAsiqBalance(walletAddress, { notifyOnError = false } = {}){
+    if(!walletAddress){
+        setAsiqWalletState({
+            connected:false,
+            message:"РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє"
+        });
+        return;
+    }
+
+    const requestId = ++asiqBalanceRequestId;
+
+    setAsiqWalletState({
+        connected:true,
+        loading:true,
+        message:"Р—Р°РіСЂСѓР¶Р°РµРј Р±Р°Р»Р°РЅСЃ ASIQвЂ¦",
+        address:walletAddress
+    });
+
+    try{
+        const data = await apiRequest(`/api/asiq-balance/${encodeURIComponent(walletAddress)}`);
+
+        if(requestId !== asiqBalanceRequestId) return;
+
+        const rawBalance = Number(
+            data.balance ?? data.balanceText ?? 0
+        );
+        const balanceText = formatCompactAsiq(rawBalance);
+
+        setAsiqWalletState({
+            connected:true,
+            balanceText,
+            message:"РљРѕС€РµР»С‘Рє РїРѕРґРєР»СЋС‡С‘РЅ",
+            address:walletAddress
+        });
+    }catch(error){
+        if(requestId !== asiqBalanceRequestId) return;
+
+        console.warn("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ Р±Р°Р»Р°РЅСЃ ASIQ:", error.message);
+
+        setAsiqWalletState({
+            connected:true,
+            balanceText:"вЂ”",
+            message:"РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ Р±Р°Р»Р°РЅСЃ. РќР°Р¶РјРёС‚Рµ РѕР±РЅРѕРІРёС‚СЊ",
+            address:walletAddress
+        });
+
+        if(notifyOnError){
+            showToast("РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ Р±Р°Р»Р°РЅСЃ ASIQ", "warning");
+        }
+    }
+}
+
+asiqRefreshButton.addEventListener("click", () => {
+    loadAsiqBalance(tonConnectUI.account?.address || "", { notifyOnError:true });
+});
+
+tonConnectUI.onStatusChange(async wallet => {
+    const walletAddress = wallet?.account?.address || "";
+
+    if (walletAddress) {
+        try {
+            await apiRequest("/api/wallet/connect", {
+                method: "POST",
+                body: JSON.stringify({
+                    walletAddress
+                })
+            });
+        } catch (error) {
+            console.warn("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ РєРѕС€РµР»РµРє:", error);
+        }
+    }
+
+    loadAsiqBalance(walletAddress);
+    renderWithdraw();
+    renderArtist();
+});
+
+if(tonConnectUI.account?.address){
+    loadAsiqBalance(tonConnectUI.account.address);
+}else{
+    setAsiqWalletState({
+        connected:false,
+        message:"РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє"
+    });
+}
+
+
+// =======================
+// РџРћРљРЈРџРљРђ Р‘РРўРђ
+// =======================
+
+function getTelegramInitData(){
+    return window.Telegram?.WebApp?.initData || "";
+}
+
+function getApiHeaders(withJson = false){
+    const headers = {
+        "Accept": "application/json",
+        "X-Telegram-Init-Data": getTelegramInitData()
+    };
+
+    if(withJson){
+        headers["Content-Type"] = "application/json";
+    }
+
+    return headers;
+}
+
+async function apiRequest(path, options = {}){
+    const response = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers: {
+            ...getApiHeaders(Boolean(options.body)),
+            ...(options.headers || {})
+        }
+    });
+
+    let data = {};
+    try{
+        data = await response.json();
+    }catch{}
+
+    if(!response.ok){
+        throw new Error(data.error || `HTTP ${response.status}`);
+    }
+
+    return data;
+}
+
+
+
+// =======================
+// ASIQPAI ARTIST MEMBERSHIP
+// =======================
+
+const artistMembershipView = document.getElementById("artistMembershipView");
+const artistStudioView = document.getElementById("artistStudioView");
+const artistNameInput = document.getElementById("artistNameInput");
+const artistRegisterButton = document.getElementById("artistRegisterButton");
+const artistStatus = document.getElementById("artistStatus");
+const artistStudioName = document.getElementById("artistStudioName");
+const artistStudioBadge = document.getElementById("artistStudioBadge");
+const artistPublishedCount = document.getElementById("artistPublishedCount");
+const artistNumber = document.getElementById("artistNumber");
+const artistFilesStatus = document.getElementById("artistFilesStatus");
+const artistContactButton = document.getElementById("artistContactButton");
+let artistState = null;
+let artistBusy = false;
+
+function renderArtist(){
+    const artist = artistState?.artist;
+    const wallet = tonConnectUI.account?.address || "";
+    if(artist){
+        artistMembershipView.hidden = true;
+        artistStudioView.hidden = false;
+        artistStudioName.textContent = artist.artistName;
+        artistPublishedCount.textContent = `${artist.publishedCount} / ${artist.publicationLimit}`;
+        artistNumber.textContent = `#${String(artist.artistNumber).padStart(4,"0")}`;
+        artistStudioBadge.textContent = artist.foundingArtist ? "FOUNDING ARTIST" : "ACTIVE";
+        const statusLabels = {
+            waiting_files:"Р–Р”РЃРњ Р¤РђР™Р›Р«",
+            files_received:"Р¤РђР™Р›Р« РџРћР›РЈР§Р•РќР«",
+            published:"РћРџРЈР‘Р›РРљРћР’РђРќРћ"
+        };
+        artistFilesStatus.textContent = statusLabels[artist.onboardingStatus] || "Р–Р”РЃРњ Р¤РђР™Р›Р«";
+        const contactUrl = artistState?.filesContactUrl || "";
+        const contactName = artistState?.filesContact || "Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ";
+        artistContactButton.textContent = `РћС‚РїСЂР°РІРёС‚СЊ С„Р°Р№Р»С‹ ${contactName}`;
+        artistContactButton.hidden = !contactUrl;
+        if(contactUrl) artistContactButton.href = contactUrl;
+        return;
+    }
+
+    artistMembershipView.hidden = false;
+    artistStudioView.hidden = true;
+    const telegramReady = Boolean(getTelegramInitData());
+    const ready = telegramReady && Boolean(wallet) && !artistBusy;
+    artistNameInput.disabled = !ready;
+    artistRegisterButton.disabled = !ready;
+    if(!telegramReady){
+        artistRegisterButton.textContent = "РћС‚РєСЂРѕР№С‚Рµ РІ Telegram";
+        artistStatus.textContent = "Р РµРіРёСЃС‚СЂР°С†РёСЏ РґРѕСЃС‚СѓРїРЅР° РІРЅСѓС‚СЂРё Telegram Mini App.";
+    }else if(!wallet){
+        artistRegisterButton.textContent = "РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє";
+        artistStatus.textContent = "Р”Р»СЏ РѕРїР»Р°С‚С‹ Artist Membership РїРѕРґРєР»СЋС‡РёС‚Рµ РєРѕС€РµР»С‘Рє.";
+    }else if(artistBusy){
+        artistRegisterButton.textContent = "РџСЂРѕРІРµСЂСЏРµРј РѕРїР»Р°С‚СѓвЂ¦";
+    }else{
+        artistRegisterButton.textContent = "REGISTER вЂ” 50,000 ASIQ";
+        artistStatus.textContent = "Р Р°Р·РѕРІР°СЏ СЂРµРіРёСЃС‚СЂР°С†РёСЏ. Р›РёРјРёС‚ РїСѓР±Р»РёРєР°С†РёР№: 10.";
+    }
+}
+
+async function loadArtist(){
+    if(!getTelegramInitData()){
+        artistState = { isArtist:false, artist:null };
+        renderArtist();
+        return;
+    }
+    try{
+        artistState = await apiRequest("/api/artist/me");
+    }catch(error){
+        console.warn("Artist status:", error.message);
+        artistState = { isArtist:false, artist:null };
+        artistStatus.textContent = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃС‚Р°С‚СѓСЃ Р°СЂС‚РёСЃС‚Р°.";
+    }
+    renderArtist();
+}
+
+async function verifyArtistPayment(orderId){
+    for(let attempt = 0; attempt < 12; attempt += 1){
+        const result = await apiRequest("/api/artist/verify", {
+            method:"POST",
+            body:JSON.stringify({ orderId })
+        });
+        if(result.status === "active" && result.artist){
+            artistState = {
+                isArtist:true,
+                artist:result.artist,
+                filesContact:result.filesContact,
+                filesContactUrl:result.filesContactUrl
+            };
+            SafeStorage.remove("artistRegistrationOrderId");
+            renderArtist();
+            showToast("Artist Membership Р°РєС‚РёРІРёСЂРѕРІР°РЅ", "success");
+            return true;
+        }
+        artistStatus.textContent = `РС‰РµРј РїРµСЂРµРІРѕРґ ASIQвЂ¦ ${attempt + 1}/12`;
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    return false;
+}
+
+artistRegisterButton?.addEventListener("click", async () => {
+    if(artistBusy) return;
+    const walletAddress = tonConnectUI.account?.address || "";
+    const artistName = artistNameInput.value.trim();
+    if(artistName.length < 2){
+        artistStatus.textContent = "Р’РІРµРґРёС‚Рµ РёРјСЏ Р°СЂС‚РёСЃС‚Р° РјРёРЅРёРјСѓРј РёР· 2 СЃРёРјРІРѕР»РѕРІ.";
+        artistNameInput.focus();
+        return;
+    }
+    if(!walletAddress){ renderArtist(); return; }
+
+    artistBusy = true;
+    renderArtist();
+    try{
+        const savedOrderId = SafeStorage.get("artistRegistrationOrderId", "");
+        if(savedOrderId){
+            artistStatus.textContent = "РџСЂРѕРІРµСЂСЏРµРј СЂР°РЅРµРµ РѕС‚РїСЂР°РІР»РµРЅРЅСѓСЋ РѕРїР»Р°С‚СѓвЂ¦";
+            const activated = await verifyArtistPayment(savedOrderId);
+            if(!activated){
+                artistStatus.textContent = "Р Р°РЅРµРµ РѕС‚РїСЂР°РІР»РµРЅРЅР°СЏ РѕРїР»Р°С‚Р° РµС‰С‘ РЅРµ РЅР°Р№РґРµРЅР°. РџРѕРґРѕР¶РґРёС‚Рµ Рё РїРѕРїСЂРѕР±СѓР№С‚Рµ РїСЂРѕРІРµСЂРёС‚СЊ СЃРЅРѕРІР° вЂ” РїРѕРІС‚РѕСЂРЅРѕ РїР»Р°С‚РёС‚СЊ РЅРµ РЅСѓР¶РЅРѕ.";
+            }
+            return;
+        }
+
+        artistStatus.textContent = "РЎРѕР·РґР°С‘Рј Р·Р°СЏРІРєСѓвЂ¦";
+        const order = await apiRequest("/api/artist/register", {
+            method:"POST",
+            body:JSON.stringify({ artistName, walletAddress })
+        });
+        artistStatus.textContent = "РџРѕРґС‚РІРµСЂРґРёС‚Рµ РїРµСЂРµРІРѕРґ 50,000 ASIQ РІ РєРѕС€РµР»СЊРєРµ.";
+        SafeStorage.set("artistRegistrationOrderId", order.orderId);
+        await tonConnectUI.sendTransaction(order.transaction);
+        artistStatus.textContent = "РџРµСЂРµРІРѕРґ РѕС‚РїСЂР°РІР»РµРЅ. Р–РґС‘Рј РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ Р±Р»РѕРєС‡РµР№РЅР°вЂ¦";
+        const activated = await verifyArtistPayment(order.orderId);
+        if(!activated){
+            artistStatus.textContent = "РћРїР»Р°С‚Р° РµС‰С‘ РЅРµ РЅР°Р№РґРµРЅР°. РќР°Р¶РјРёС‚Рµ РєРЅРѕРїРєСѓ СЃРЅРѕРІР° С‡РµСЂРµР· РјРёРЅСѓС‚Сѓ вЂ” РїРѕРІС‚РѕСЂРЅРѕ РїР»Р°С‚РёС‚СЊ РЅРµ РїРѕС‚СЂРµР±СѓРµС‚СЃСЏ.";
+        }
+    }catch(error){
+        console.error("Artist registration:", error);
+        const message = String(error?.message || "");
+        if(/reject|cancel|declin/i.test(message)){
+            SafeStorage.remove("artistRegistrationOrderId");
+        }
+        artistStatus.textContent = message || "Р РµРіРёСЃС‚СЂР°С†РёСЏ РЅРµ Р·Р°РІРµСЂС€РµРЅР°.";
+    }finally{
+        artistBusy = false;
+        renderArtist();
+    }
+});
+
+// =======================
+// DAILY REWARD (INTERNAL ASIQ REWARD BALANCE)
+// =======================
+
+const dailyRewardCard = document.getElementById("dailyRewardCard");
+const dailyRewardBalance = document.getElementById("dailyRewardBalance");
+const dailyRewardButton = document.getElementById("dailyRewardButton");
+const dailyRewardTimer = document.getElementById("dailyRewardTimer");
+
+let dailyRewardState = null;
+let dailyRewardTimerId = null;
+let dailyRewardBusy = false;
+
+function formatRewardNumber(value){
+    return formatCompactAsiq(value);
+}
+
+function formatRewardCountdown(milliseconds){
+    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return [hours, minutes, seconds]
+        .map(value => String(value).padStart(2, "0"))
+        .join(":");
+}
+
+function stopDailyRewardTimer(){
+    if(dailyRewardTimerId){
+        clearInterval(dailyRewardTimerId);
+        dailyRewardTimerId = null;
+    }
+}
+
+function renderDailyReward(){
+    if(!dailyRewardState) return;
+
+    const rewardBalance = formatRewardNumber(
+        dailyRewardState.rewardBalance ?? 0
+    );
+
+    dailyRewardBalance.textContent =
+        `РќР°РіСЂР°РґС‹ РІ РїСЂРёР»РѕР¶РµРЅРёРё: ${rewardBalance} ASIQ`;
+
+    dailyRewardCard.classList.toggle(
+        "claimed",
+        !dailyRewardState.eligible
+    );
+
+    if(dailyRewardBusy){
+        dailyRewardButton.disabled = true;
+        dailyRewardButton.textContent = "РџРѕР»СѓС‡Р°РµРј РЅР°РіСЂР°РґСѓвЂ¦";
+        return;
+    }
+
+    if(dailyRewardState.eligible){
+        dailyRewardButton.disabled = false;
+        dailyRewardButton.textContent = "рџЋЃ CLAIM +25 ASIQ";
+        dailyRewardTimer.textContent =
+            dailyRewardState.streak > 0
+                ? `РўРµРєСѓС‰Р°СЏ СЃРµСЂРёСЏ: ${dailyRewardState.streak} РґРЅ.`
+                : "РќР°РіСЂР°РґР° РґРѕСЃС‚СѓРїРЅР° СЃРµР№С‡Р°СЃ";
+        return;
+    }
+
+    dailyRewardButton.disabled = true;
+    dailyRewardButton.textContent = "вњ… РџРѕР»СѓС‡РµРЅРѕ СЃРµРіРѕРґРЅСЏ";
+
+    const nextClaimAt = Date.parse(
+        dailyRewardState.nextClaimAt || ""
+    );
+
+    if(Number.isFinite(nextClaimAt)){
+        const remaining = nextClaimAt - Date.now();
+
+        if(remaining <= 0){
+            dailyRewardState.eligible = true;
+            dailyRewardState.nextClaimAt = null;
+            renderDailyReward();
+            return;
+        }
+
+        dailyRewardTimer.textContent =
+            `РЎР»РµРґСѓСЋС‰Р°СЏ РЅР°РіСЂР°РґР° С‡РµСЂРµР· ${formatRewardCountdown(remaining)}`;
+    }else{
+        dailyRewardTimer.textContent =
+            "РЎР»РµРґСѓСЋС‰Р°СЏ РЅР°РіСЂР°РґР° Р±СѓРґРµС‚ РґРѕСЃС‚СѓРїРЅР° С‡РµСЂРµР· 24 С‡Р°СЃР°";
+    }
+}
+
+function startDailyRewardTimer(){
+    stopDailyRewardTimer();
+
+    dailyRewardTimerId = setInterval(() => {
+        renderDailyReward();
+    }, 1000);
+}
+
+function showDailyRewardAnimation(){
+    const element = document.createElement("div");
+    element.className = "daily-reward-float";
+    element.textContent = "вњ“";
+    element.setAttribute("role", "status");
+    element.setAttribute("aria-label", "РќР°РіСЂР°РґР° РїРѕР»СѓС‡РµРЅР°");
+    document.body.appendChild(element);
+
+    setTimeout(() => element.remove(), 1250);
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+    }catch{}
+}
+
+function showWithdrawAnimation(){
+    const element = document.createElement("div");
+    element.className = "daily-reward-float";
+    element.textContent = "вњ“";
+    element.setAttribute("role", "status");
+    element.setAttribute("aria-label", "Р—Р°СЏРІРєР° РЅР° РІС‹РІРѕРґ СЃРѕР·РґР°РЅР°");
+    document.body.appendChild(element);
+
+    setTimeout(() => element.remove(), 1250);
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+    }catch{}
+}
+
+async function loadDailyReward(){
+    if(!getTelegramInitData()){
+        dailyRewardButton.disabled = true;
+        dailyRewardButton.textContent = "РћС‚РєСЂРѕР№С‚Рµ РІ Telegram";
+        dailyRewardTimer.textContent =
+            "Daily Reward СЂР°Р±РѕС‚Р°РµС‚ С‚РѕР»СЊРєРѕ РІРЅСѓС‚СЂРё Telegram";
+        dailyRewardBalance.textContent =
+            "РќР°РіСЂР°РґС‹ РІ РїСЂРёР»РѕР¶РµРЅРёРё: вЂ” ASIQ";
+        return;
+    }
+
+    try{
+        dailyRewardButton.disabled = true;
+        dailyRewardButton.textContent = "Р—Р°РіСЂСѓР·РєР°вЂ¦";
+
+        dailyRewardState = await apiRequest("/api/daily-reward");
+        renderDailyReward();
+        if(withdrawState){ withdrawState.rewardBalance = dailyRewardState.rewardBalance; renderWithdraw(); }
+        startDailyRewardTimer();
+    }catch(error){
+        console.warn("Daily Reward load error:", error.message);
+        dailyRewardButton.disabled = true;
+        dailyRewardButton.textContent = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ";
+        dailyRewardTimer.textContent =
+            "РџРѕРїСЂРѕР±СѓР№С‚Рµ РїРµСЂРµР·Р°РїСѓСЃС‚РёС‚СЊ Mini App";
+    }
+}
+
+async function claimDailyReward(){
+    if(dailyRewardBusy || !dailyRewardState?.eligible) return;
+
+    dailyRewardBusy = true;
+    renderDailyReward();
+
+    try{
+        dailyRewardState = await apiRequest(
+            "/api/daily-reward/claim",
+            {
+                method:"POST",
+                body:JSON.stringify({})
+            }
+        );
+
+        showDailyRewardAnimation();
+        if(withdrawState){ withdrawState.rewardBalance = dailyRewardState.rewardBalance; renderWithdraw(); }
+        renderDailyReward();
+        startDailyRewardTimer();
+    }catch(error){
+        console.warn("Daily Reward claim error:", error.message);
+        dailyRewardTimer.textContent = "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РЅР°РіСЂР°РґСѓ. РџРѕРїСЂРѕР±СѓР№С‚Рµ РµС‰С‘ СЂР°Р·.";
+        await loadDailyReward();
+    }finally{
+        dailyRewardBusy = false;
+        renderDailyReward();
+    }
+}
+
+dailyRewardButton?.addEventListener(
+    "click",
+    claimDailyReward
+);
+
+
+
+// =======================
+// WITHDRAW ASIQ
+// =======================
+const withdrawBalance = document.getElementById("withdrawBalance");
+const withdrawAmount = document.getElementById("withdrawAmount");
+const withdrawMaxButton = document.getElementById("withdrawMaxButton");
+const withdrawButton = document.getElementById("withdrawButton");
+const withdrawNote = document.getElementById("withdrawNote");
+
+let withdrawState = null;
+let withdrawBusy = false;
+
+function withdrawStatusText(status){
+    return status === "sent" ? "РћС‚РїСЂР°РІР»РµРЅРѕ" : status === "rejected" ? "РћС‚РєР»РѕРЅРµРЅРѕ" : "Р’ РѕР±СЂР°Р±РѕС‚РєРµ";
+}
+function withdrawDate(value){
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}) : "";
+}
+function renderWithdraw(){
+    const balance = Number(withdrawState?.rewardBalance ?? dailyRewardState?.rewardBalance ?? 0);
+    const min = Number(withdrawState?.minimum || 25);
+    const max = Number(withdrawState?.maximum || 10000);
+    const wallet = tonConnectUI.account?.address || "";
+    const pending = Boolean(withdrawState?.hasPending);
+    withdrawBalance.textContent = `Р”РѕСЃС‚СѓРїРЅРѕ: ${formatRewardNumber(balance)} ASIQ`;
+    const enabled = Boolean(getTelegramInitData() && wallet && !pending && balance >= min && !withdrawBusy);
+    withdrawAmount.disabled = !enabled;
+    withdrawMaxButton.disabled = !enabled;
+    withdrawButton.disabled = !enabled;
+    withdrawAmount.min = String(min);
+    withdrawAmount.max = String(Math.min(balance,max));
+
+    if(!getTelegramInitData()) withdrawButton.textContent = "РћС‚РєСЂРѕР№С‚Рµ РІ Telegram";
+    else if(!wallet) withdrawButton.textContent = "РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє";
+    else if(pending) withdrawButton.textContent = "вЏі Р—Р°СЏРІРєР° РІ РѕР±СЂР°Р±РѕС‚РєРµ";
+    else if(balance < min) withdrawButton.textContent = `РќСѓР¶РЅРѕ РјРёРЅРёРјСѓРј ${min} ASIQ`;
+    else if(withdrawBusy) withdrawButton.textContent = "РЎРѕР·РґР°С‘Рј Р·Р°СЏРІРєСѓвЂ¦";
+    else withdrawButton.textContent = "рџ’ё РЎРћР—Р”РђРўР¬ Р—РђРЇР’РљРЈ";
+
+    withdrawNote.textContent = `РњРёРЅРёРјСѓРј ${min} ASIQ. РџСЂРё РѕС‚РєР»РѕРЅРµРЅРёРё СЃСѓРјРјР° Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё РІРѕР·РІСЂР°С‰Р°РµС‚СЃСЏ.`;
+}
+async function loadWithdraw(){
+    if(!getTelegramInitData()){ renderWithdraw(); return; }
+    try{
+        withdrawState = await apiRequest("/api/withdrawals");
+        renderWithdraw();
+    }catch(error){
+        withdrawButton.disabled = true;
+        withdrawButton.textContent = "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ";
+    }
+}
+async function createWithdraw(){
+    const walletAddress = tonConnectUI.account?.address || "";
+    const amount = Number(withdrawAmount.value);
+    if(!walletAddress){ showToast("РџРѕРґРєР»СЋС‡РёС‚Рµ TON-РєРѕС€РµР»С‘Рє","warning"); return; }
+    if(!Number.isFinite(amount) || amount <= 0){ showToast("Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ ASIQ","warning"); return; }
+    withdrawBusy = true; renderWithdraw();
+    try{
+        withdrawState = await apiRequest("/api/withdrawals",{
+            method:"POST",
+            body:JSON.stringify({walletAddress,amount:String(amount)})
+        });
+        withdrawAmount.value = "";
+        if(dailyRewardState){
+            dailyRewardState.rewardBalance = withdrawState.rewardBalance;
+            renderDailyReward();
+        }
+        showWithdrawAnimation();
+    }catch(error){
+        showToast(error.message || "РћС€РёР±РєР° РІС‹РІРѕРґР°","warning");
+        await loadWithdraw();
+    }finally{
+        withdrawBusy = false;
+        renderWithdraw();
+    }
+}
+withdrawMaxButton?.addEventListener("click",()=>{
+    const balance = Number(withdrawState?.rewardBalance ?? dailyRewardState?.rewardBalance ?? 0);
+    withdrawAmount.value = String(Math.min(balance,Number(withdrawState?.maximum || 10000)));
+});
+withdrawButton?.addEventListener("click",createWithdraw);
+
+
+async function syncServerProfile(){
+    if(!getTelegramInitData()) return null;
+
+    try{
+        const data = await apiRequest("/api/me");
+        const serverGP = Number(data.user?.gp);
+
+        if(Number.isFinite(serverGP) && serverGP >= 0){
+            /*
+             * РџРѕРєР° РѕР±С‹С‡РЅС‹Рµ С‚Р°РїС‹ РµС‰С‘ СЃС‡РёС‚Р°СЋС‚СЃСЏ Р»РѕРєР°Р»СЊРЅРѕ, РЅРµ СѓРјРµРЅСЊС€Р°РµРј Р±Р°Р»Р°РЅСЃ.
+             * РџРѕСЃР»Рµ РїРµСЂРµРЅРѕСЃР° С‚Р°РїРѕРІ РЅР° backend СЃРµСЂРІРµСЂ СЃС‚Р°РЅРµС‚ РµРґРёРЅСЃС‚РІРµРЅРЅС‹Рј РёСЃС‚РѕС‡РЅРёРєРѕРј GP.
+             */
+            gp = Math.max(gp, serverGP);
+            SafeStorage.set("gp", String(gp));
+            updateGP();
+        }
+
+        if(data.user?.goldLicense === true){
+            goldLicenseClaimed = true;
+            SafeStorage.set("goldLicenseClaimed", "true");
+            updateGP();
+        }
+
+        return data.user;
+    }catch(error){
+        console.warn("РќРµ СѓРґР°Р»РѕСЃСЊ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ РїСЂРѕС„РёР»СЊ:", error.message);
+        return null;
+    }
+}
+
+function sleep(ms){
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForOrderPayment(orderId){
+    const maxAttempts = 30;
+
+    for(let attempt = 0; attempt < maxAttempts; attempt++){
+        const order = await apiRequest(`/api/orders/${encodeURIComponent(orderId)}`);
+
+        if(order.status === "paid"){
+            return order;
+        }
+
+        if(order.status === "expired"){
+            throw new Error("Р’СЂРµРјСЏ РѕРїР»Р°С‚С‹ РёСЃС‚РµРєР»Рѕ");
+        }
+
+        await sleep(4000);
+    }
+
+    throw new Error("РџР»Р°С‚С‘Р¶ РµС‰С‘ РЅРµ РЅР°Р№РґРµРЅ. Р‘Р°Р»Р°РЅСЃ РјРѕР¶РЅРѕ РѕР±РЅРѕРІРёС‚СЊ РїРѕР·Р¶Рµ");
+}
+
+let paymentInProgress = false;
+
+async function buyGP(){
+    if(paymentInProgress) return;
+
+    if(!getTelegramInitData()){
+        showToast("РћС‚РєСЂРѕР№ РїСЂРёР»РѕР¶РµРЅРёРµ РІРЅСѓС‚СЂРё Telegram РґР»СЏ РїРѕРєСѓРїРєРё GP", "warning");
+        return;
+    }
+
+    if(!tonConnectUI.account?.address){
+        showToast("РЎРЅР°С‡Р°Р»Р° РїРѕРґРєР»СЋС‡Рё TON-РєРѕС€РµР»С‘Рє", "warning");
+        try{
+            await tonConnectUI.openModal();
+        }catch{}
+        return;
+    }
+
+    paymentInProgress = true;
+    if(buyGPButton) buyGPButton.disabled = true;
+    if(buyGPButton) buyGPButton.textContent = "РЎРѕР·РґР°РЅРёРµ Р·Р°РєР°Р·Р°вЂ¦";
+
+    try{
+        const order = await apiRequest("/api/orders", {
+            method: "POST",
+            body: JSON.stringify({
+                walletAddress: tonConnectUI.account.address
+            })
+        });
+
+        if(buyGPButton) buyGPButton.textContent = "РџРѕРґС‚РІРµСЂРґРё РѕРїР»Р°С‚Сѓ РІ РєРѕС€РµР»СЊРєРµвЂ¦";
+
+        await tonConnectUI.sendTransaction({
+            validUntil: Math.floor(Date.now() / 1000) + 600,
+            messages: [{
+                address: order.address,
+                amount: String(order.amount),
+                payload: order.payload
+            }]
+        });
+
+        showToast("вЏі РџР»Р°С‚С‘Р¶ РѕС‚РїСЂР°РІР»РµРЅ. РџСЂРѕРІРµСЂСЏРµРј Р±Р»РѕРєС‡РµР№РЅвЂ¦");
+        if(buyGPButton) buyGPButton.textContent = "РџСЂРѕРІРµСЂСЏРµРј РѕРїР»Р°С‚СѓвЂ¦";
+
+        const paidOrder = await waitForOrderPayment(order.orderId);
+        const serverTotal = Number(paidOrder.gpTotal);
+
+        if(Number.isFinite(serverTotal) && serverTotal >= 0){
+            gp = Math.max(gp, serverTotal);
+        }else{
+            gp += Number(paidOrder.gpReward || 0);
+        }
+
+        SafeStorage.set("gp", String(gp));
+        updateGP();
+
+        window.Telegram?.WebApp?.HapticFeedback
+            ?.notificationOccurred("success");
+
+        showToast(`рџ’Ћ РќР°С‡РёСЃР»РµРЅРѕ ${Number(paidOrder.gpReward).toLocaleString()} GP`, "success");
+    }catch(error){
+        console.error(error);
+        const message = error?.message || "РќРµ СѓРґР°Р»РѕСЃСЊ РІС‹РїРѕР»РЅРёС‚СЊ РїРѕРєСѓРїРєСѓ";
+
+        if(/reject|cancel/i.test(message)){
+            showToast("РћРїР»Р°С‚Р° РѕС‚РјРµРЅРµРЅР°", "warning");
+        }else{
+            showToast(message, "warning");
+        }
+    }finally{
+        paymentInProgress = false;
+        if(buyGPButton) buyGPButton.disabled = false;
+        if(buyGPButton) buyGPButton.textContent = "рџ’Ћ РљСѓРїРёС‚СЊ 100 000 GP вЂ” 10 TON";
+    }
+}
+
+// =======================
+// РџР›Р•Р•Р 
+// =======================
+
+const player = document.getElementById("player");
+const playButton = document.getElementById("playButton");
+const trackName = document.getElementById("trackName");
+const trackMeta = document.getElementById("trackMeta");
+const trackCover = document.getElementById("trackCover");
+const musicPlayer = document.getElementById("musicPlayer");
+const likeButton = document.getElementById("likeButton");
+const playModeButton = document.getElementById("playModeButton");
+
+const toastContainer = document.getElementById("toastContainer");
+
+let trackChangeToken = 0;
+
+function showToast(message, type = ""){
+    if(!toastContainer) return;
+
+    const toast = document.createElement("div");
+    toast.className = `app-toast ${type}`.trim();
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+
+    while(toastContainer.children.length > 3){
+        toastContainer.firstElementChild.remove();
+    }
+
+    window.setTimeout(() => toast.classList.add("hide"), 2200);
+    window.setTimeout(() => toast.remove(), 2500);
+}
+
+function updatePlayerAccent(track){
+    const rgb = track.accent || "212,175,55";
+    document.documentElement.style.setProperty("--player-accent-rgb", rgb);
+}
+
+
+const progress = document.getElementById("progress");
+const currentTime = document.getElementById("currentTime");
+const duration = document.getElementById("duration");
+
+    function trackHaptic(){
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+
+        Telegram.WebApp.HapticFeedback
+            .selectionChanged();
+
+    }else if(navigator.vibrate){
+
+        navigator.vibrate(25);
+
+    }
+
+}
+
+// =======================
+
+function saveCurrentTrack(){
+    SafeStorage.set("currentTrack", String(currentTrack));
+}
+
+function updatePlayModeButton(){
+    const icon = playModeButton.querySelector("i");
+    playModeButton.classList.remove("active");
+
+    if(playMode === "repeat"){
+        icon.className = "fa-solid fa-repeat";
+        playModeButton.classList.add("active");
+        playModeButton.title = "РџРѕРІС‚РѕСЂ С‚РµРєСѓС‰РµРіРѕ С‚СЂРµРєР°";
+        playModeButton.setAttribute("aria-label","Р РµР¶РёРј РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ: РїРѕРІС‚РѕСЂ");
+    }else if(playMode === "shuffle"){
+        icon.className = "fa-solid fa-shuffle";
+        playModeButton.classList.add("active");
+        playModeButton.title = "РЎР»СѓС‡Р°Р№РЅС‹Р№ РїРѕСЂСЏРґРѕРє";
+        playModeButton.setAttribute("aria-label","Р РµР¶РёРј РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ: СЃР»СѓС‡Р°Р№РЅС‹Р№ РїРѕСЂСЏРґРѕРє");
+    }else{
+        icon.className = "fa-solid fa-arrow-right-arrow-left";
+        playModeButton.title = "РџРѕ РїРѕСЂСЏРґРєСѓ";
+        playModeButton.setAttribute("aria-label","Р РµР¶РёРј РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ: РїРѕ РїРѕСЂСЏРґРєСѓ");
+    }
+}
+
+function waitForAudioReady(timeout = 8000){
+    return new Promise((resolve, reject) => {
+        if(player.readyState >= 2){
+            resolve();
+            return;
+        }
+
+        let finished = false;
+
+        const cleanup = () => {
+            player.removeEventListener("canplay", onReady);
+            player.removeEventListener("loadeddata", onReady);
+            player.removeEventListener("error", onError);
+            clearTimeout(timer);
+        };
+
+        const onReady = () => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            resolve();
+        };
+
+        const onError = () => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error("РђСѓРґРёРѕС„Р°Р№Р» РЅРµ Р·Р°РіСЂСѓР·РёР»СЃСЏ"));
+        };
+
+        const timer = setTimeout(() => {
+            if(finished) return;
+            finished = true;
+            cleanup();
+            reject(new Error("РСЃС‚РµРєР»Рѕ РІСЂРµРјСЏ РѕР¶РёРґР°РЅРёСЏ Р°СѓРґРёРѕ"));
+        }, timeout);
+
+        player.addEventListener("canplay", onReady, { once:true });
+        player.addEventListener("loadeddata", onReady, { once:true });
+        player.addEventListener("error", onError, { once:true });
+    });
+}
+
+async function playLoadedTrack(){
+    try{
+        // Р—Р°РїСѓСЃРєР°РµРј РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ РЅР°Р¶Р°С‚РёСЏ.
+        // Р‘СЂР°СѓР·РµСЂ СЃР°Рј РїСЂРѕРґРѕР»Р¶РёС‚ Р±СѓС„РµСЂРёР·Р°С†РёСЋ Р±РµР· РёСЃРєСѓСЃСЃС‚РІРµРЅРЅРѕРіРѕ РѕР¶РёРґР°РЅРёСЏ canplay/loadeddata.
+        await player.play();
+
+        playButton.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        musicPlayer.classList.add("playing");
+        updateTrackCatalogState();
+    }catch(error){
+        console.warn("РћС€РёР±РєР° РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ Р°СѓРґРёРѕ", error);
+
+        playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        musicPlayer.classList.remove("playing");
+        updateTrackCatalogState();
+        //showToast("РќРµ СѓРґР°Р»РѕСЃСЊ РІРѕСЃРїСЂРѕРёР·РІРµСЃС‚Рё С‚СЂРµРє. РџСЂРѕРІРµСЂСЊ РїСѓС‚СЊ Рє MP3", "warning");
+    }
+}
+
+function getRandomTrackIndex(){
+    if(playlist.length <= 1) return currentTrack;
+    let randomIndex;
+    do{
+        randomIndex = Math.floor(Math.random() * playlist.length);
+    }while(randomIndex === currentTrack);
+    return randomIndex;
+}
+
+async function loadTrack(index, options = {}){
+
+    const track = playlist[index];
+    if(!track) return;
+
+    saveCurrentTrack();
+    updatePlayerAccent(track);
+
+    const safeAudioPath = encodeURI(track.file).replace(/#/g, "%23");
+    player.src = safeAudioPath;
+    player.load();
+
+    trackName.textContent = track.title;
+    trackMeta.textContent = `${track.artist} вЂў ${track.meta}`;
+    trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
+    trackCover.alt = `РћР±Р»РѕР¶РєР° ${track.title}`;
+
+
+    const likedTracks = SafeStorage.getJSON("likedTracks", {});
+    const isLiked = Boolean(likedTracks[track.file]);
+
+    likeButton.classList.toggle("active", isLiked);
+    likeButton.querySelector("i").className = isLiked
+        ? "fa-solid fa-heart"
+        : "fa-regular fa-heart";
+
+    progress.value = 0;
+    currentTime.textContent = "0:00";
+    duration.textContent = "0:00";
+
+}
+
+// =======================
+// PLAY / PAUSE
+// =======================
+
+playButton.onclick = async function(){
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }else if(navigator.vibrate){
+        navigator.vibrate(15);
+    }
+
+    if(player.paused){
+        await playLoadedTrack();
+    }else{
+        player.pause();
+        playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+        musicPlayer.classList.remove("playing");
+        updateTrackCatalogState();
+    }
+};
+
+// =======================
+// NEXT
+// =======================
+
+document.getElementById("nextButton").onclick = async function(){
+
+    trackHaptic();
+
+    currentTrack = playMode === "shuffle"
+        ? getRandomTrackIndex()
+        : (currentTrack + 1) % playlist.length;
+
+    await loadTrack(currentTrack);
+    renderTrackCatalog();
+    playLoadedTrack();
+};
+
+// =======================
+// PREVIOUS
+// =======================
+
+document.getElementById("prevButton").onclick = async function(){
+
+    trackHaptic();
+
+    if(playMode === "shuffle"){
+
+        currentTrack = getRandomTrackIndex();
+
+    }else{
+
+        currentTrack--;
+
+        if(currentTrack < 0){
+            currentTrack = playlist.length - 1;
+        }
+
+    }
+
+    await loadTrack(currentTrack);
+    renderTrackCatalog();
+    playLoadedTrack();
+};
+
+likeButton.addEventListener("click", function(){
+    likeButton.classList.toggle("active");
+    const isLiked = likeButton.classList.contains("active");
+    likeButton.querySelector("i").className = isLiked
+        ? "fa-solid fa-heart"
+        : "fa-regular fa-heart";
+
+    const likedTracks = SafeStorage.getJSON("likedTracks", {});
+    likedTracks[playlist[currentTrack].file] = isLiked;
+    SafeStorage.setJSON("likedTracks", likedTracks);
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }
+
+    showToast(
+        isLiked ? "вќ¤пёЏ Р”РѕР±Р°РІР»РµРЅРѕ РІ РёР·Р±СЂР°РЅРЅРѕРµ" : "рџ’” РЈРґР°Р»РµРЅРѕ РёР· РёР·Р±СЂР°РЅРЅРѕРіРѕ"
+    );
+});
+
+
+playModeButton.addEventListener("click", function(){
+    if(playMode === "sequence") playMode = "repeat";
+    else if(playMode === "repeat") playMode = "shuffle";
+    else playMode = "sequence";
+
+    SafeStorage.set("playMode", playMode);
+    updatePlayModeButton();
+
+    playModeButton.classList.remove("mode-flash");
+    void playModeButton.offsetWidth;
+    playModeButton.classList.add("mode-flash");
+
+    if(window.Telegram?.WebApp?.HapticFeedback){
+        Telegram.WebApp.HapticFeedback.impactOccurred("light");
+    }
+});
+
+player.addEventListener("ended", async function(){
+    if(playMode === "repeat"){
+        player.currentTime = 0;
+        playLoadedTrack();
+        return;
+    }
+
+    currentTrack = playMode === "shuffle"
+        ? getRandomTrackIndex()
+        : (currentTrack + 1) % playlist.length;
+
+    await loadTrack(currentTrack);
+    renderTrackCatalog();
+    playLoadedTrack();
+});
+
+player.addEventListener("play", updateTrackCatalogState);
+player.addEventListener("pause", updateTrackCatalogState);
+
+// =======================
+// РџР РћР“Р Р•РЎРЎ
+// =======================
+
+player.addEventListener("error", function(){
+    const track = playlist[currentTrack];
+    console.warn("РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё MP3");
+});
+
+player.addEventListener("loadedmetadata", function(){
+    duration.textContent = formatTime(player.duration);
+});
+
+player.addEventListener("timeupdate", function(){
+
+    if(player.duration){
+
+        progress.value =
+        (player.currentTime / player.duration) * 100;
+
+        currentTime.textContent =
+        formatTime(player.currentTime);
+
+    }
+
+});
+
+
+
+progress.addEventListener("input", function(){
+
+    if(player.duration){
+
+        player.currentTime =
+        (progress.value / 100) * player.duration;
+
+    }
+
+});
+
+// =======================
+// Р¤РћР РњРђРў Р’Р Р•РњР•РќР
+// =======================
+
+function formatTime(seconds){
+
+    const minutes = Math.floor(seconds / 60);
+
+    const secs = Math.floor(seconds % 60);
+
+    return minutes + ":" + secs.toString().padStart(2,"0");
+
+}
+
+// =======================
+// Р—РђР“Р РЈР—РљРђ РџР•Р Р’РћР“Рћ РўР Р•РљРђ
+// =======================
+
+
+function updateTrackCatalogState(){
+    const catalog = document.getElementById("trackCatalog");
+    if(!catalog) return;
+
+    const isPlaying = !player.paused && !player.ended;
+
+    catalog.querySelectorAll(".track-item").forEach(button => {
+        const index = Number(button.dataset.trackIndex);
+        const active = index === currentTrack;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-current", active ? "true" : "false");
+
+        const icon = button.querySelector(".track-item-icon");
+        if(icon){
+            icon.innerHTML = active && isPlaying
+                ? '<i class="fa-solid fa-pause" aria-hidden="true"></i>'
+                : '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+        }
+    });
+}
+
+let activeCatalogCategory = "tracks";
+
+function getTrackCategory(track){
+    const meta = String(track?.meta || "").trim().toUpperCase();
+
+    /*
+     * РђРІС‚РѕРјР°С‚РёС‡РµСЃРєРѕРµ СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµ:
+     * INSTRUMENTAL, BEAT, TYPE BEAT, Р‘РРў, РРќРЎРўР РЈРњР•РќРўРђР› -> Instrumentals
+     * Р’СЃС‘ РѕСЃС‚Р°Р»СЊРЅРѕРµ -> Tracks
+     */
+    const instrumentalMarkers = [
+        "INSTRUMENTAL",
+        "BEAT",
+        "TYPE BEAT",
+        "Р‘РРў",
+        "РРќРЎРўР РЈРњР•РќРўРђР›"
+    ];
+
+    return instrumentalMarkers.some(marker => meta.includes(marker))
+        ? "instrumentals"
+        : "tracks";
+}
+
+function updateCatalogTabs(){
+    const tracksCount = playlist.filter(
+        track => getTrackCategory(track) === "tracks"
+    ).length;
+
+    const instrumentalsCount = playlist.filter(
+        track => getTrackCategory(track) === "instrumentals"
+    ).length;
+
+    const tracksCountElement = document.getElementById("tracksCount");
+    const instrumentalsCountElement = document.getElementById("instrumentalsCount");
+
+    if(tracksCountElement){
+        tracksCountElement.textContent = String(tracksCount);
+    }
+
+    if(instrumentalsCountElement){
+        instrumentalsCountElement.textContent = String(instrumentalsCount);
+    }
+
+    document.querySelectorAll(".catalog-tab").forEach(button => {
+        const active = button.dataset.category === activeCatalogCategory;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+}
+
+function createCatalogTrackButton(track, index){
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `track-item${index === currentTrack ? " active" : ""}`;
+    button.dataset.trackIndex = String(index);
+    button.setAttribute("aria-label", `Р’РєР»СЋС‡РёС‚СЊ ${track.title}`);
+
+    const cover = document.createElement("img");
+    cover.className = "track-item-cover";
+    cover.src = encodeURI(track.cover).replace(/#/g,"%23");
+    cover.alt = "";
+    cover.loading = "lazy";
+    cover.decoding = "async";
+
+    const copy = document.createElement("span");
+    copy.className = "track-item-copy";
+
+    const name = document.createElement("span");
+    name.className = "track-item-name";
+    name.textContent = track.title;
+
+    const meta = document.createElement("span");
+    meta.className = "track-item-meta";
+    meta.textContent = `${track.artist} вЂў ${track.meta}`;
+
+    copy.append(name, meta);
+
+    const icon = document.createElement("span");
+    icon.className = "track-item-icon";
+    icon.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+
+    button.append(cover, copy, icon);
+
+    button.addEventListener("click", async () => {
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+        }catch{
+            if(navigator.vibrate) navigator.vibrate(15);
+        }
+
+        if(index === currentTrack){
+            if(player.paused){
+                await playLoadedTrack();
+            }else{
+                player.pause();
+                playButton.innerHTML = '<i class="fa-solid fa-play"></i>';
+                musicPlayer.classList.remove("playing");
+                updateTrackCatalogState();
+            }
+            return;
+        }
+
+        currentTrack = index;
+        await loadTrack(currentTrack);
+        updateTrackCatalogState();
+        await playLoadedTrack();
+    });
+
+    return button;
+}
+
+function renderTrackCatalog(){
+    const catalog = document.getElementById("trackCatalog");
+    if(!catalog) return;
+
+    updateCatalogTabs();
+
+    const fragment = document.createDocumentFragment();
+
+    const heading = document.createElement("div");
+    heading.className = "track-catalog-title";
+    heading.textContent = activeCatalogCategory === "instrumentals"
+        ? "Instrumentals"
+        : "Tracks";
+
+    fragment.appendChild(heading);
+
+    const filteredTracks = playlist
+        .map((track, index) => ({ track, index }))
+        .filter(({ track }) => getTrackCategory(track) === activeCatalogCategory);
+
+    if(filteredTracks.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "catalog-empty";
+        empty.textContent = activeCatalogCategory === "instrumentals"
+            ? "РРЅСЃС‚СЂСѓРјРµРЅС‚Р°Р»С‹ РїРѕРєР° РЅРµ РґРѕР±Р°РІР»РµРЅС‹."
+            : "РўСЂРµРєРё РїРѕРєР° РЅРµ РґРѕР±Р°РІР»РµРЅС‹.";
+        fragment.appendChild(empty);
+    }else{
+        filteredTracks.forEach(({ track, index }) => {
+            fragment.appendChild(createCatalogTrackButton(track, index));
+        });
+    }
+
+    catalog.replaceChildren(fragment);
+    updateTrackCatalogState();
+}
+
+document.querySelectorAll(".catalog-tab").forEach(button => {
+    button.addEventListener("click", () => {
+        const category = button.dataset.category;
+
+        if(!["tracks", "instrumentals"].includes(category)){
+            return;
+        }
+
+        activeCatalogCategory = category;
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+        }catch{}
+
+        renderTrackCatalog();
+    });
+});
+
+async function loadPlaylist(){
+    try{
+        const response = await fetch("tracks.json", {
+            cache: "no-store",
+            credentials: "same-origin",
+            headers: { "Accept": "application/json" }
+        });
+
+        if(!response.ok){
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const raw = await response.text();
+
+        if(raw.length > 100000){
+            throw new Error("tracks.json СЃР»РёС€РєРѕРј Р±РѕР»СЊС€РѕР№");
+        }
+
+        const data = JSON.parse(raw);
+
+        if(!Array.isArray(data) || data.length === 0){
+            throw new Error("tracks.json РїСѓСЃС‚РѕР№ РёР»Рё РёРјРµРµС‚ РЅРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚");
+        }
+
+        playlist = data
+            .slice(0, 100)
+            .map(normalizeTrack)
+            .filter(Boolean);
+
+        if(playlist.length === 0){
+            throw new Error("Р’ tracks.json РЅРµС‚ Р±РµР·РѕРїР°СЃРЅС‹С… РєРѕСЂСЂРµРєС‚РЅС‹С… С‚СЂРµРєРѕРІ");
+        }
+    }catch(error){
+        console.warn("РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ tracks.json. РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ СЂРµР·РµСЂРІРЅС‹Р№ СЃРїРёСЃРѕРє.");
+
+        playlist = fallbackPlaylist
+            .map(normalizeTrack)
+            .filter(Boolean);
+
+        showToast("РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ СЂРµР·РµСЂРІРЅС‹Р№ СЃРїРёСЃРѕРє С‚СЂРµРєРѕРІ", "warning");
+    }
+
+    if(currentTrack < 0 || currentTrack >= playlist.length){
+        currentTrack = 0;
+    }
+
+    updatePlayModeButton();
+    await loadTrack(currentTrack, { notify:false });
+    renderTrackCatalog();
+
+    const isTelegramLaunch = Boolean(
+        window.Telegram?.WebApp?.initData &&
+        window.Telegram.WebApp.initData.length > 0
+    );
+
+    if(!isTelegramLaunch){
+        showToast("РўРµСЃС‚РѕРІС‹Р№ СЂРµР¶РёРј: РїСЂРёР»РѕР¶РµРЅРёРµ РѕС‚РєСЂС‹С‚Рѕ РІРЅРµ Telegram", "warning");
+    }
+}
+
+loadPlaylist();
+</script>
+    <script>
+const crown = document.getElementById("crown");
+
+// Р—Р°РіСЂСѓР¶Р°РµРј С„СѓРЅРєС†РёРё РїСЂРёР»РѕР¶РµРЅРёСЏ, РЅРµ СЃРІСЏР·Р°РЅРЅС‹Рµ СЃ Gold Points.
+loadDailyReward();
+loadWithdraw();
+loadArtist();
+
+// РљРѕСЂРѕРЅР° СЂР°Р±РѕС‚Р°РµС‚ РєР°Рє РёРЅС‚РµСЂР°РєС‚РёРІРЅР°СЏ РєРЅРѕРїРєР°: РЅР°Р¶Р°С‚РёРµ, РІРёР±СЂР°С†РёСЏ Рё РѕС‚РґР°С‡Р°.
+if(crown){
+    crown.addEventListener("pointerdown", () => {
+        crown.classList.add("crown-down");
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
+        }catch{}
+    });
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
+        crown.addEventListener(eventName, () => {
+            crown.classList.remove("crown-down");
+        });
+    });
+
+    crown.addEventListener("click", () => {
+        crown.classList.remove("crown-down");
+
+        if(crown._tapAnimation){
+            crown._tapAnimation.cancel();
+        }
+
+        crown._tapAnimation = crown.animate([
+            { transform:"scale(.90) translateY(3px)" },
+            { transform:"scale(1.06) translateY(-3px)", offset:.45 },
+            { transform:"scale(.94) translateY(1px)", offset:.72 },
+            { transform:"scale(1) translateY(0)" }
+        ], {
+            duration:460,
+            easing:"cubic-bezier(.22,1.35,.36,1)"
+        });
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+        }catch{}
+    });
+}
+
+</script>
+    
+<script>
+(function(){
+    const pages = Array.from(document.querySelectorAll('.app-page'));
+    const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+
+    function openPage(name){
+        const target = pages.find(page => page.dataset.page === name) || pages[0];
+        pages.forEach(page => page.classList.toggle('active', page === target));
+        tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
+        window.scrollTo({top:0, behavior:'auto'});
+        try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
+})();
+</script>
+
+</body>
+</html>
