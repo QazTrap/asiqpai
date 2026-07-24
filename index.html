@@ -2174,6 +2174,178 @@ body{
 }
 </style>
 
+
+<style id="wallet-center-dark-community-final">
+/* FINAL FIX: точное центрирование без смещения */
+html,
+body {
+    width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+body {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+.app-shell,
+.app-page,
+#page-home,
+#page-music,
+#page-library,
+#page-wallet,
+#page-community {
+    width: 100% !important;
+    max-width: 430px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Все основные блоки строго по центру */
+.player,
+.license-card,
+.artist-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card,
+.asiq-swap-button,
+.catalog-tabs,
+.track-catalog {
+    display: block;
+    width: 340px !important;
+    max-width: calc(100vw - 24px) !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Единый стиль Community */
+.player,
+.license-card,
+.artist-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card {
+    border: 1px solid rgba(212,175,55,.22) !important;
+    border-radius: 22px !important;
+    background:
+        linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98)) !important;
+    box-shadow:
+        0 18px 42px rgba(0,0,0,.38) !important;
+}
+
+/* ASIQ Wallet: тёмная карточка, золотые надписи */
+#page-wallet .asiq-wallet-card {
+    padding: 20px 18px !important;
+    color: #d4af37 !important;
+    background:
+        radial-gradient(circle at 88% 18%,rgba(212,175,55,.10),transparent 34%),
+        linear-gradient(145deg,rgba(24,24,24,.98),rgba(7,7,7,.99)) !important;
+    border: 1px solid rgba(212,175,55,.30) !important;
+}
+
+#page-wallet .asiq-wallet-card::before {
+    content: none !important;
+    display: none !important;
+}
+
+#page-wallet .asiq-wallet-card::after {
+    opacity: .09 !important;
+}
+
+#page-wallet .asiq-wallet-label,
+#page-wallet .asiq-balance-value,
+#page-wallet .asiq-balance-symbol,
+#page-wallet .asiq-wallet-address {
+    color: #d4af37 !important;
+    text-shadow: 0 0 10px rgba(212,175,55,.16) !important;
+}
+
+#page-wallet .asiq-wallet-status {
+    color: #c8c0ae !important;
+    text-shadow: none !important;
+}
+
+#page-wallet .asiq-refresh-button {
+    color: #d4af37 !important;
+    background: rgba(212,175,55,.07) !important;
+    border: 1px solid rgba(212,175,55,.25) !important;
+}
+
+/* BUY / SELL: как кнопки Community — тёмная внутри, золотые буквы */
+#page-wallet .asiq-swap-button {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 62px !important;
+    padding: 15px 18px !important;
+    margin-top: 0 !important;
+    margin-bottom: 20px !important;
+    border: 1px solid #d4af37 !important;
+    border-radius: 12px !important;
+    background: #1b1b1b !important;
+    color: #d4af37 !important;
+    box-shadow: none !important;
+    font-size: 15px !important;
+    font-weight: 900 !important;
+    text-decoration: none !important;
+}
+
+#page-wallet .asiq-swap-button i,
+#page-wallet .asiq-swap-button span {
+    color: #d4af37 !important;
+}
+
+#page-wallet .asiq-swap-button:hover {
+    background: #d4af37 !important;
+    color: #111 !important;
+    transform: none !important;
+}
+
+#page-wallet .asiq-swap-button:hover i,
+#page-wallet .asiq-swap-button:hover span {
+    color: #111 !important;
+}
+
+/* Withdraw тоже строго по центру */
+#page-wallet .withdraw-card {
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* TON Connect тоже по центру */
+#ton-connect {
+    width: 340px !important;
+    max-width: calc(100vw - 24px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    justify-content: center !important;
+}
+
+@media (max-width: 370px) {
+    .player,
+    .license-card,
+    .artist-card,
+    .daily-reward-card,
+    .asiq-wallet-card,
+    .withdraw-card,
+    .community-card,
+    .asiq-swap-button,
+    .catalog-tabs,
+    .track-catalog,
+    #ton-connect {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
