@@ -1983,49 +1983,68 @@ body{
 </style>
 
 
-<style id="all-cards-player-width-final">
-/* FINAL: все основные карточки во всех вкладках имеют ширину плеера */
+<style id="community-style-all-cards-final">
+/* FINAL: все основные карточки в едином стиле Community и строго по центру */
 :root{
     --asiqpai-card-width: 340px;
+    --asiqpai-card-gap: 20px;
+    --asiqpai-card-radius: 22px;
+    --asiqpai-card-border: rgba(212,175,55,.22);
+    --asiqpai-card-bg:
+        linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));
+    --asiqpai-card-shadow:
+        0 18px 42px rgba(0,0,0,.38);
 }
 
-/* Основные карточки */
+/* Единый размер и стиль основных карточек */
 .player,
 .license-card,
 .artist-card,
 .daily-reward-card,
 .asiq-wallet-card,
 .withdraw-card,
-.community-card,
-.asiq-swap-button,
-.track-catalog,
-.catalog-tabs {
+.community-card {
     width: min(92vw, var(--asiqpai-card-width)) !important;
     max-width: var(--asiqpai-card-width) !important;
     min-width: 0 !important;
+    margin: 0 auto var(--asiqpai-card-gap) !important;
+    padding: 18px !important;
     box-sizing: border-box !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
+    border: 1px solid var(--asiqpai-card-border) !important;
+    border-radius: var(--asiqpai-card-radius) !important;
+    background: var(--asiqpai-card-bg) !important;
+    box-shadow: var(--asiqpai-card-shadow) !important;
 }
 
-/* Карточки внутри вкладок не должны растягиваться до 390px */
-#page-home .artist-card,
-#page-home .daily-reward-card,
-#page-music .player,
-#page-library .track-catalog,
-#page-library .catalog-tabs,
-#page-wallet .asiq-wallet-card,
-#page-wallet .asiq-swap-button,
-#page-wallet .withdraw-card,
-#page-community .community-card {
+/* Элементы, визуально работающие как карточки */
+.asiq-swap-button,
+.catalog-tabs,
+.track-catalog {
     width: min(92vw, var(--asiqpai-card-width)) !important;
     max-width: var(--asiqpai-card-width) !important;
+    min-width: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    box-sizing: border-box !important;
+}
+
+/* Все страницы и блоки центрируются */
+.app-shell,
+.app-page,
+#page-home,
+#page-music,
+#page-library,
+#page-wallet,
+#page-community {
     margin-left: auto !important;
     margin-right: auto !important;
 }
 
-/* Убираем растягивание Wallet-карточек через width:100% */
-#page-wallet {
+#page-home,
+#page-music,
+#page-library,
+#page-wallet,
+#page-community {
     width: 100% !important;
     max-width: 430px !important;
     padding-left: 12px !important;
@@ -2033,7 +2052,87 @@ body{
     box-sizing: border-box !important;
 }
 
-/* Кнопки внутри карточек остаются на всю внутреннюю ширину */
+/* Убираем старые растягивания Wallet */
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .withdraw-card {
+    width: min(92vw, var(--asiqpai-card-width)) !important;
+    max-width: var(--asiqpai-card-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Daily Reward и Artist строго в том же стиле */
+#page-home .artist-card,
+#page-home .daily-reward-card {
+    width: min(92vw, var(--asiqpai-card-width)) !important;
+    max-width: var(--asiqpai-card-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    background: var(--asiqpai-card-bg) !important;
+    border: 1px solid var(--asiqpai-card-border) !important;
+    border-radius: var(--asiqpai-card-radius) !important;
+    box-shadow: var(--asiqpai-card-shadow) !important;
+}
+
+/* Wallet card оставляем читаемой, но в общей форме */
+#page-wallet .asiq-wallet-card {
+    color: #111 !important;
+    background:
+        linear-gradient(115deg,rgba(255,255,255,.42),transparent 28%),
+        radial-gradient(circle at 80% 18%,rgba(255,244,174,.72),transparent 26%),
+        linear-gradient(135deg,#f7df88 0%,#d8ad2a 30%,#b9830c 64%,#f0ce69 100%) !important;
+}
+
+/* Withdraw сохраняет золотую палитру, но получает общую форму */
+#page-wallet .withdraw-card {
+    background: var(--asiqpai-card-bg) !important;
+    border: 1px solid var(--asiqpai-card-border) !important;
+    border-radius: var(--asiqpai-card-radius) !important;
+    box-shadow: var(--asiqpai-card-shadow) !important;
+}
+
+/* Community остаётся эталонной карточкой */
+#page-community .community-card {
+    background: var(--asiqpai-card-bg) !important;
+    border: 1px solid var(--asiqpai-card-border) !important;
+    border-radius: var(--asiqpai-card-radius) !important;
+    box-shadow: var(--asiqpai-card-shadow) !important;
+}
+
+/* Плеер получает ту же рамку, фон и тень */
+#page-music .player {
+    background: var(--asiqpai-card-bg) !important;
+    border: 1px solid var(--asiqpai-card-border) !important;
+    border-radius: var(--asiqpai-card-radius) !important;
+    box-shadow: var(--asiqpai-card-shadow) !important;
+}
+
+/* Одинаковое поведение при наведении */
+.player,
+.license-card,
+.artist-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card {
+    transition: transform .25s ease, box-shadow .25s ease !important;
+}
+
+.player:hover,
+.license-card:hover,
+.artist-card:hover,
+.daily-reward-card:hover,
+.asiq-wallet-card:hover,
+.withdraw-card:hover,
+.community-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow:
+        0 22px 48px rgba(0,0,0,.48),
+        0 0 22px rgba(212,175,55,.10) !important;
+}
+
+/* Внутренние кнопки не выходят за границы карточек */
 .community-card .button,
 .artist-card .artist-button,
 .artist-card .artist-input,
@@ -2045,8 +2144,20 @@ body{
     box-sizing: border-box !important;
 }
 
-/* Одинаковые боковые отступы на узких экранах */
-@media (max-width: 390px) {
+/* На телефонах без hover карточки не двигаются */
+@media (hover:none){
+    .player:hover,
+    .license-card:hover,
+    .artist-card:hover,
+    .daily-reward-card:hover,
+    .asiq-wallet-card:hover,
+    .withdraw-card:hover,
+    .community-card:hover {
+        transform: none !important;
+    }
+}
+
+@media (max-width:390px){
     .player,
     .license-card,
     .artist-card,
@@ -2055,8 +2166,8 @@ body{
     .withdraw-card,
     .community-card,
     .asiq-swap-button,
-    .track-catalog,
-    .catalog-tabs {
+    .catalog-tabs,
+    .track-catalog {
         width: min(100%, var(--asiqpai-card-width)) !important;
         max-width: var(--asiqpai-card-width) !important;
     }
