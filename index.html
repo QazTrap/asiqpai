@@ -1442,6 +1442,10 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
     -webkit-backdrop-filter:none;
     backdrop-filter:none;
 }
+
+.artist-card{width:min(92vw,390px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.artist-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.artist-title{font-size:20px;font-weight:950;color:#f4d67a}.artist-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.08);color:#e9c75d;font-size:10px;font-weight:950}.artist-copy{margin:11px 0;color:#a99d7c;font-size:12px;line-height:1.55}.artist-benefits{display:grid;gap:7px;margin:13px 0}.artist-benefit{padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.025);color:#d8d0b8;font-size:11px}.artist-input{width:100%;box-sizing:border-box;margin:4px 0 10px;padding:13px 12px;border:1px solid rgba(212,175,55,.18);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:15px;font-weight:850}.artist-button{width:100%;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104;font-size:14px;font-weight:950;cursor:pointer}.artist-button:disabled,.artist-input:disabled{opacity:.5;cursor:not-allowed}.artist-status{margin-top:10px;color:#8b826c;font-size:10.5px;line-height:1.45}.artist-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.artist-stat,.artist-action{padding:13px 10px;border:1px solid rgba(212,175,55,.13);border-radius:13px;background:rgba(212,175,55,.045);text-align:center}.artist-stat strong{display:block;color:#fff0b4;font-size:18px}.artist-stat span,.artist-action{color:#bcae87;font-size:10px;font-weight:850}.artist-action{cursor:not-allowed;opacity:.65}.artist-number{margin-top:10px;color:#f2d171;font-size:12px;font-weight:950}
+
 .nav-tab{
     min-width:0;
     padding:12px 6px 10px;
@@ -2078,6 +2082,33 @@ body{
             <span>BUY / SELL ASIQ</span>
         </a>
 
+
+        <div class="artist-card" id="artistCard" aria-live="polite">
+            <div id="artistMembershipView">
+                <div class="artist-card-head"><div class="artist-title">👑 ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
+                <p class="artist-copy">Зарегистрируйтесь как артист и откройте Artist Studio.</p>
+                <div class="artist-benefits">
+                    <div class="artist-benefit">🎵 До 10 опубликованных треков или битов</div>
+                    <div class="artist-benefit">🛡 Модерация и публикация в каталоге</div>
+                    <div class="artist-benefit">🏆 Первые 100 — Founding Artist</div>
+                </div>
+                <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Ваше имя артиста" autocomplete="off" disabled>
+                <button class="artist-button" id="artistRegisterButton" type="button" disabled>Загрузка…</button>
+                <div class="artist-status" id="artistStatus">Проверяем статус Artist Membership</div>
+            </div>
+            <div id="artistStudioView" hidden>
+                <div class="artist-card-head"><div class="artist-title">🎤 Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
+                <div class="artist-number" id="artistStudioName">—</div>
+                <div class="artist-studio-grid">
+                    <div class="artist-stat"><strong id="artistPublishedCount">0 / 10</strong><span>Published</span></div>
+                    <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
+                    <button class="artist-action" type="button" disabled>⬆ Upload Track</button>
+                    <button class="artist-action" type="button" disabled>🎚 Upload Beat</button>
+                </div>
+                <div class="artist-status">Загрузка музыки появится на следующем этапе.</div>
+            </div>
+        </div>
+
         <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
             <div class="daily-reward-icon">🎁</div>
             <div class="daily-reward-title">Daily Reward</div>
@@ -2301,6 +2332,7 @@ tonConnectUI.onStatusChange(async wallet => {
 
     loadAsiqBalance(walletAddress);
     renderWithdraw();
+    renderArtist();
 });
 
 if(tonConnectUI.account?.address){
@@ -2355,6 +2387,141 @@ async function apiRequest(path, options = {}){
     return data;
 }
 
+
+
+// =======================
+// ASIQPAI ARTIST MEMBERSHIP
+// =======================
+
+const artistMembershipView = document.getElementById("artistMembershipView");
+const artistStudioView = document.getElementById("artistStudioView");
+const artistNameInput = document.getElementById("artistNameInput");
+const artistRegisterButton = document.getElementById("artistRegisterButton");
+const artistStatus = document.getElementById("artistStatus");
+const artistStudioName = document.getElementById("artistStudioName");
+const artistStudioBadge = document.getElementById("artistStudioBadge");
+const artistPublishedCount = document.getElementById("artistPublishedCount");
+const artistNumber = document.getElementById("artistNumber");
+let artistState = null;
+let artistBusy = false;
+
+function renderArtist(){
+    const artist = artistState?.artist;
+    const wallet = tonConnectUI.account?.address || "";
+    if(artist){
+        artistMembershipView.hidden = true;
+        artistStudioView.hidden = false;
+        artistStudioName.textContent = artist.artistName;
+        artistPublishedCount.textContent = `${artist.publishedCount} / ${artist.publicationLimit}`;
+        artistNumber.textContent = `#${String(artist.artistNumber).padStart(4,"0")}`;
+        artistStudioBadge.textContent = artist.foundingArtist ? "FOUNDING ARTIST" : "ACTIVE";
+        return;
+    }
+
+    artistMembershipView.hidden = false;
+    artistStudioView.hidden = true;
+    const telegramReady = Boolean(getTelegramInitData());
+    const ready = telegramReady && Boolean(wallet) && !artistBusy;
+    artistNameInput.disabled = !ready;
+    artistRegisterButton.disabled = !ready;
+    if(!telegramReady){
+        artistRegisterButton.textContent = "Откройте в Telegram";
+        artistStatus.textContent = "Регистрация доступна внутри Telegram Mini App.";
+    }else if(!wallet){
+        artistRegisterButton.textContent = "Подключите TON-кошелёк";
+        artistStatus.textContent = "Для оплаты Artist Membership подключите кошелёк.";
+    }else if(artistBusy){
+        artistRegisterButton.textContent = "Проверяем оплату…";
+    }else{
+        artistRegisterButton.textContent = "REGISTER — 50,000 ASIQ";
+        artistStatus.textContent = "Разовая регистрация. Лимит публикаций: 10.";
+    }
+}
+
+async function loadArtist(){
+    if(!getTelegramInitData()){
+        artistState = { isArtist:false, artist:null };
+        renderArtist();
+        return;
+    }
+    try{
+        artistState = await apiRequest("/api/artist/me");
+    }catch(error){
+        console.warn("Artist status:", error.message);
+        artistState = { isArtist:false, artist:null };
+        artistStatus.textContent = "Не удалось загрузить статус артиста.";
+    }
+    renderArtist();
+}
+
+async function verifyArtistPayment(orderId){
+    for(let attempt = 0; attempt < 12; attempt += 1){
+        const result = await apiRequest("/api/artist/verify", {
+            method:"POST",
+            body:JSON.stringify({ orderId })
+        });
+        if(result.status === "active" && result.artist){
+            artistState = { isArtist:true, artist:result.artist };
+            SafeStorage.remove("artistRegistrationOrderId");
+            renderArtist();
+            showToast("Artist Membership активирован", "success");
+            return true;
+        }
+        artistStatus.textContent = `Ищем перевод ASIQ… ${attempt + 1}/12`;
+        await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    return false;
+}
+
+artistRegisterButton?.addEventListener("click", async () => {
+    if(artistBusy) return;
+    const walletAddress = tonConnectUI.account?.address || "";
+    const artistName = artistNameInput.value.trim();
+    if(artistName.length < 2){
+        artistStatus.textContent = "Введите имя артиста минимум из 2 символов.";
+        artistNameInput.focus();
+        return;
+    }
+    if(!walletAddress){ renderArtist(); return; }
+
+    artistBusy = true;
+    renderArtist();
+    try{
+        const savedOrderId = SafeStorage.get("artistRegistrationOrderId", "");
+        if(savedOrderId){
+            artistStatus.textContent = "Проверяем ранее отправленную оплату…";
+            const activated = await verifyArtistPayment(savedOrderId);
+            if(!activated){
+                artistStatus.textContent = "Ранее отправленная оплата ещё не найдена. Подождите и попробуйте проверить снова — повторно платить не нужно.";
+            }
+            return;
+        }
+
+        artistStatus.textContent = "Создаём заявку…";
+        const order = await apiRequest("/api/artist/register", {
+            method:"POST",
+            body:JSON.stringify({ artistName, walletAddress })
+        });
+        artistStatus.textContent = "Подтвердите перевод 50,000 ASIQ в кошельке.";
+        SafeStorage.set("artistRegistrationOrderId", order.orderId);
+        await tonConnectUI.sendTransaction(order.transaction);
+        artistStatus.textContent = "Перевод отправлен. Ждём подтверждение блокчейна…";
+        const activated = await verifyArtistPayment(order.orderId);
+        if(!activated){
+            artistStatus.textContent = "Оплата ещё не найдена. Нажмите кнопку снова через минуту — повторно платить не потребуется.";
+        }
+    }catch(error){
+        console.error("Artist registration:", error);
+        const message = String(error?.message || "");
+        if(/reject|cancel|declin/i.test(message)){
+            SafeStorage.remove("artistRegistrationOrderId");
+        }
+        artistStatus.textContent = message || "Регистрация не завершена.";
+    }finally{
+        artistBusy = false;
+        renderArtist();
+    }
+});
 
 // =======================
 // DAILY REWARD (INTERNAL ASIQ REWARD BALANCE)
@@ -3390,6 +3557,7 @@ const crown = document.getElementById("crown");
 // Загружаем функции приложения, не связанные с Gold Points.
 loadDailyReward();
 loadWithdraw();
+loadArtist();
 
 // Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
 if(crown){
