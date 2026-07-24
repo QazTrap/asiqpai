@@ -1982,6 +1982,87 @@ body{
 }
 </style>
 
+
+<style id="all-cards-player-width-final">
+/* FINAL: все основные карточки во всех вкладках имеют ширину плеера */
+:root{
+    --asiqpai-card-width: 340px;
+}
+
+/* Основные карточки */
+.player,
+.license-card,
+.artist-card,
+.daily-reward-card,
+.asiq-wallet-card,
+.withdraw-card,
+.community-card,
+.asiq-swap-button,
+.track-catalog,
+.catalog-tabs {
+    width: min(92vw, var(--asiqpai-card-width)) !important;
+    max-width: var(--asiqpai-card-width) !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Карточки внутри вкладок не должны растягиваться до 390px */
+#page-home .artist-card,
+#page-home .daily-reward-card,
+#page-music .player,
+#page-library .track-catalog,
+#page-library .catalog-tabs,
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .withdraw-card,
+#page-community .community-card {
+    width: min(92vw, var(--asiqpai-card-width)) !important;
+    max-width: var(--asiqpai-card-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Убираем растягивание Wallet-карточек через width:100% */
+#page-wallet {
+    width: 100% !important;
+    max-width: 430px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    box-sizing: border-box !important;
+}
+
+/* Кнопки внутри карточек остаются на всю внутреннюю ширину */
+.community-card .button,
+.artist-card .artist-button,
+.artist-card .artist-input,
+.artist-card .artist-contact-button,
+.daily-reward-card .daily-reward-button,
+.withdraw-card .withdraw-button {
+    width: 100% !important;
+    max-width: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Одинаковые боковые отступы на узких экранах */
+@media (max-width: 390px) {
+    .player,
+    .license-card,
+    .artist-card,
+    .daily-reward-card,
+    .asiq-wallet-card,
+    .withdraw-card,
+    .community-card,
+    .asiq-swap-button,
+    .track-catalog,
+    .catalog-tabs {
+        width: min(100%, var(--asiqpai-card-width)) !important;
+        max-width: var(--asiqpai-card-width) !important;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
