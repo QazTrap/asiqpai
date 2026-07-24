@@ -1983,68 +1983,49 @@ body{
 </style>
 
 
-<style id="community-style-all-cards-final">
-/* FINAL: все основные карточки в едином стиле Community и строго по центру */
+<style id="all-cards-player-width-final">
+/* FINAL: все основные карточки во всех вкладках имеют ширину плеера */
 :root{
     --asiqpai-card-width: 340px;
-    --asiqpai-card-gap: 20px;
-    --asiqpai-card-radius: 22px;
-    --asiqpai-card-border: rgba(212,175,55,.22);
-    --asiqpai-card-bg:
-        linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));
-    --asiqpai-card-shadow:
-        0 18px 42px rgba(0,0,0,.38);
 }
 
-/* Единый размер и стиль основных карточек */
+/* Основные карточки */
 .player,
 .license-card,
 .artist-card,
 .daily-reward-card,
 .asiq-wallet-card,
 .withdraw-card,
-.community-card {
-    width: min(92vw, var(--asiqpai-card-width)) !important;
-    max-width: var(--asiqpai-card-width) !important;
-    min-width: 0 !important;
-    margin: 0 auto var(--asiqpai-card-gap) !important;
-    padding: 18px !important;
-    box-sizing: border-box !important;
-    border: 1px solid var(--asiqpai-card-border) !important;
-    border-radius: var(--asiqpai-card-radius) !important;
-    background: var(--asiqpai-card-bg) !important;
-    box-shadow: var(--asiqpai-card-shadow) !important;
-}
-
-/* Элементы, визуально работающие как карточки */
+.community-card,
 .asiq-swap-button,
-.catalog-tabs,
-.track-catalog {
+.track-catalog,
+.catalog-tabs {
     width: min(92vw, var(--asiqpai-card-width)) !important;
     max-width: var(--asiqpai-card-width) !important;
     min-width: 0 !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
     box-sizing: border-box !important;
-}
-
-/* Все страницы и блоки центрируются */
-.app-shell,
-.app-page,
-#page-home,
-#page-music,
-#page-library,
-#page-wallet,
-#page-community {
     margin-left: auto !important;
     margin-right: auto !important;
 }
 
-#page-home,
-#page-music,
-#page-library,
-#page-wallet,
-#page-community {
+/* Карточки внутри вкладок не должны растягиваться до 390px */
+#page-home .artist-card,
+#page-home .daily-reward-card,
+#page-music .player,
+#page-library .track-catalog,
+#page-library .catalog-tabs,
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .withdraw-card,
+#page-community .community-card {
+    width: min(92vw, var(--asiqpai-card-width)) !important;
+    max-width: var(--asiqpai-card-width) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Убираем растягивание Wallet-карточек через width:100% */
+#page-wallet {
     width: 100% !important;
     max-width: 430px !important;
     padding-left: 12px !important;
@@ -2052,87 +2033,7 @@ body{
     box-sizing: border-box !important;
 }
 
-/* Убираем старые растягивания Wallet */
-#page-wallet .asiq-wallet-card,
-#page-wallet .asiq-swap-button,
-#page-wallet .withdraw-card {
-    width: min(92vw, var(--asiqpai-card-width)) !important;
-    max-width: var(--asiqpai-card-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* Daily Reward и Artist строго в том же стиле */
-#page-home .artist-card,
-#page-home .daily-reward-card {
-    width: min(92vw, var(--asiqpai-card-width)) !important;
-    max-width: var(--asiqpai-card-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    background: var(--asiqpai-card-bg) !important;
-    border: 1px solid var(--asiqpai-card-border) !important;
-    border-radius: var(--asiqpai-card-radius) !important;
-    box-shadow: var(--asiqpai-card-shadow) !important;
-}
-
-/* Wallet card оставляем читаемой, но в общей форме */
-#page-wallet .asiq-wallet-card {
-    color: #111 !important;
-    background:
-        linear-gradient(115deg,rgba(255,255,255,.42),transparent 28%),
-        radial-gradient(circle at 80% 18%,rgba(255,244,174,.72),transparent 26%),
-        linear-gradient(135deg,#f7df88 0%,#d8ad2a 30%,#b9830c 64%,#f0ce69 100%) !important;
-}
-
-/* Withdraw сохраняет золотую палитру, но получает общую форму */
-#page-wallet .withdraw-card {
-    background: var(--asiqpai-card-bg) !important;
-    border: 1px solid var(--asiqpai-card-border) !important;
-    border-radius: var(--asiqpai-card-radius) !important;
-    box-shadow: var(--asiqpai-card-shadow) !important;
-}
-
-/* Community остаётся эталонной карточкой */
-#page-community .community-card {
-    background: var(--asiqpai-card-bg) !important;
-    border: 1px solid var(--asiqpai-card-border) !important;
-    border-radius: var(--asiqpai-card-radius) !important;
-    box-shadow: var(--asiqpai-card-shadow) !important;
-}
-
-/* Плеер получает ту же рамку, фон и тень */
-#page-music .player {
-    background: var(--asiqpai-card-bg) !important;
-    border: 1px solid var(--asiqpai-card-border) !important;
-    border-radius: var(--asiqpai-card-radius) !important;
-    box-shadow: var(--asiqpai-card-shadow) !important;
-}
-
-/* Одинаковое поведение при наведении */
-.player,
-.license-card,
-.artist-card,
-.daily-reward-card,
-.asiq-wallet-card,
-.withdraw-card,
-.community-card {
-    transition: transform .25s ease, box-shadow .25s ease !important;
-}
-
-.player:hover,
-.license-card:hover,
-.artist-card:hover,
-.daily-reward-card:hover,
-.asiq-wallet-card:hover,
-.withdraw-card:hover,
-.community-card:hover {
-    transform: translateY(-2px) !important;
-    box-shadow:
-        0 22px 48px rgba(0,0,0,.48),
-        0 0 22px rgba(212,175,55,.10) !important;
-}
-
-/* Внутренние кнопки не выходят за границы карточек */
+/* Кнопки внутри карточек остаются на всю внутреннюю ширину */
 .community-card .button,
 .artist-card .artist-button,
 .artist-card .artist-input,
@@ -2144,20 +2045,8 @@ body{
     box-sizing: border-box !important;
 }
 
-/* На телефонах без hover карточки не двигаются */
-@media (hover:none){
-    .player:hover,
-    .license-card:hover,
-    .artist-card:hover,
-    .daily-reward-card:hover,
-    .asiq-wallet-card:hover,
-    .withdraw-card:hover,
-    .community-card:hover {
-        transform: none !important;
-    }
-}
-
-@media (max-width:390px){
+/* Одинаковые боковые отступы на узких экранах */
+@media (max-width: 390px) {
     .player,
     .license-card,
     .artist-card,
@@ -2166,182 +2055,10 @@ body{
     .withdraw-card,
     .community-card,
     .asiq-swap-button,
-    .catalog-tabs,
-    .track-catalog {
+    .track-catalog,
+    .catalog-tabs {
         width: min(100%, var(--asiqpai-card-width)) !important;
         max-width: var(--asiqpai-card-width) !important;
-    }
-}
-</style>
-
-
-<style id="wallet-center-dark-community-final">
-/* FINAL FIX: точное центрирование без смещения */
-html,
-body {
-    width: 100% !important;
-    overflow-x: hidden !important;
-}
-
-body {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-}
-
-.app-shell,
-.app-page,
-#page-home,
-#page-music,
-#page-library,
-#page-wallet,
-#page-community {
-    width: 100% !important;
-    max-width: 430px !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* Все основные блоки строго по центру */
-.player,
-.license-card,
-.artist-card,
-.daily-reward-card,
-.asiq-wallet-card,
-.withdraw-card,
-.community-card,
-.asiq-swap-button,
-.catalog-tabs,
-.track-catalog {
-    display: block;
-    width: 340px !important;
-    max-width: calc(100vw - 24px) !important;
-    min-width: 0 !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    box-sizing: border-box !important;
-}
-
-/* Единый стиль Community */
-.player,
-.license-card,
-.artist-card,
-.daily-reward-card,
-.asiq-wallet-card,
-.withdraw-card,
-.community-card {
-    border: 1px solid rgba(212,175,55,.22) !important;
-    border-radius: 22px !important;
-    background:
-        linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98)) !important;
-    box-shadow:
-        0 18px 42px rgba(0,0,0,.38) !important;
-}
-
-/* ASIQ Wallet: тёмная карточка, золотые надписи */
-#page-wallet .asiq-wallet-card {
-    padding: 20px 18px !important;
-    color: #d4af37 !important;
-    background:
-        radial-gradient(circle at 88% 18%,rgba(212,175,55,.10),transparent 34%),
-        linear-gradient(145deg,rgba(24,24,24,.98),rgba(7,7,7,.99)) !important;
-    border: 1px solid rgba(212,175,55,.30) !important;
-}
-
-#page-wallet .asiq-wallet-card::before {
-    content: none !important;
-    display: none !important;
-}
-
-#page-wallet .asiq-wallet-card::after {
-    opacity: .09 !important;
-}
-
-#page-wallet .asiq-wallet-label,
-#page-wallet .asiq-balance-value,
-#page-wallet .asiq-balance-symbol,
-#page-wallet .asiq-wallet-address {
-    color: #d4af37 !important;
-    text-shadow: 0 0 10px rgba(212,175,55,.16) !important;
-}
-
-#page-wallet .asiq-wallet-status {
-    color: #c8c0ae !important;
-    text-shadow: none !important;
-}
-
-#page-wallet .asiq-refresh-button {
-    color: #d4af37 !important;
-    background: rgba(212,175,55,.07) !important;
-    border: 1px solid rgba(212,175,55,.25) !important;
-}
-
-/* BUY / SELL: как кнопки Community — тёмная внутри, золотые буквы */
-#page-wallet .asiq-swap-button {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    min-height: 62px !important;
-    padding: 15px 18px !important;
-    margin-top: 0 !important;
-    margin-bottom: 20px !important;
-    border: 1px solid #d4af37 !important;
-    border-radius: 12px !important;
-    background: #1b1b1b !important;
-    color: #d4af37 !important;
-    box-shadow: none !important;
-    font-size: 15px !important;
-    font-weight: 900 !important;
-    text-decoration: none !important;
-}
-
-#page-wallet .asiq-swap-button i,
-#page-wallet .asiq-swap-button span {
-    color: #d4af37 !important;
-}
-
-#page-wallet .asiq-swap-button:hover {
-    background: #d4af37 !important;
-    color: #111 !important;
-    transform: none !important;
-}
-
-#page-wallet .asiq-swap-button:hover i,
-#page-wallet .asiq-swap-button:hover span {
-    color: #111 !important;
-}
-
-/* Withdraw тоже строго по центру */
-#page-wallet .withdraw-card {
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* TON Connect тоже по центру */
-#ton-connect {
-    width: 340px !important;
-    max-width: calc(100vw - 24px) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-    justify-content: center !important;
-}
-
-@media (max-width: 370px) {
-    .player,
-    .license-card,
-    .artist-card,
-    .daily-reward-card,
-    .asiq-wallet-card,
-    .withdraw-card,
-    .community-card,
-    .asiq-swap-button,
-    .catalog-tabs,
-    .track-catalog,
-    #ton-connect {
-        width: calc(100vw - 20px) !important;
-        max-width: calc(100vw - 20px) !important;
     }
 }
 </style>
