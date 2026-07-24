@@ -1853,530 +1853,76 @@ body{
 }
 </style>
 
-<style>
-/* ===== WALLET CLEAN BRIGHT FINAL PATCH ===== */
-#page-wallet{
-    width:100%;
-    max-width:390px;
-    margin:0 auto;
-    padding-left:14px;
-    padding-right:14px;
-    box-sizing:border-box;
-}
 
+
+
+
+
+
+
+
+
+<style id="wallet-layout-clean-final">
+/* ===== WALLET: CLEAN CENTERED FINAL ===== */
+#page-wallet{
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 auto !important;
+    padding:2px 16px 36px !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
+}
 #page-wallet .asiq-wallet-card,
 #page-wallet .asiq-swap-button,
-#page-home .daily-reward-card,
 #page-wallet .withdraw-card{
-    width:100%!important;
-    max-width:none!important;
-    margin:0 0 18px!important;
-    box-sizing:border-box!important;
+    width:100% !important;
+    max-width:340px !important;
+    min-width:0 !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    box-sizing:border-box !important;
 }
-
-/* Brighter background and cleaner contrast */
 #page-wallet .asiq-wallet-card{
-    background:
-        linear-gradient(115deg,rgba(255,255,255,.42),transparent 28%),
-        radial-gradient(circle at 80% 18%,rgba(255,244,174,.72),transparent 26%),
-        linear-gradient(135deg,#f7df88 0%,#d8ad2a 30%,#b9830c 64%,#f0ce69 100%)!important;
-    border:1px solid rgba(255,235,150,.80)!important;
-    box-shadow:
-        0 15px 34px rgba(0,0,0,.44),
-        0 0 28px rgba(255,197,41,.24),
-        inset 0 1px 0 rgba(255,255,255,.62)!important;
+    margin-bottom:18px !important;
+    padding:18px !important;
+    border:1px solid rgba(212,175,55,.25) !important;
+    border-radius:22px !important;
+    background:radial-gradient(circle at 88% 8%,rgba(212,175,55,.08),transparent 34%),linear-gradient(145deg,rgba(22,22,22,.97),rgba(7,7,7,.99)) !important;
+    box-shadow:0 18px 42px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.025) !important;
+    color:#f4f0e5 !important;
 }
-
-#page-wallet .asiq-wallet-label,
-#page-wallet .asiq-wallet-status,
-#page-wallet .asiq-wallet-address,
-#page-wallet .asiq-balance-value,
-#page-wallet .asiq-balance-symbol{
-    color:#1a1407!important;
-    text-shadow:none!important;
-}
-
-#page-wallet .asiq-balance-value{
-    font-size:clamp(42px,12vw,58px)!important;
-    line-height:1!important;
-    font-weight:950!important;
-    letter-spacing:-1.5px!important;
-}
-
-#page-wallet .asiq-balance-symbol{
-    display:block;
-    margin-top:7px;
-    font-size:.42em!important;
-    letter-spacing:1.4px!important;
-}
-
-#page-wallet .asiq-swap-button{
-    min-height:72px;
-    border-radius:20px!important;
-    background:linear-gradient(135deg,#ffd95d,#c89410)!important;
-    color:#161105!important;
-    border:1px solid rgba(255,231,133,.75)!important;
-    box-shadow:
-        0 12px 26px rgba(0,0,0,.34),
-        0 0 22px rgba(255,202,45,.22)!important;
-}
-
-#page-home .daily-reward-card,
-#page-wallet .withdraw-card{
-    background:
-        radial-gradient(circle at 88% 12%,rgba(255,204,65,.15),transparent 32%),
-        linear-gradient(145deg,#242118,#11100d)!important;
-    border:1px solid rgba(222,177,53,.55)!important;
-    box-shadow:
-        0 14px 30px rgba(0,0,0,.42),
-        0 0 22px rgba(212,175,55,.14)!important;
-}
-
-#page-home .daily-reward-card{
-    padding:20px!important;
-}
-
-#page-home .daily-reward-card::after{
-    content:none!important;
-    display:none!important;
-}
-
-#page-wallet .daily-reward-title,
-#page-wallet .daily-reward-amount,
-#page-wallet .withdraw-title{
-    color:#ffe08a!important;
-    text-shadow:0 0 14px rgba(255,211,88,.12)!important;
-}
-
-#page-home .daily-reward-note,
-#page-home .daily-reward-timer,
-#page-wallet .withdraw-note{
-    color:#c6bfae!important;
-}
-
-#page-home .daily-reward-balance,
-#page-wallet .withdraw-balance{
-    background:rgba(255,205,65,.09)!important;
-    border-color:rgba(255,205,65,.28)!important;
-    color:#f0d98c!important;
-}
-
-#page-wallet .withdraw-card{
-    padding:20px!important;
-}
-
-#page-wallet .withdraw-badge{
-    color:#f1d274!important;
-    border-color:rgba(241,210,116,.32)!important;
-    background:rgba(241,210,116,.08)!important;
-}
-
-#page-wallet .withdraw-input{
-    background:#12100a!important;
-    border-color:rgba(255,214,89,.24)!important;
-}
-
-#page-wallet .withdraw-max{
-    color:#f4d36d!important;
-    background:rgba(244,211,109,.10)!important;
-    border-color:rgba(244,211,109,.30)!important;
-}
-
-#page-wallet .withdraw-button{
-    background:linear-gradient(135deg,#f4cf57,#ad7b0c)!important;
-    color:#171105!important;
-}
-
-/* Keep bottom nav above content without covering Withdraw */
-body{
-    padding-bottom:calc(118px + env(safe-area-inset-bottom))!important;
-}
-
-@media(max-width:360px){
-    #page-wallet{
-        padding-left:10px;
-        padding-right:10px;
-    }
-}
-</style>
-
-
-<style id="all-cards-player-width-final">
-/* FINAL: все основные карточки во всех вкладках имеют ширину плеера */
-:root{
-    --asiqpai-card-width: 340px;
-}
-
-/* Основные карточки */
-.player,
-.license-card,
-.artist-card,
-.daily-reward-card,
-.asiq-wallet-card,
-.withdraw-card,
-.community-card,
-.asiq-swap-button,
-.track-catalog,
-.catalog-tabs {
-    width: min(92vw, var(--asiqpai-card-width)) !important;
-    max-width: var(--asiqpai-card-width) !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* Карточки внутри вкладок не должны растягиваться до 390px */
-#page-home .artist-card,
-#page-home .daily-reward-card,
-#page-music .player,
-#page-library .track-catalog,
-#page-library .catalog-tabs,
-#page-wallet .asiq-wallet-card,
-#page-wallet .asiq-swap-button,
-#page-wallet .withdraw-card,
-#page-community .community-card {
-    width: min(92vw, var(--asiqpai-card-width)) !important;
-    max-width: var(--asiqpai-card-width) !important;
-    margin-left: auto !important;
-    margin-right: auto !important;
-}
-
-/* Убираем растягивание Wallet-карточек через width:100% */
-#page-wallet {
-    width: 100% !important;
-    max-width: 430px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    box-sizing: border-box !important;
-}
-
-/* Кнопки внутри карточек остаются на всю внутреннюю ширину */
-.community-card .button,
-.artist-card .artist-button,
-.artist-card .artist-input,
-.artist-card .artist-contact-button,
-.daily-reward-card .daily-reward-button,
-.withdraw-card .withdraw-button {
-    width: 100% !important;
-    max-width: none !important;
-    box-sizing: border-box !important;
-}
-
-/* Одинаковые боковые отступы на узких экранах */
-@media (max-width: 390px) {
-    .player,
-    .license-card,
-    .artist-card,
-    .daily-reward-card,
-    .asiq-wallet-card,
-    .withdraw-card,
-    .community-card,
-    .asiq-swap-button,
-    .track-catalog,
-    .catalog-tabs {
-        width: min(100%, var(--asiqpai-card-width)) !important;
-        max-width: var(--asiqpai-card-width) !important;
-    }
-}
-</style>
-
-
-<style id="wallet-community-elegant-final">
-/* ===== WALLET: ELEGANT COMMUNITY STYLE ===== */
-#page-wallet{
-    width:100%!important;
-    max-width:430px!important;
-    margin:0 auto!important;
-    padding:2px 12px 34px!important;
-    box-sizing:border-box!important;
-}
-
-#page-wallet .asiq-wallet-card,
-#page-wallet .withdraw-card{
-    width:min(92vw,340px)!important;
-    max-width:340px!important;
-    margin:0 auto 18px!important;
-    padding:18px!important;
-    box-sizing:border-box!important;
-    border:1px solid rgba(212,175,55,.25)!important;
-    border-radius:22px!important;
-    background:
-        radial-gradient(circle at 88% 8%,rgba(212,175,55,.08),transparent 34%),
-        linear-gradient(145deg,rgba(22,22,22,.97),rgba(7,7,7,.99))!important;
-    box-shadow:
-        0 18px 42px rgba(0,0,0,.38),
-        inset 0 1px 0 rgba(255,255,255,.025)!important;
-    color:#f4f0e5!important;
-}
-
 #page-wallet .asiq-wallet-card::before,
-#page-wallet .asiq-wallet-card::after{
-    content:none!important;
-    display:none!important;
-}
-
+#page-wallet .asiq-wallet-card::after{content:none !important;display:none !important;}
 #page-wallet .asiq-wallet-head,
-#page-wallet .withdraw-head{
-    display:flex!important;
-    align-items:center!important;
-    justify-content:space-between!important;
-    gap:12px!important;
-    margin:0 0 16px!important;
-}
-
+#page-wallet .withdraw-head{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:12px !important;margin:0 0 16px !important;}
 #page-wallet .asiq-wallet-label,
-#page-wallet .withdraw-title{
-    display:flex!important;
-    align-items:center!important;
-    gap:9px!important;
-    color:#e6c45f!important;
-    font-size:18px!important;
-    font-weight:900!important;
-    letter-spacing:.2px!important;
-    text-shadow:none!important;
-}
-
+#page-wallet .withdraw-title{display:flex !important;align-items:center !important;gap:9px !important;color:#e6c45f !important;font-size:18px !important;font-weight:900 !important;letter-spacing:.2px !important;text-shadow:none !important;}
 #page-wallet .asiq-wallet-label i,
-#page-wallet .withdraw-title i{
-    width:28px!important;
-    height:28px!important;
-    display:grid!important;
-    place-items:center!important;
-    flex:0 0 28px!important;
-    border:1px solid rgba(212,175,55,.27)!important;
-    border-radius:9px!important;
-    background:rgba(212,175,55,.07)!important;
-    color:#d4af37!important;
-    font-size:13px!important;
-    box-shadow:0 0 12px rgba(212,175,55,.07)!important;
-}
-
-#page-wallet .asiq-refresh-button{
-    width:34px!important;
-    height:34px!important;
-    display:grid!important;
-    place-items:center!important;
-    padding:0!important;
-    border:1px solid rgba(212,175,55,.24)!important;
-    border-radius:10px!important;
-    background:rgba(212,175,55,.055)!important;
-    color:#d4af37!important;
-    font-size:13px!important;
-    box-shadow:none!important;
-}
-
-#page-wallet .asiq-refresh-button:active{
-    transform:scale(.94)!important;
-}
-
-#page-wallet .asiq-balance-value{
-    margin:6px 0 8px!important;
-    color:#f2d36d!important;
-    font-size:clamp(40px,12vw,54px)!important;
-    line-height:1!important;
-    font-weight:900!important;
-    letter-spacing:-1.2px!important;
-    text-align:center!important;
-    text-shadow:0 0 18px rgba(212,175,55,.12)!important;
-}
-
-#page-wallet .asiq-balance-symbol{
-    display:block!important;
-    margin-top:8px!important;
-    color:#c8a94f!important;
-    font-size:15px!important;
-    line-height:1!important;
-    font-weight:850!important;
-    letter-spacing:2px!important;
-}
-
-#page-wallet .asiq-wallet-status{
-    margin-top:14px!important;
-    color:#b9ad8c!important;
-    font-size:12px!important;
-    font-weight:700!important;
-    line-height:1.4!important;
-    text-align:center!important;
-}
-
-#page-wallet .asiq-wallet-address{
-    margin-top:7px!important;
-    color:#777064!important;
-    font-size:10.5px!important;
-    line-height:1.35!important;
-    text-align:center!important;
-    word-break:break-all!important;
-}
-
-#page-wallet .asiq-swap-button{
-    width:min(92vw,340px)!important;
-    max-width:340px!important;
-    min-height:54px!important;
-    margin:0 auto 18px!important;
-    padding:0 18px!important;
-    display:flex!important;
-    align-items:center!important;
-    justify-content:center!important;
-    gap:10px!important;
-    box-sizing:border-box!important;
-    border:1px solid rgba(212,175,55,.32)!important;
-    border-radius:16px!important;
-    background:linear-gradient(145deg,rgba(24,24,24,.97),rgba(9,9,9,.99))!important;
-    color:#e4c15a!important;
-    font-size:14px!important;
-    font-weight:900!important;
-    letter-spacing:.8px!important;
-    text-decoration:none!important;
-    box-shadow:0 12px 28px rgba(0,0,0,.30)!important;
-}
-
-#page-wallet .asiq-swap-button i{
-    width:27px!important;
-    height:27px!important;
-    display:grid!important;
-    place-items:center!important;
-    border:1px solid rgba(212,175,55,.24)!important;
-    border-radius:9px!important;
-    background:rgba(212,175,55,.06)!important;
-    color:#d4af37!important;
-    font-size:12px!important;
-}
-
-#page-wallet .asiq-swap-button:active{
-    transform:scale(.985)!important;
-}
-
-#page-wallet .withdraw-badge{
-    display:flex!important;
-    align-items:center!important;
-    gap:6px!important;
-    padding:6px 9px!important;
-    border:1px solid rgba(212,175,55,.22)!important;
-    border-radius:999px!important;
-    background:rgba(212,175,55,.055)!important;
-    color:#cdb45f!important;
-    font-size:9px!important;
-    font-weight:900!important;
-    letter-spacing:.4px!important;
-}
-
-#page-wallet .withdraw-badge i{
-    font-size:9px!important;
-    color:#d4af37!important;
-}
-
-#page-wallet .withdraw-balance{
-    margin:0 0 12px!important;
-    padding:11px 12px!important;
-    border:1px solid rgba(212,175,55,.16)!important;
-    border-radius:13px!important;
-    background:rgba(212,175,55,.035)!important;
-    color:#d8c98f!important;
-    font-size:12px!important;
-    font-weight:800!important;
-    text-align:left!important;
-}
-
-#page-wallet .withdraw-row{
-    display:grid!important;
-    grid-template-columns:minmax(0,1fr) 64px!important;
-    gap:9px!important;
-}
-
+#page-wallet .withdraw-title i{width:28px !important;height:28px !important;display:grid !important;place-items:center !important;flex:0 0 28px !important;border:1px solid rgba(212,175,55,.27) !important;border-radius:9px !important;background:rgba(212,175,55,.07) !important;color:#d4af37 !important;font-size:13px !important;}
+#page-wallet .asiq-refresh-button{width:34px !important;height:34px !important;display:grid !important;place-items:center !important;padding:0 !important;border:1px solid rgba(212,175,55,.24) !important;border-radius:10px !important;background:rgba(212,175,55,.055) !important;color:#d4af37 !important;font-size:13px !important;box-shadow:none !important;}
+#page-wallet .asiq-balance-value{margin:6px 0 8px !important;color:#f2d36d !important;font-size:clamp(40px,12vw,54px) !important;line-height:1 !important;font-weight:900 !important;letter-spacing:-1.2px !important;text-align:center !important;text-shadow:0 0 18px rgba(212,175,55,.12) !important;}
+#page-wallet .asiq-balance-symbol{display:block !important;margin-top:8px !important;color:#c8a94f !important;font-size:15px !important;line-height:1 !important;font-weight:850 !important;letter-spacing:2px !important;}
+#page-wallet .asiq-wallet-status{margin-top:14px !important;color:#b9ad8c !important;font-size:12px !important;font-weight:700 !important;line-height:1.4 !important;text-align:center !important;}
+#page-wallet .asiq-wallet-address{margin-top:7px !important;color:#777064 !important;font-size:10.5px !important;line-height:1.35 !important;text-align:center !important;word-break:break-all !important;}
+#page-wallet .asiq-swap-button{min-height:54px !important;margin-bottom:18px !important;padding:0 18px !important;display:flex !important;align-items:center !important;justify-content:center !important;gap:10px !important;border:1px solid rgba(212,175,55,.32) !important;border-radius:16px !important;background:linear-gradient(145deg,rgba(24,24,24,.97),rgba(9,9,9,.99)) !important;color:#e4c15a !important;font-size:14px !important;font-weight:900 !important;letter-spacing:.8px !important;text-decoration:none !important;box-shadow:0 12px 28px rgba(0,0,0,.30) !important;}
+#page-wallet .asiq-swap-button i{width:27px !important;height:27px !important;display:grid !important;place-items:center !important;border:1px solid rgba(212,175,55,.24) !important;border-radius:9px !important;background:rgba(212,175,55,.06) !important;color:#d4af37 !important;font-size:12px !important;}
+#page-wallet .buy-text{color:#2ECC71 !important;font-weight:900 !important;}
+#page-wallet .sell-text{color:#FF5A5A !important;font-weight:900 !important;}
+#page-wallet .asiq-text{color:#FFD700 !important;font-weight:900 !important;}
+#page-wallet .separator{color:#D4AF37 !important;}
+#page-wallet .withdraw-card{margin-bottom:30px !important;padding:18px !important;border:1px solid rgba(212,175,55,.25) !important;border-radius:22px !important;background:radial-gradient(circle at 88% 8%,rgba(212,175,55,.08),transparent 34%),linear-gradient(145deg,rgba(22,22,22,.97),rgba(7,7,7,.99)) !important;box-shadow:0 18px 42px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.025) !important;}
+#page-wallet .withdraw-badge{display:flex !important;align-items:center !important;gap:6px !important;padding:6px 9px !important;border:1px solid rgba(212,175,55,.22) !important;border-radius:999px !important;background:rgba(212,175,55,.055) !important;color:#cdb45f !important;font-size:9px !important;font-weight:900 !important;}
+#page-wallet .withdraw-balance{margin:0 0 12px !important;padding:11px 12px !important;border:1px solid rgba(212,175,55,.16) !important;border-radius:13px !important;background:rgba(212,175,55,.035) !important;color:#d8c98f !important;font-size:12px !important;font-weight:800 !important;text-align:left !important;}
+#page-wallet .withdraw-row{display:grid !important;grid-template-columns:minmax(0,1fr) 64px !important;gap:9px !important;}
 #page-wallet .withdraw-input,
-#page-wallet .withdraw-max{
-    height:50px!important;
-    box-sizing:border-box!important;
-    border:1px solid rgba(212,175,55,.18)!important;
-    border-radius:13px!important;
-    background:#0d0d0c!important;
-    color:#f4e9bd!important;
-    box-shadow:none!important;
-}
-
-#page-wallet .withdraw-input{
-    width:100%!important;
-    min-width:0!important;
-    padding:0 13px!important;
-    font-size:15px!important;
-    font-weight:800!important;
-}
-
-#page-wallet .withdraw-input::placeholder{
-    color:#6f695b!important;
-    opacity:1!important;
-}
-
-#page-wallet .withdraw-input:focus{
-    border-color:rgba(212,175,55,.45)!important;
-    outline:none!important;
-}
-
-#page-wallet .withdraw-max{
-    width:64px!important;
-    padding:0!important;
-    color:#d6b951!important;
-    font-size:11px!important;
-    font-weight:900!important;
-    letter-spacing:.5px!important;
-}
-
-#page-wallet .withdraw-button{
-    width:100%!important;
-    min-height:52px!important;
-    margin-top:10px!important;
-    padding:0 15px!important;
-    border:1px solid rgba(212,175,55,.32)!important;
-    border-radius:14px!important;
-    background:rgba(212,175,55,.075)!important;
-    color:#e6c75f!important;
-    font-size:13px!important;
-    font-weight:900!important;
-    letter-spacing:.35px!important;
-    box-shadow:none!important;
-}
-
-#page-wallet .withdraw-button:not(:disabled):active,
-#page-wallet .withdraw-max:not(:disabled):active{
-    transform:scale(.985)!important;
-}
-
-#page-wallet .withdraw-button:disabled,
-#page-wallet .withdraw-max:disabled,
-#page-wallet .withdraw-input:disabled{
-    opacity:.46!important;
-}
-
-#page-wallet .withdraw-note{
-    margin:12px 2px 0!important;
-    color:#7d776b!important;
-    font-size:10px!important;
-    line-height:1.5!important;
-    text-align:left!important;
-}
-
-@media (hover:hover){
-    #page-wallet .asiq-refresh-button:hover,
-    #page-wallet .asiq-swap-button:hover,
-    #page-wallet .withdraw-button:not(:disabled):hover,
-    #page-wallet .withdraw-max:not(:disabled):hover{
-        border-color:rgba(212,175,55,.52)!important;
-        background:rgba(212,175,55,.11)!important;
-        color:#f1d36d!important;
-        transform:translateY(-1px)!important;
-        box-shadow:0 0 16px rgba(212,175,55,.08)!important;
-    }
-}
-
-@media(max-width:360px){
-    #page-wallet{padding-left:9px!important;padding-right:9px!important}
-    #page-wallet .asiq-wallet-card,
-    #page-wallet .withdraw-card{padding:16px!important}
-    #page-wallet .asiq-wallet-label,
-    #page-wallet .withdraw-title{font-size:16px!important}
-    #page-wallet .withdraw-badge{padding:5px 7px!important;font-size:8px!important}
-}
+#page-wallet .withdraw-max{height:50px !important;box-sizing:border-box !important;border:1px solid rgba(212,175,55,.18) !important;border-radius:13px !important;background:#0d0d0c !important;color:#f4e9bd !important;box-shadow:none !important;}
+#page-wallet .withdraw-input{width:100% !important;min-width:0 !important;padding:0 13px !important;font-size:15px !important;font-weight:800 !important;}
+#page-wallet .withdraw-max{width:64px !important;padding:0 !important;color:#d6b951 !important;font-size:11px !important;font-weight:900 !important;}
+#page-wallet .withdraw-button{width:100% !important;min-height:52px !important;margin-top:10px !important;padding:0 15px !important;border:1px solid rgba(212,175,55,.32) !important;border-radius:14px !important;background:rgba(212,175,55,.075) !important;color:#e6c75f !important;font-size:13px !important;font-weight:900 !important;box-shadow:none !important;}
+#page-wallet .withdraw-note{margin:12px 2px 0 !important;color:#7d776b !important;font-size:10px !important;line-height:1.5 !important;text-align:left !important;}
+body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
+@media(max-width:390px){#page-wallet{padding-left:14px !important;padding-right:14px !important;}}
+@media(max-width:360px){#page-wallet{padding-left:10px !important;padding-right:10px !important;}#page-wallet .asiq-wallet-card,#page-wallet .withdraw-card{padding:16px !important;}}
 </style>
 
 </head>
