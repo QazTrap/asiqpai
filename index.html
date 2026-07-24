@@ -939,7 +939,7 @@ audio{
     box-shadow:none;
 }
 
-@media (max-width:340px){
+@media (max-width:390px){
     body{
         padding-left:12px;
         padding-right:12px;
@@ -1008,7 +1008,7 @@ audio{
     0%{transform:scale(.86);opacity:.55;}
     100%{transform:scale(1);opacity:1;}
 }
-@media (max-width:340px){
+@media (max-width:390px){
     .play-mode-button{left:14px;bottom:25px;}
 }
 
@@ -1141,6 +1141,25 @@ audio{
         animation:none !important;
         transition:none !important;
     }
+}
+
+
+/* Home cards aligned to music player width */
+#page-home .artist-card,
+#page-home .daily-reward-card{
+    width:min(92vw,340px);
+    max-width:340px;
+    box-sizing:border-box;
+    margin-left:auto;
+    margin-right:auto;
+}
+#page-home .artist-card{
+    margin-top:14px;
+    margin-bottom:16px;
+}
+#page-home .daily-reward-card{
+    margin-top:0;
+    margin-bottom:30px;
 }
 
 </style>
@@ -1378,7 +1397,7 @@ color:#3b2b00;
 
 
 /* ===== WITHDRAW ASIQ ===== */
-.withdraw-card{width:min(92vw,340px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(105,175,255,.25);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(50,145,255,.13),transparent 34%),linear-gradient(145deg,rgba(12,20,30,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.withdraw-card{width:min(92vw,390px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(105,175,255,.25);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(50,145,255,.13),transparent 34%),linear-gradient(145deg,rgba(12,20,30,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
 .withdraw-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
 .withdraw-title{color:#d9ecff;font-size:21px;font-weight:950}
 .withdraw-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(105,175,255,.22);background:rgba(105,175,255,.07);color:#8fc7ff;font-size:10px;font-weight:900}
@@ -1443,7 +1462,7 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
     backdrop-filter:none;
 }
 
-.artist-card{width:min(92vw,340px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
+.artist-card{width:min(92vw,340px);max-width:340px;margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
 .artist-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.artist-title{font-size:20px;font-weight:950;color:#f4d67a}.artist-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.08);color:#e9c75d;font-size:10px;font-weight:950}.artist-copy{margin:11px 0;color:#a99d7c;font-size:12px;line-height:1.55}.artist-benefits{display:grid;gap:7px;margin:13px 0}.artist-benefit{padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.025);color:#d8d0b8;font-size:11px}.artist-input{width:100%;box-sizing:border-box;margin:4px 0 10px;padding:13px 12px;border:1px solid rgba(212,175,55,.18);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:15px;font-weight:850}.artist-button{width:100%;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104;font-size:14px;font-weight:950;cursor:pointer}.artist-button:disabled,.artist-input:disabled{opacity:.5;cursor:not-allowed}.artist-status{margin-top:10px;color:#8b826c;font-size:10.5px;line-height:1.45}.artist-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.artist-stat,.artist-action{padding:13px 10px;border:1px solid rgba(212,175,55,.13);border-radius:13px;background:rgba(212,175,55,.045);text-align:center}.artist-stat strong{display:block;color:#fff0b4;font-size:18px}.artist-stat span,.artist-action{color:#bcae87;font-size:10px;font-weight:850}.artist-action{cursor:not-allowed;opacity:.65}.artist-number{margin-top:10px;color:#f2d171;font-size:12px;font-weight:950}.artist-next-step{margin-top:14px;padding:13px;border:1px solid rgba(212,175,55,.18);border-radius:13px;background:rgba(212,175,55,.055);color:#d8d0b8;font-size:11px;line-height:1.55}.artist-next-step strong{display:block;margin-bottom:4px;color:#f2d171;font-size:12px}.artist-contact-button{display:block;width:100%;box-sizing:border-box;margin-top:10px;padding:12px 14px;border:1px solid rgba(212,175,55,.26);border-radius:12px;background:rgba(212,175,55,.1);color:#f4d67a;text-align:center;text-decoration:none;font-size:12px;font-weight:950}.artist-contact-button[hidden]{display:none}
 
 .nav-tab{
@@ -1467,10 +1486,10 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
     font-size:28px;
 }
 .home-hero{padding-top:8px}.home-hero .logo{margin:0 auto}.home-hero .subtitle{margin-bottom:22px}
-.community-card{width:min(92vw,340px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
+.community-card{width:min(92vw,390px);margin:0 auto 20px;padding:18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.22);border-radius:22px;background:linear-gradient(145deg,rgba(24,24,24,.96),rgba(7,7,7,.98));box-shadow:0 18px 42px rgba(0,0,0,.38)}
 .community-card .button{max-width:none;width:100%;box-sizing:border-box;margin:10px 0}
 .web3-footer{margin:26px 0 8px;color:#d4af37;font-weight:900}.web3-domain{margin:0;color:#8b8b8b;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
-@media(max-width:340px){.nav-tab{padding:10px 2px 9px;font-size:8px}.nav-tab i{font-size:18px}.page-heading{font-size:23px}}
+@media(max-width:390px){.nav-tab{padding:10px 2px 9px;font-size:8px}.nav-tab i{font-size:18px}.page-heading{font-size:23px}}
 </style>
 
 
@@ -1836,7 +1855,7 @@ body{
 /* ===== WALLET CLEAN BRIGHT FINAL PATCH ===== */
 #page-wallet{
     width:100%;
-    max-width:340px;
+    max-width:390px;
     margin:0 auto;
     padding-left:14px;
     padding-right:14px;
@@ -1990,6 +2009,47 @@ body{
             <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">    
         </div>
 
+        <div class="artist-card" id="artistCard" aria-live="polite">
+                    <div id="artistMembershipView">
+                        <div class="artist-card-head"><div class="artist-title">рџ‘‘ ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
+                        <p class="artist-copy">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚РµСЃСЊ РєР°Рє Р°СЂС‚РёСЃС‚ Рё РѕС‚РєСЂРѕР№С‚Рµ Artist Studio.</p>
+                        <div class="artist-benefits">
+                            <div class="artist-benefit">рџЋµ Р”Рѕ 10 РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅС‹С… С‚СЂРµРєРѕРІ РёР»Рё Р±РёС‚РѕРІ</div>
+                            <div class="artist-benefit">рџ›Ў РњРѕРґРµСЂР°С†РёСЏ Рё РїСѓР±Р»РёРєР°С†РёСЏ РІ РєР°С‚Р°Р»РѕРіРµ</div>
+                            <div class="artist-benefit">рџЏ† РџРµСЂРІС‹Рµ 100 вЂ” Founding Artist</div>
+                        </div>
+                        <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Р’Р°С€Рµ РёРјСЏ Р°СЂС‚РёСЃС‚Р°" autocomplete="off" disabled>
+                        <button class="artist-button" id="artistRegisterButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
+                        <div class="artist-status" id="artistStatus">РџСЂРѕРІРµСЂСЏРµРј СЃС‚Р°С‚СѓСЃ Artist Membership</div>
+                    </div>
+                    <div id="artistStudioView" hidden>
+                        <div class="artist-card-head"><div class="artist-title">рџЋ¤ Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
+                        <div class="artist-number" id="artistStudioName">вЂ”</div>
+                        <div class="artist-studio-grid">
+                            <div class="artist-stat"><strong id="artistPublishedCount">0 / 10</strong><span>Published</span></div>
+                            <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
+                            <div class="artist-stat"><strong id="artistFilesStatus">РћР–РР”РђРќРР•</strong><span>Files Status</span></div>
+                            <div class="artist-stat"><strong>MP3 + COVER</strong><span>Р§С‚Рѕ РѕС‚РїСЂР°РІРёС‚СЊ</span></div>
+                        </div>
+                        <div class="artist-next-step">
+                            <strong>Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°</strong>
+                            РћС‚РїСЂР°РІСЊС‚Рµ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ MP3-С„Р°Р№Р» Рё РєРІР°РґСЂР°С‚РЅСѓСЋ РѕР±Р»РѕР¶РєСѓ JPG РёР»Рё PNG. РџРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё СЂРµР»РёР· Р±СѓРґРµС‚ РґРѕР±Р°РІР»РµРЅ РІ РєР°С‚Р°Р»РѕРі РІСЂСѓС‡РЅСѓСЋ.
+                        </div>
+                        <a class="artist-contact-button" id="artistContactButton" href="#" target="_blank" rel="noopener noreferrer">РћС‚РїСЂР°РІРёС‚СЊ С„Р°Р№Р»С‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ</a>
+                    </div>
+                </div>
+
+        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
+                    <div class="daily-reward-icon">рџЋЃ</div>
+                    <div class="daily-reward-title">Daily Reward</div>
+                    <div class="daily-reward-amount">+25 ASIQ</div>
+                    <p class="daily-reward-note">РџРѕР»СѓС‡Р°Р№С‚Рµ РµР¶РµРґРЅРµРІРЅСѓСЋ РЅР°РіСЂР°РґСѓ РІРѕ РІРЅСѓС‚СЂРµРЅРЅРёР№ Р±Р°Р»Р°РЅСЃ РїСЂРёР»РѕР¶РµРЅРёСЏ.</p>
+                    <div class="daily-reward-balance" id="dailyRewardBalance">РќР°РіСЂР°РґС‹ РІ РїСЂРёР»РѕР¶РµРЅРёРё: вЂ” ASIQ</div>
+                    <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
+                    <div class="daily-reward-timer" id="dailyRewardTimer">РџСЂРѕРІРµСЂСЏРµРј РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РЅР°РіСЂР°РґС‹</div>
+                </div>
+
+
 
     </section>
 
@@ -2083,45 +2143,9 @@ body{
         </a>
 
 
-        <div class="artist-card" id="artistCard" aria-live="polite">
-            <div id="artistMembershipView">
-                <div class="artist-card-head"><div class="artist-title">рџ‘‘ ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
-                <p class="artist-copy">Р—Р°СЂРµРіРёСЃС‚СЂРёСЂСѓР№С‚РµСЃСЊ РєР°Рє Р°СЂС‚РёСЃС‚ Рё РѕС‚РєСЂРѕР№С‚Рµ Artist Studio.</p>
-                <div class="artist-benefits">
-                    <div class="artist-benefit">рџЋµ Р”Рѕ 10 РѕРїСѓР±Р»РёРєРѕРІР°РЅРЅС‹С… С‚СЂРµРєРѕРІ РёР»Рё Р±РёС‚РѕРІ</div>
-                    <div class="artist-benefit">рџ›Ў РњРѕРґРµСЂР°С†РёСЏ Рё РїСѓР±Р»РёРєР°С†РёСЏ РІ РєР°С‚Р°Р»РѕРіРµ</div>
-                    <div class="artist-benefit">рџЏ† РџРµСЂРІС‹Рµ 100 вЂ” Founding Artist</div>
-                </div>
-                <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Р’Р°С€Рµ РёРјСЏ Р°СЂС‚РёСЃС‚Р°" autocomplete="off" disabled>
-                <button class="artist-button" id="artistRegisterButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
-                <div class="artist-status" id="artistStatus">РџСЂРѕРІРµСЂСЏРµРј СЃС‚Р°С‚СѓСЃ Artist Membership</div>
-            </div>
-            <div id="artistStudioView" hidden>
-                <div class="artist-card-head"><div class="artist-title">рџЋ¤ Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
-                <div class="artist-number" id="artistStudioName">вЂ”</div>
-                <div class="artist-studio-grid">
-                    <div class="artist-stat"><strong id="artistPublishedCount">0 / 10</strong><span>Published</span></div>
-                    <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
-                    <div class="artist-stat"><strong id="artistFilesStatus">РћР–РР”РђРќРР•</strong><span>Files Status</span></div>
-                    <div class="artist-stat"><strong>MP3 + COVER</strong><span>Р§С‚Рѕ РѕС‚РїСЂР°РІРёС‚СЊ</span></div>
-                </div>
-                <div class="artist-next-step">
-                    <strong>Р РµРіРёСЃС‚СЂР°С†РёСЏ Р·Р°РІРµСЂС€РµРЅР°</strong>
-                    РћС‚РїСЂР°РІСЊС‚Рµ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ MP3-С„Р°Р№Р» Рё РєРІР°РґСЂР°С‚РЅСѓСЋ РѕР±Р»РѕР¶РєСѓ JPG РёР»Рё PNG. РџРѕСЃР»Рµ РїСЂРѕРІРµСЂРєРё СЂРµР»РёР· Р±СѓРґРµС‚ РґРѕР±Р°РІР»РµРЅ РІ РєР°С‚Р°Р»РѕРі РІСЂСѓС‡РЅСѓСЋ.
-                </div>
-                <a class="artist-contact-button" id="artistContactButton" href="#" target="_blank" rel="noopener noreferrer">РћС‚РїСЂР°РІРёС‚СЊ С„Р°Р№Р»С‹ Р°РґРјРёРЅРёСЃС‚СЂР°С‚РѕСЂСѓ</a>
-            </div>
-        </div>
+        
 
-        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
-            <div class="daily-reward-icon">рџЋЃ</div>
-            <div class="daily-reward-title">Daily Reward</div>
-            <div class="daily-reward-amount">+25 ASIQ</div>
-            <p class="daily-reward-note">РџРѕР»СѓС‡Р°Р№С‚Рµ РµР¶РµРґРЅРµРІРЅСѓСЋ РЅР°РіСЂР°РґСѓ РІРѕ РІРЅСѓС‚СЂРµРЅРЅРёР№ Р±Р°Р»Р°РЅСЃ РїСЂРёР»РѕР¶РµРЅРёСЏ.</p>
-            <div class="daily-reward-balance" id="dailyRewardBalance">РќР°РіСЂР°РґС‹ РІ РїСЂРёР»РѕР¶РµРЅРёРё: вЂ” ASIQ</div>
-            <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Р—Р°РіСЂСѓР·РєР°вЂ¦</button>
-            <div class="daily-reward-timer" id="dailyRewardTimer">РџСЂРѕРІРµСЂСЏРµРј РґРѕСЃС‚СѓРїРЅРѕСЃС‚СЊ РЅР°РіСЂР°РґС‹</div>
-        </div>
+        
 
         <div class="withdraw-card" id="withdrawCard">
             <div class="withdraw-head"><div class="withdraw-title">рџ’ё Withdraw ASIQ</div><div class="withdraw-badge">TON WALLET</div></div>
