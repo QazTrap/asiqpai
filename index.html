@@ -1220,14 +1220,8 @@ color:#3b2b00;
 }
 
 .daily-reward-card::after{
-    content:"25";
-    position:absolute;
-    right:-3px;
-    bottom:-28px;
-    color:rgba(255,215,0,.045);
-    font-size:105px;
-    font-weight:950;
-    pointer-events:none;
+    content:none!important;
+    display:none!important;
 }
 
 .daily-reward-icon{
@@ -1833,6 +1827,154 @@ body{
     }
 }
 </style>
+
+<style>
+/* ===== WALLET CLEAN BRIGHT FINAL PATCH ===== */
+#page-wallet{
+    width:100%;
+    max-width:390px;
+    margin:0 auto;
+    padding-left:14px;
+    padding-right:14px;
+    box-sizing:border-box;
+}
+
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .daily-reward-card,
+#page-wallet .withdraw-card{
+    width:100%!important;
+    max-width:none!important;
+    margin:0 0 18px!important;
+    box-sizing:border-box!important;
+}
+
+/* Brighter background and cleaner contrast */
+#page-wallet .asiq-wallet-card{
+    background:
+        linear-gradient(115deg,rgba(255,255,255,.42),transparent 28%),
+        radial-gradient(circle at 80% 18%,rgba(255,244,174,.72),transparent 26%),
+        linear-gradient(135deg,#f7df88 0%,#d8ad2a 30%,#b9830c 64%,#f0ce69 100%)!important;
+    border:1px solid rgba(255,235,150,.80)!important;
+    box-shadow:
+        0 15px 34px rgba(0,0,0,.44),
+        0 0 28px rgba(255,197,41,.24),
+        inset 0 1px 0 rgba(255,255,255,.62)!important;
+}
+
+#page-wallet .asiq-wallet-label,
+#page-wallet .asiq-wallet-status,
+#page-wallet .asiq-wallet-address,
+#page-wallet .asiq-balance-value,
+#page-wallet .asiq-balance-symbol{
+    color:#1a1407!important;
+    text-shadow:none!important;
+}
+
+#page-wallet .asiq-balance-value{
+    font-size:clamp(42px,12vw,58px)!important;
+    line-height:1!important;
+    font-weight:950!important;
+    letter-spacing:-1.5px!important;
+}
+
+#page-wallet .asiq-balance-symbol{
+    display:block;
+    margin-top:7px;
+    font-size:.42em!important;
+    letter-spacing:1.4px!important;
+}
+
+#page-wallet .asiq-swap-button{
+    min-height:72px;
+    border-radius:20px!important;
+    background:linear-gradient(135deg,#ffd95d,#c89410)!important;
+    color:#161105!important;
+    border:1px solid rgba(255,231,133,.75)!important;
+    box-shadow:
+        0 12px 26px rgba(0,0,0,.34),
+        0 0 22px rgba(255,202,45,.22)!important;
+}
+
+#page-wallet .daily-reward-card,
+#page-wallet .withdraw-card{
+    background:
+        radial-gradient(circle at 88% 12%,rgba(255,204,65,.15),transparent 32%),
+        linear-gradient(145deg,#242118,#11100d)!important;
+    border:1px solid rgba(222,177,53,.55)!important;
+    box-shadow:
+        0 14px 30px rgba(0,0,0,.42),
+        0 0 22px rgba(212,175,55,.14)!important;
+}
+
+#page-wallet .daily-reward-card{
+    padding:20px!important;
+}
+
+#page-wallet .daily-reward-card::after{
+    content:none!important;
+    display:none!important;
+}
+
+#page-wallet .daily-reward-title,
+#page-wallet .daily-reward-amount,
+#page-wallet .withdraw-title{
+    color:#ffe08a!important;
+    text-shadow:0 0 14px rgba(255,211,88,.12)!important;
+}
+
+#page-wallet .daily-reward-note,
+#page-wallet .daily-reward-timer,
+#page-wallet .withdraw-note{
+    color:#c6bfae!important;
+}
+
+#page-wallet .daily-reward-balance,
+#page-wallet .withdraw-balance{
+    background:rgba(255,205,65,.09)!important;
+    border-color:rgba(255,205,65,.28)!important;
+    color:#f0d98c!important;
+}
+
+#page-wallet .withdraw-card{
+    padding:20px!important;
+}
+
+#page-wallet .withdraw-badge{
+    color:#f1d274!important;
+    border-color:rgba(241,210,116,.32)!important;
+    background:rgba(241,210,116,.08)!important;
+}
+
+#page-wallet .withdraw-input{
+    background:#12100a!important;
+    border-color:rgba(255,214,89,.24)!important;
+}
+
+#page-wallet .withdraw-max{
+    color:#f4d36d!important;
+    background:rgba(244,211,109,.10)!important;
+    border-color:rgba(244,211,109,.30)!important;
+}
+
+#page-wallet .withdraw-button{
+    background:linear-gradient(135deg,#f4cf57,#ad7b0c)!important;
+    color:#171105!important;
+}
+
+/* Keep bottom nav above content without covering Withdraw */
+body{
+    padding-bottom:calc(118px + env(safe-area-inset-bottom))!important;
+}
+
+@media(max-width:360px){
+    #page-wallet{
+        padding-left:10px;
+        padding-right:10px;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -2044,6 +2186,29 @@ function shortenWalletAddress(address){
     return `${address.slice(0,6)}…${address.slice(-6)}`;
 }
 
+
+function formatCompactAsiq(value){
+    const number = Number(value);
+    if(!Number.isFinite(number)) return "0";
+
+    const absolute = Math.abs(number);
+    const sign = number < 0 ? "-" : "";
+
+    const trim = formatted => formatted.replace(/\.0+$|(\.\d*[1-9])0+$/,"$1");
+
+    if(absolute >= 1_000_000_000){
+        return `${sign}${trim((absolute / 1_000_000_000).toFixed(1))}B`;
+    }
+    if(absolute >= 1_000_000){
+        return `${sign}${trim((absolute / 1_000_000).toFixed(1))}M`;
+    }
+    if(absolute >= 1_000){
+        return `${sign}${trim((absolute / 1_000).toFixed(1))}k`;
+    }
+
+    return `${Math.round(number)}`;
+}
+
 function setAsiqWalletState({ connected, loading = false, balanceText = null, message = "", address = "" }){
     asiqWalletCard?.classList.toggle("connected", Boolean(connected));
     asiqRefreshButton.disabled = !connected || loading;
@@ -2085,12 +2250,10 @@ async function loadAsiqBalance(walletAddress, { notifyOnError = false } = {}){
 
         if(requestId !== asiqBalanceRequestId) return;
 
-        const rawBalance = Number(data.balance);
-        const balanceText = typeof data.balanceText === "string"
-            ? data.balanceText
-            : Number.isFinite(rawBalance)
-                ? rawBalance.toLocaleString("ru-RU", { maximumFractionDigits:9 })
-                : "0";
+        const rawBalance = Number(
+            data.balance ?? data.balanceText ?? 0
+        );
+        const balanceText = formatCompactAsiq(rawBalance);
 
         setAsiqWalletState({
             connected:true,
@@ -2207,10 +2370,7 @@ let dailyRewardTimerId = null;
 let dailyRewardBusy = false;
 
 function formatRewardNumber(value){
-    const number = Number(value);
-    return Number.isFinite(number)
-        ? number.toLocaleString("ru-RU", { maximumFractionDigits:9 })
-        : "0";
+    return formatCompactAsiq(value);
 }
 
 function formatRewardCountdown(milliseconds){
