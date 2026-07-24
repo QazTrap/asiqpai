@@ -1168,51 +1168,152 @@ body{
 
 /* ===== ASIQ JETTON BALANCE ===== */
 .asiq-wallet-card{
-position:relative;
-overflow:hidden;
-width:min(92vw,340px)!important;
-max-width:340px!important;
-margin:0 auto 22px!important;
-padding:20px!important;
-box-sizing:border-box;
-border-radius:24px;
-border:1px solid rgba(255,236,170,.55);
-background:
-linear-gradient(135deg,#f8df8b 0%,#d4af37 25%,#b8850a 62%,#f5d06d 100%);
-box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 25px rgba(255,215,0,.25);
-color:#111;
+    width:min(92vw,390px);
+    margin:0 auto 30px;
+    padding:18px;
+    box-sizing:border-box;
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(212,175,55,.32);
+    border-radius:20px;
+    background:
+        radial-gradient(circle at 85% 15%,rgba(255,215,0,.13),transparent 34%),
+        linear-gradient(145deg,rgba(26,26,26,.98),rgba(7,7,7,.98));
+    box-shadow:
+        0 18px 42px rgba(0,0,0,.42),
+        0 0 22px rgba(212,175,55,.10),
+        inset 0 1px 0 rgba(255,255,255,.04);
+    text-align:left;
 }
-.asiq-wallet-card::before{
-content:"";
-position:absolute;
-inset:0;
-background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.35) 22%,transparent 45%);
-pointer-events:none;
-}
+
 .asiq-wallet-card::after{
-content:"";
-position:absolute;
-right:-35px;
-bottom:-25px;
-width:180px;
-height:180px;
-background:url('images/crow.png') center/contain no-repeat;
-opacity:.12;
-pointer-events:none;
+    content:"ASIQ";
+    position:absolute;
+    right:-7px;
+    bottom:-18px;
+    color:rgba(212,175,55,.055);
+    font-size:70px;
+    font-weight:900;
+    letter-spacing:3px;
+    pointer-events:none;
 }
-.asiq-wallet-head,.asiq-balance-value,.asiq-wallet-status,.asiq-wallet-address{position:relative;z-index:2}
-.asiq-wallet-label{color:#3b2b00;font-weight:900}
-.asiq-balance-value{color:#111;font-size:38px;font-weight:950;text-shadow:none}
-.asiq-balance-symbol{color:#3b2b00}
-.asiq-wallet-status,.asiq-wallet-address{color:#3f3320}
-.asiq-wallet-dot{background:#31d85c;box-shadow:0 0 10px #31d85c}
+
+.asiq-wallet-head{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.asiq-wallet-label{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    color:#d4af37;
+    font-size:12px;
+    font-weight:900;
+    letter-spacing:1.8px;
+    text-transform:uppercase;
+}
+
+.asiq-wallet-dot{
+    width:8px;
+    height:8px;
+    flex:0 0 auto;
+    border-radius:50%;
+    background:#777;
+    box-shadow:none;
+    transition:.25s ease;
+}
+
+.asiq-wallet-card.connected .asiq-wallet-dot{
+    background:#45d483;
+    box-shadow:0 0 12px rgba(69,212,131,.65);
+}
+
 .asiq-refresh-button{
-background:rgba(255,255,255,.18);
-border:1px solid rgba(60,40,0,.25);
-color:#3b2b00;
+    width:36px;
+    height:36px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:1px solid rgba(212,175,55,.25);
+    border-radius:50%;
+    background:rgba(212,175,55,.06);
+    color:#d4af37;
+    cursor:pointer;
+    transition:.2s ease;
 }
-.asiq-refresh-button:hover{background:rgba(255,255,255,.28);}
-/* ===== ASIQPAI DAILY REWARD =====/* ===== ASIQPAI DAILY REWARD ===== */
+
+.asiq-refresh-button:hover{
+    transform:rotate(18deg) scale(1.04);
+    background:rgba(212,175,55,.12);
+}
+
+.asiq-refresh-button:disabled{
+    opacity:.45;
+    cursor:wait;
+}
+
+.asiq-refresh-button.loading i{
+    animation:asiqSpin .8s linear infinite;
+}
+
+@keyframes asiqSpin{
+    to{transform:rotate(360deg);}
+}
+
+.asiq-balance-value{
+    position:relative;
+    z-index:1;
+    margin-top:15px;
+    color:#fff2b1;
+    font-size:clamp(29px,8vw,38px);
+    line-height:1.05;
+    font-weight:950;
+    letter-spacing:.3px;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 18px rgba(255,215,0,.15);
+    overflow-wrap:anywhere;
+}
+
+.asiq-balance-value.updated{
+    animation:asiqBalancePulse .42s ease;
+}
+
+@keyframes asiqBalancePulse{
+    0%{transform:scale(.97);opacity:.62;}
+    100%{transform:scale(1);opacity:1;}
+}
+
+.asiq-balance-symbol{
+    color:#d4af37;
+    font-size:.5em;
+    letter-spacing:1px;
+}
+
+.asiq-wallet-status{
+    position:relative;
+    z-index:1;
+    margin-top:9px;
+    color:#999;
+    font-size:12px;
+    line-height:1.4;
+}
+
+.asiq-wallet-address{
+    position:relative;
+    z-index:1;
+    margin-top:4px;
+    color:#666;
+    font-size:11px;
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+
+
+/* ===== ASIQPAI DAILY REWARD ===== */
 .daily-reward-card{
  width:min(92vw,340px)!important;
  max-width:340px!important;
@@ -1833,6 +1934,389 @@ body{
     }
 }
 </style>
+
+<style>
+/* ===== WALLET PREMIUM FINAL OVERRIDE ===== */
+#page-wallet{
+    width:100%;
+    max-width:390px;
+    margin:0 auto;
+    padding:8px 14px 150px;
+    box-sizing:border-box;
+}
+
+#page-wallet #ton-connect{
+    margin:0 auto 18px;
+}
+
+/* Exact same outer width for all wallet blocks */
+#page-wallet .asiq-wallet-card,
+#page-wallet .asiq-swap-button,
+#page-wallet .daily-reward-card,
+#page-wallet .withdraw-card{
+    width:100%!important;
+    max-width:none!important;
+    margin:0 0 16px!important;
+    box-sizing:border-box!important;
+}
+
+/* Premium bank card */
+#page-wallet .asiq-wallet-card{
+    min-height:220px;
+    padding:22px!important;
+    border-radius:26px!important;
+    border:1px solid rgba(255,241,177,.72)!important;
+    color:#130f05!important;
+    background:
+        linear-gradient(115deg,
+            rgba(255,255,255,.52) 0%,
+            rgba(255,255,255,.10) 18%,
+            transparent 31%),
+        radial-gradient(circle at 82% 18%,rgba(255,244,169,.85),transparent 24%),
+        linear-gradient(135deg,#f7df87 0%,#d4a91f 26%,#b17a08 63%,#e7c65f 100%)!important;
+    box-shadow:
+        0 16px 36px rgba(0,0,0,.58),
+        0 0 30px rgba(255,199,32,.24),
+        inset 0 1px 0 rgba(255,255,255,.72),
+        inset 0 -1px 0 rgba(94,57,0,.35)!important;
+    overflow:hidden;
+    isolation:isolate;
+}
+
+#page-wallet .asiq-wallet-card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    opacity:.20;
+    background:
+        repeating-linear-gradient(115deg,
+            rgba(255,255,255,.20) 0 1px,
+            transparent 1px 7px);
+    pointer-events:none;
+}
+
+#page-wallet .asiq-wallet-card::after{
+    content:"";
+    position:absolute;
+    right:-24px;
+    bottom:-22px;
+    width:195px;
+    height:195px;
+    z-index:0;
+    background:url("images/crow.png") center/contain no-repeat;
+    opacity:.34;
+    filter:sepia(1) saturate(1.2) contrast(1.06);
+    pointer-events:none;
+}
+
+#page-wallet .asiq-wallet-head,
+#page-wallet .asiq-balance-label,
+#page-wallet .asiq-balance-value,
+#page-wallet .asiq-wallet-status-row,
+#page-wallet .asiq-wallet-address{
+    position:relative;
+    z-index:2;
+}
+
+#page-wallet .asiq-wallet-head{
+    align-items:flex-start;
+}
+
+#page-wallet .asiq-wallet-label{
+    color:#171106!important;
+    font-size:17px!important;
+    letter-spacing:.7px!important;
+    font-weight:950!important;
+}
+
+#page-wallet .asiq-wallet-dot{
+    width:9px!important;
+    height:9px!important;
+    margin-top:5px;
+    background:#21d85d!important;
+    box-shadow:0 0 12px rgba(33,216,93,.9)!important;
+}
+
+#page-wallet .asiq-refresh-button{
+    width:38px!important;
+    height:38px!important;
+    border:1px solid rgba(69,43,0,.34)!important;
+    background:rgba(255,255,255,.24)!important;
+    color:#2b1d00!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.42)!important;
+}
+
+#page-wallet .asiq-balance-label{
+    margin-top:31px;
+    color:#2d2109;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:1.7px;
+}
+
+#page-wallet .asiq-balance-value{
+    margin-top:7px!important;
+    color:#0d0b06!important;
+    font-size:clamp(38px,11vw,52px)!important;
+    line-height:.96!important;
+    font-weight:950!important;
+    letter-spacing:-1.3px!important;
+    text-shadow:none!important;
+    max-width:75%;
+}
+
+#page-wallet .asiq-balance-symbol{
+    display:block;
+    margin-top:8px;
+    color:#271b00!important;
+    font-size:.46em!important;
+    letter-spacing:1.5px!important;
+}
+
+#page-wallet .asiq-wallet-status-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:18px;
+}
+
+#page-wallet .asiq-wallet-status{
+    margin:0!important;
+    color:#3f3218!important;
+    font-size:11px!important;
+    font-weight:800;
+}
+
+#page-wallet .asiq-connected-badge{
+    display:none;
+    align-items:center;
+    gap:7px;
+    padding:7px 10px;
+    border:1px solid rgba(48,35,5,.30);
+    border-radius:999px;
+    background:rgba(255,255,255,.22);
+    color:#231903;
+    font-size:10px;
+    font-weight:950;
+    box-shadow:0 6px 14px rgba(93,58,0,.14);
+}
+#page-wallet .asiq-wallet-card.connected .asiq-connected-badge{
+    display:flex;
+}
+#page-wallet .asiq-connected-badge span{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#21d85d;
+    box-shadow:0 0 10px rgba(33,216,93,.9);
+}
+
+#page-wallet .asiq-wallet-address{
+    margin-top:5px!important;
+    color:#47391d!important;
+    font-size:11px!important;
+}
+
+/* BUY / SELL premium strip */
+#page-wallet .asiq-swap-button{
+    min-height:78px;
+    padding:0 22px!important;
+    justify-content:flex-start!important;
+    border-radius:22px!important;
+    border:1px solid rgba(240,190,44,.70)!important;
+    background:
+        radial-gradient(circle at 15% 50%,rgba(255,207,57,.18),transparent 22%),
+        linear-gradient(135deg,#201606,#090806)!important;
+    color:#f3c94d!important;
+    font-size:18px!important;
+    letter-spacing:.4px!important;
+    box-shadow:
+        0 14px 30px rgba(0,0,0,.48),
+        inset 0 1px 0 rgba(255,220,100,.12),
+        0 0 22px rgba(222,166,23,.12)!important;
+}
+
+#page-wallet .asiq-swap-button i{
+    width:48px;
+    height:48px;
+    display:grid;
+    place-items:center;
+    margin-right:8px;
+    border:1px solid rgba(245,200,67,.55);
+    border-radius:50%;
+    background:linear-gradient(145deg,#5b3c05,#191004);
+    color:#ffd768;
+    font-size:20px!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.16);
+}
+
+/* Daily reward: mature compact layout */
+#page-wallet .daily-reward-card{
+    min-height:178px;
+    display:grid;
+    grid-template-columns:74px 1fr;
+    column-gap:16px;
+    align-items:center;
+    padding:20px!important;
+    text-align:left!important;
+    border-radius:22px!important;
+    border:1px solid rgba(214,170,48,.42)!important;
+    background:
+        radial-gradient(circle at 90% 15%,rgba(255,197,36,.08),transparent 28%),
+        linear-gradient(145deg,#16140f,#090909)!important;
+    box-shadow:0 14px 30px rgba(0,0,0,.45)!important;
+}
+
+#page-wallet .daily-reward-card::after{display:none!important}
+
+#page-wallet .daily-reward-icon{
+    grid-row:1 / span 5;
+    width:68px;
+    height:68px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(225,178,51,.42);
+    border-radius:50%;
+    background:linear-gradient(145deg,#3c2907,#120d05);
+    font-size:34px!important;
+}
+
+#page-wallet .daily-reward-title{
+    margin:0!important;
+    color:#efc656!important;
+    font-size:19px!important;
+    letter-spacing:.4px!important;
+}
+
+#page-wallet .daily-reward-amount{
+    margin:4px 0 2px!important;
+    color:#f7f2df!important;
+    font-size:31px!important;
+}
+
+#page-wallet .daily-reward-note{
+    display:none!important;
+}
+
+#page-wallet .daily-reward-balance{
+    margin:8px 0!important;
+    padding:7px 10px!important;
+    border-radius:10px!important;
+    background:rgba(255,200,48,.045)!important;
+    font-size:11px!important;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+#page-wallet .daily-reward-button{
+    min-height:44px;
+    margin-top:2px;
+    border-radius:12px!important;
+    font-size:13px!important;
+}
+
+#page-wallet .daily-reward-timer{
+    grid-column:2;
+    margin-top:8px!important;
+    font-size:10.5px!important;
+}
+
+/* Withdraw: premium compact block */
+#page-wallet .withdraw-card{
+    padding:20px!important;
+    border-radius:22px!important;
+    border:1px solid rgba(214,170,48,.38)!important;
+    background:
+        radial-gradient(circle at 12% 12%,rgba(255,199,44,.07),transparent 25%),
+        linear-gradient(145deg,#14130f,#080808)!important;
+    box-shadow:0 14px 30px rgba(0,0,0,.45)!important;
+}
+
+#page-wallet .withdraw-title{
+    color:#efc656!important;
+    font-size:20px!important;
+}
+
+#page-wallet .withdraw-badge{
+    border-color:rgba(235,187,55,.30)!important;
+    background:rgba(235,187,55,.06)!important;
+    color:#d5b75f!important;
+}
+
+#page-wallet .withdraw-balance{
+    border-color:rgba(235,187,55,.16)!important;
+    background:rgba(235,187,55,.045)!important;
+    color:#d8c894!important;
+}
+
+#page-wallet .withdraw-input{
+    border-color:rgba(235,187,55,.16)!important;
+    background:#0a0906!important;
+}
+
+#page-wallet .withdraw-max{
+    border-color:rgba(235,187,55,.26)!important;
+    background:rgba(235,187,55,.08)!important;
+    color:#e5c65c!important;
+}
+
+#page-wallet .withdraw-button{
+    background:linear-gradient(135deg,#f2ce5b,#ad7807)!important;
+    color:#140f04!important;
+}
+
+/* Premium bottom navigation */
+.app-bottom-nav{
+    left:50%!important;
+    bottom:10px!important;
+    width:min(calc(100% - 20px),410px)!important;
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom))!important;
+    border:1px solid rgba(210,165,42,.30)!important;
+    border-radius:24px!important;
+    background:rgba(12,11,8,.88)!important;
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.60),
+        inset 0 1px 0 rgba(255,255,255,.04)!important;
+    -webkit-backdrop-filter:blur(18px)!important;
+    backdrop-filter:blur(18px)!important;
+}
+
+.nav-tab{
+    min-height:58px!important;
+    gap:4px!important;
+    padding:8px 2px!important;
+    color:#777!important;
+    font-size:9px!important;
+}
+
+.nav-tab i{
+    font-size:21px!important;
+    color:#777!important;
+    text-shadow:none!important;
+}
+
+.nav-tab.active{
+    color:#f2c846!important;
+}
+
+.nav-tab.active i{
+    color:#f2c846!important;
+    transform:translateY(-2px) scale(1.08)!important;
+    text-shadow:0 0 14px rgba(242,200,70,.45)!important;
+}
+
+@media(max-width:360px){
+    #page-wallet{padding-left:10px;padding-right:10px}
+    #page-wallet .asiq-wallet-card{min-height:205px;padding:18px!important}
+    #page-wallet .asiq-balance-value{font-size:39px!important}
+    #page-wallet .daily-reward-card{grid-template-columns:58px 1fr;column-gap:12px;padding:16px!important}
+    #page-wallet .daily-reward-icon{width:56px;height:56px;font-size:28px!important}
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -1920,8 +2404,12 @@ body{
                 <div class="asiq-wallet-label"><span class="asiq-wallet-dot" aria-hidden="true"></span><span>ASIQ Wallet</span></div>
                 <button class="asiq-refresh-button" id="asiqRefreshButton" type="button" aria-label="Обновить баланс ASIQ" title="Обновить баланс" disabled><i class="fa-solid fa-rotate"></i></button>
             </div>
+            <div class="asiq-balance-label">BALANCE</div>
             <div class="asiq-balance-value" id="asiqBalanceValue">— <span class="asiq-balance-symbol">ASIQ</span></div>
-            <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
+            <div class="asiq-wallet-status-row">
+                <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
+                <div class="asiq-connected-badge"><span></span> CONNECTED</div>
+            </div>
             <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
         </div>
 
