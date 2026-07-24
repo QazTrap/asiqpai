@@ -1168,152 +1168,51 @@ body{
 
 /* ===== ASIQ JETTON BALANCE ===== */
 .asiq-wallet-card{
-    width:min(92vw,390px);
-    margin:0 auto 30px;
-    padding:18px;
-    box-sizing:border-box;
-    position:relative;
-    overflow:hidden;
-    border:1px solid rgba(212,175,55,.32);
-    border-radius:20px;
-    background:
-        radial-gradient(circle at 85% 15%,rgba(255,215,0,.13),transparent 34%),
-        linear-gradient(145deg,rgba(26,26,26,.98),rgba(7,7,7,.98));
-    box-shadow:
-        0 18px 42px rgba(0,0,0,.42),
-        0 0 22px rgba(212,175,55,.10),
-        inset 0 1px 0 rgba(255,255,255,.04);
-    text-align:left;
+position:relative;
+overflow:hidden;
+width:min(92vw,340px)!important;
+max-width:340px!important;
+margin:0 auto 22px!important;
+padding:20px!important;
+box-sizing:border-box;
+border-radius:24px;
+border:1px solid rgba(255,236,170,.55);
+background:
+linear-gradient(135deg,#f8df8b 0%,#d4af37 25%,#b8850a 62%,#f5d06d 100%);
+box-shadow:0 18px 40px rgba(0,0,0,.45),0 0 25px rgba(255,215,0,.25);
+color:#111;
 }
-
+.asiq-wallet-card::before{
+content:"";
+position:absolute;
+inset:0;
+background:linear-gradient(120deg,transparent 0%,rgba(255,255,255,.35) 22%,transparent 45%);
+pointer-events:none;
+}
 .asiq-wallet-card::after{
-    content:"ASIQ";
-    position:absolute;
-    right:-7px;
-    bottom:-18px;
-    color:rgba(212,175,55,.055);
-    font-size:70px;
-    font-weight:900;
-    letter-spacing:3px;
-    pointer-events:none;
+content:"";
+position:absolute;
+right:-35px;
+bottom:-25px;
+width:180px;
+height:180px;
+background:url('images/crow.png') center/contain no-repeat;
+opacity:.12;
+pointer-events:none;
 }
-
-.asiq-wallet-head{
-    position:relative;
-    z-index:1;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-}
-
-.asiq-wallet-label{
-    display:flex;
-    align-items:center;
-    gap:9px;
-    color:#d4af37;
-    font-size:12px;
-    font-weight:900;
-    letter-spacing:1.8px;
-    text-transform:uppercase;
-}
-
-.asiq-wallet-dot{
-    width:8px;
-    height:8px;
-    flex:0 0 auto;
-    border-radius:50%;
-    background:#777;
-    box-shadow:none;
-    transition:.25s ease;
-}
-
-.asiq-wallet-card.connected .asiq-wallet-dot{
-    background:#45d483;
-    box-shadow:0 0 12px rgba(69,212,131,.65);
-}
-
+.asiq-wallet-head,.asiq-balance-value,.asiq-wallet-status,.asiq-wallet-address{position:relative;z-index:2}
+.asiq-wallet-label{color:#3b2b00;font-weight:900}
+.asiq-balance-value{color:#111;font-size:38px;font-weight:950;text-shadow:none}
+.asiq-balance-symbol{color:#3b2b00}
+.asiq-wallet-status,.asiq-wallet-address{color:#3f3320}
+.asiq-wallet-dot{background:#31d85c;box-shadow:0 0 10px #31d85c}
 .asiq-refresh-button{
-    width:36px;
-    height:36px;
-    display:grid;
-    place-items:center;
-    padding:0;
-    border:1px solid rgba(212,175,55,.25);
-    border-radius:50%;
-    background:rgba(212,175,55,.06);
-    color:#d4af37;
-    cursor:pointer;
-    transition:.2s ease;
+background:rgba(255,255,255,.18);
+border:1px solid rgba(60,40,0,.25);
+color:#3b2b00;
 }
-
-.asiq-refresh-button:hover{
-    transform:rotate(18deg) scale(1.04);
-    background:rgba(212,175,55,.12);
-}
-
-.asiq-refresh-button:disabled{
-    opacity:.45;
-    cursor:wait;
-}
-
-.asiq-refresh-button.loading i{
-    animation:asiqSpin .8s linear infinite;
-}
-
-@keyframes asiqSpin{
-    to{transform:rotate(360deg);}
-}
-
-.asiq-balance-value{
-    position:relative;
-    z-index:1;
-    margin-top:15px;
-    color:#fff2b1;
-    font-size:clamp(29px,8vw,38px);
-    line-height:1.05;
-    font-weight:950;
-    letter-spacing:.3px;
-    font-variant-numeric:tabular-nums;
-    text-shadow:0 0 18px rgba(255,215,0,.15);
-    overflow-wrap:anywhere;
-}
-
-.asiq-balance-value.updated{
-    animation:asiqBalancePulse .42s ease;
-}
-
-@keyframes asiqBalancePulse{
-    0%{transform:scale(.97);opacity:.62;}
-    100%{transform:scale(1);opacity:1;}
-}
-
-.asiq-balance-symbol{
-    color:#d4af37;
-    font-size:.5em;
-    letter-spacing:1px;
-}
-
-.asiq-wallet-status{
-    position:relative;
-    z-index:1;
-    margin-top:9px;
-    color:#999;
-    font-size:12px;
-    line-height:1.4;
-}
-
-.asiq-wallet-address{
-    position:relative;
-    z-index:1;
-    margin-top:4px;
-    color:#666;
-    font-size:11px;
-    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
-}
-
-
-/* ===== ASIQPAI DAILY REWARD ===== */
+.asiq-refresh-button:hover{background:rgba(255,255,255,.28);}
+/* ===== ASIQPAI DAILY REWARD =====/* ===== ASIQPAI DAILY REWARD ===== */
 .daily-reward-card{
  width:min(92vw,340px)!important;
  max-width:340px!important;
