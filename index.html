@@ -1887,6 +1887,53 @@ body{
 }
 </style>
 
+
+<style>
+/* ===== BUY / SELL ASIQ BUTTON ===== */
+.asiq-swap-button{
+    width:min(92vw,340px);
+    max-width:340px;
+    margin:0 auto 22px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:14px 18px;
+    box-sizing:border-box;
+    border:1px solid rgba(212,175,55,.42);
+    border-radius:14px;
+    background:linear-gradient(135deg,#f0cc55,#b98a12);
+    color:#111;
+    text-decoration:none;
+    font-size:15px;
+    font-weight:950;
+    letter-spacing:.7px;
+    box-shadow:
+        0 10px 26px rgba(212,175,55,.18),
+        0 0 18px rgba(255,215,0,.10);
+    transition:.22s ease;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+}
+.asiq-swap-button:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.05);
+    box-shadow:
+        0 14px 30px rgba(212,175,55,.24),
+        0 0 24px rgba(255,215,0,.16);
+}
+.asiq-swap-button:active{
+    transform:scale(.98);
+}
+.asiq-swap-button i{
+    font-size:16px;
+}
+@media (hover:none){
+    .asiq-swap-button:hover{
+        transform:none;
+    }
+}
+</style>
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -1978,6 +2025,17 @@ body{
             <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
             <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
         </div>
+
+        <a
+            class="asiq-swap-button"
+            href="https://app.dedust.io/swap/GRAM/EQDtaiYQRMlcGHXVkcK873McLzx-JQUZtyR8W1O6e2XISp52"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Buy or sell ASIQ on DeDust"
+        >
+            <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+            <span>BUY / SELL ASIQ</span>
+        </a>
 
         <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
             <div class="daily-reward-icon">🎁</div>
