@@ -1479,10 +1479,10 @@ app.post("/api/withdrawals", requireTelegramUser, async (req, res) => {
 
   const initialWithdrawal = serializeWithdrawal(createdRow);
 
-  await sendWithdrawalNotification({
-    telegramUser: req.telegramUser,
-    withdrawal: initialWithdrawal
-  });
+  // await sendWithdrawalNotification({
+//   telegramUser: req.telegramUser,
+//   withdrawal: initialWithdrawal
+// });
 
   const result = await executeAutomaticWithdrawal({
     withdrawalId: initialWithdrawal.id,
