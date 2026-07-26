@@ -3448,9 +3448,10 @@ async function buyInstrumental(track, index, button){
 
     /*
      * Первый этап: кнопка и цена уже работают в каталоге.
+     * Всплывающее уведомление отключено.
      * Следующим этапом сюда подключается backend-заказ и TON Connect перевод ASIQ.
      */
-    showToast(`${track.title} — ${formatAsiqPrice(price)} ASIQ`, "success");
+    return;
 }
 
 function createCatalogTrackButton(track, index){
