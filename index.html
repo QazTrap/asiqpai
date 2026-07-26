@@ -150,7 +150,10 @@ function normalizeTrack(track){
         meta: cleanText(track.meta || "TRACK", 50) || "TRACK",
         cover: track.cover,
         file: track.file,
-        accent: normalizeAccent(track.accent)
+        accent: normalizeAccent(track.accent),
+        priceAsiq: Number.isSafeInteger(Number(track.priceAsiq)) && Number(track.priceAsiq) > 0
+            ? Number(track.priceAsiq)
+            : null
     });
 }
 
@@ -1925,6 +1928,76 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 @media(max-width:360px){#page-wallet{padding-left:10px !important;padding-right:10px !important;}#page-wallet .asiq-wallet-card,#page-wallet .withdraw-card{padding:16px !important;}}
 </style>
 
+
+<style id="instrumental-buy-patch">
+/* ===== BUY BUTTON FOR INSTRUMENTALS ===== */
+.track-item{
+    grid-template-columns:52px minmax(0,1fr) auto;
+}
+
+.track-item-play{
+    width:34px;
+    height:34px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    color:#d4af37;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+
+.track-item-buy{
+    min-width:86px;
+    min-height:38px;
+    padding:7px 10px;
+    border:1px solid rgba(212,175,55,.42);
+    border-radius:11px;
+    background:rgba(212,175,55,.08);
+    color:#ffd966;
+    font-size:10px;
+    font-weight:950;
+    line-height:1.15;
+    white-space:nowrap;
+    cursor:pointer;
+    touch-action:manipulation;
+}
+
+.track-item-buy:active,
+.track-item-play:active{
+    transform:scale(.95);
+}
+
+.track-item-buy:disabled{
+    opacity:.55;
+    cursor:wait;
+}
+
+.track-item.instrumental-item{
+    grid-template-columns:52px minmax(0,1fr) 34px;
+}
+
+.track-item.instrumental-item .track-item-buy{
+    grid-column:1 / -1;
+    width:100%;
+    margin-top:2px;
+}
+
+@media(min-width:380px){
+    .track-item.instrumental-item{
+        grid-template-columns:52px minmax(0,1fr) 34px 94px;
+    }
+
+    .track-item.instrumental-item .track-item-buy{
+        grid-column:auto;
+        width:auto;
+        margin-top:0;
+    }
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -2117,7 +2190,8 @@ const fallbackPlaylist = [
         meta: "INSTRUMENTAL",
         cover: "images/dark-nights-cover.jpg",
         file: "music/track.mp3",
-        accent: "212,175,55"
+        accent: "212,175,55",
+        priceAsiq: 500
     },
     {
         title: "Демон",
@@ -3288,6 +3362,14 @@ function updateTrackCatalogState(){
         button.classList.toggle("active", active);
         button.setAttribute("aria-current", active ? "true" : "false");
 
+        const playControl = button.querySelector(".track-item-play");
+        if(playControl){
+            playControl.setAttribute("aria-label", active && isPlaying
+                ? `Поставить на паузу ${playlist[index]?.title || "трек"}`
+                : `Включить ${playlist[index]?.title || "трек"}`
+            );
+        }
+
         const icon = button.querySelector(".track-item-icon");
         if(icon){
             icon.innerHTML = active && isPlaying
@@ -3347,12 +3429,37 @@ function updateCatalogTabs(){
     });
 }
 
+function formatAsiqPrice(value){
+    const price = Number(value);
+    if(!Number.isFinite(price) || price <= 0) return "";
+    return Math.round(price).toLocaleString("ru-RU");
+}
+
+async function buyInstrumental(track, index, button){
+    const price = Number(track?.priceAsiq);
+
+    if(!Number.isFinite(price) || price <= 0){
+        showToast("Для этого бита ещё не установлена цена", "warning");
+        return;
+    }
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
+    }catch{}
+
+    /*
+     * Первый этап: кнопка и цена уже работают в каталоге.
+     * Следующим этапом сюда подключается backend-заказ и TON Connect перевод ASIQ.
+     */
+    showToast(`${track.title} — ${formatAsiqPrice(price)} ASIQ`, "success");
+}
+
 function createCatalogTrackButton(track, index){
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `track-item${index === currentTrack ? " active" : ""}`;
-    button.dataset.trackIndex = String(index);
-    button.setAttribute("aria-label", `Включить ${track.title}`);
+    const isInstrumental = getTrackCategory(track) === "instrumentals";
+
+    const item = document.createElement("div");
+    item.className = `track-item${index === currentTrack ? " active" : ""}${isInstrumental ? " instrumental-item" : ""}`;
+    item.dataset.trackIndex = String(index);
 
     const cover = document.createElement("img");
     cover.className = "track-item-cover";
@@ -3374,13 +3481,17 @@ function createCatalogTrackButton(track, index){
 
     copy.append(name, meta);
 
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "track-item-play";
+    play.setAttribute("aria-label", `Включить ${track.title}`);
+
     const icon = document.createElement("span");
     icon.className = "track-item-icon";
     icon.innerHTML = '<i class="fa-solid fa-play" aria-hidden="true"></i>';
+    play.appendChild(icon);
 
-    button.append(cover, copy, icon);
-
-    button.addEventListener("click", async () => {
+    play.addEventListener("click", async () => {
         try{
             window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
         }catch{
@@ -3405,7 +3516,25 @@ function createCatalogTrackButton(track, index){
         await playLoadedTrack();
     });
 
-    return button;
+    item.append(cover, copy, play);
+
+    if(isInstrumental){
+        const buy = document.createElement("button");
+        buy.type = "button";
+        buy.className = "track-item-buy";
+
+        const priceText = formatAsiqPrice(track.priceAsiq);
+        buy.textContent = priceText ? `BUY • ${priceText} ASIQ` : "BUY";
+        buy.setAttribute("aria-label", priceText
+            ? `Купить ${track.title} за ${priceText} ASIQ`
+            : `Купить ${track.title}`
+        );
+
+        buy.addEventListener("click", () => buyInstrumental(track, index, buy));
+        item.appendChild(buy);
+    }
+
+    return item;
 }
 
 function renderTrackCatalog(){
