@@ -62,7 +62,8 @@
     "meta": "INSTRUMENTAL",
     "cover": "images/Разъём.jpg",
     "file": "music/Razem.mp3",
-    "accent": "212,175,55"
+    "accent": "212,175,55",
+    "priceAsiq": 1200
   },
   {
     "title": "Крипто банк",
