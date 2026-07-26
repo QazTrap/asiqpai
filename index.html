@@ -1082,7 +1082,7 @@ audio{
 #toastContainer{
     position:fixed;
     left:50%;
-    bottom:calc(18px + env(safe-area-inset-bottom));
+    bottom:calc(92px + env(safe-area-inset-bottom));
     width:min(92vw,380px);
     transform:translateX(-50%);
     z-index:10000;
@@ -3460,7 +3460,7 @@ async function buyInstrumental(track, index, button){
             method: "POST",
             body: JSON.stringify({
                 walletAddress: tonConnectUI.account.address,
-                trackTitle: track.title
+                trackTitle: String(track.title || "").normalize("NFKC").trim()
             })
         });
 
