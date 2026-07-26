@@ -3439,7 +3439,6 @@ async function buyInstrumental(track, index, button){
     const price = Number(track?.priceAsiq);
 
     if(!Number.isFinite(price) || price <= 0){
-        showToast("Для этого бита ещё не установлена цена", "warning");
         return;
     }
 
@@ -3524,13 +3523,16 @@ function createCatalogTrackButton(track, index){
         buy.className = "track-item-buy";
 
         const priceText = formatAsiqPrice(track.priceAsiq);
-        buy.textContent = priceText ? `BUY • ${priceText} ASIQ` : "BUY";
-        buy.setAttribute("aria-label", priceText
-            ? `Купить ${track.title} за ${priceText} ASIQ`
-            : `Купить ${track.title}`
-        );
 
-        buy.addEventListener("click", () => buyInstrumental(track, index, buy));
+        if(priceText){
+            buy.textContent = `BUY • ${priceText} ASIQ`;
+            buy.setAttribute("aria-label", `Купить ${track.title} за ${priceText} ASIQ`);
+            buy.addEventListener("click", () => buyInstrumental(track, index, buy));
+        }else{
+            buy.textContent = "PRICE NOT SET";
+            buy.disabled = true;
+            buy.setAttribute("aria-label", `Цена для ${track.title} ещё не установлена`);
+        }
         item.appendChild(buy);
     }
 
