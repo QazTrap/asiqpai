@@ -3437,21 +3437,60 @@ function formatAsiqPrice(value){
 
 async function buyInstrumental(track, index, button){
     const price = Number(track?.priceAsiq);
+    if(!Number.isFinite(price) || price <= 0 || paymentInProgress) return;
 
-    if(!Number.isFinite(price) || price <= 0){
+    if(!getTelegramInitData()){
+        showToast("Открой приложение внутри Telegram", "warning");
+        return;
+    }
+    if(!tonConnectUI.account?.address){
+        showToast("Сначала подключи TON-кошелёк", "warning");
+        try{ await tonConnectUI.openModal(); }catch{}
         return;
     }
 
+    paymentInProgress = true;
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = "СОЗДАНИЕ…";
+
     try{
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
-    }catch{}
+        const order = await apiRequest("/api/instrumental-orders", {
+            method: "POST",
+            body: JSON.stringify({
+                walletAddress: tonConnectUI.account.address,
+                trackTitle: track.title
+            })
+        });
 
-    /*
-     * Первый этап: кнопка и цена уже работают в каталоге.
-     * Всплывающее уведомление отключено.
-     * Следующим этапом сюда подключается backend-заказ и TON Connect перевод ASIQ.
-     */
-    return;
+        button.textContent = "ПОДТВЕРДИ В КОШЕЛЬКЕ";
+        await tonConnectUI.sendTransaction(order.transaction);
+        button.textContent = "ПРОВЕРЯЕМ ASIQ…";
+
+        const maxAttempts = 30;
+        let paidOrder = null;
+        for(let attempt = 0; attempt < maxAttempts; attempt++){
+            const state = await apiRequest(`/api/instrumental-orders/${encodeURIComponent(order.orderId)}`);
+            if(state.status === "paid"){ paidOrder = state; break; }
+            if(state.status === "expired") throw new Error("Время оплаты истекло");
+            await sleep(4000);
+        }
+        if(!paidOrder) throw new Error("Платёж ASIQ отправлен, но ещё не найден");
+
+        button.textContent = "КУПЛЕНО ✓";
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("success");
+        showToast(`${track.title} куплен за ${formatAsiqPrice(price)} ASIQ`, "success");
+    }catch(error){
+        console.error(error);
+        const message = error?.message || "Не удалось купить инструментал";
+        showToast(/reject|cancel/i.test(message) ? "Оплата отменена" : message, "warning");
+        button.disabled = false;
+        button.textContent = originalText;
+    }finally{
+        paymentInProgress = false;
+        if(button.textContent !== "КУПЛЕНО ✓") button.disabled = false;
+    }
 }
 
 function createCatalogTrackButton(track, index){
