@@ -5,7 +5,8 @@
     "meta": "INSTRUMENTAL",
     "cover": "images/dark-nights-cover.jpg",
     "file": "music/track.mp3",
-    "accent": "212,175,55"
+    "accent": "212,175,55",
+    "priceAsiq": 400
   },
   {
     "title": "Демон",
