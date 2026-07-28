@@ -1998,6 +1998,60 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 }
 </style>
 
+
+<style id="library-video-background">
+/* ===== LIBRARY VIDEO BACKGROUND ===== */
+#page-library{
+    position:relative;
+    min-height:calc(100vh - 150px);
+    isolation:isolate;
+}
+
+#page-library .library-video-bg,
+#page-library .library-video-overlay{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+    pointer-events:none;
+}
+
+#page-library .library-video-bg{
+    z-index:0;
+    object-fit:cover;
+    object-position:center;
+    background:#050505;
+}
+
+#page-library .library-video-overlay{
+    z-index:1;
+    background:
+        linear-gradient(to bottom,rgba(5,5,5,.52),rgba(5,5,5,.72) 48%,rgba(5,5,5,.92)),
+        radial-gradient(circle at 50% 18%,transparent,rgba(0,0,0,.35) 72%);
+}
+
+#page-library > :not(.library-video-bg):not(.library-video-overlay){
+    position:relative;
+    z-index:2;
+}
+
+#page-library .track-item{
+    background:rgba(12,12,12,.78);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+}
+
+#page-library .catalog-tab{
+    background:rgba(12,12,12,.76);
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
+}
+
+@media (prefers-reduced-motion:reduce){
+    #libraryBackgroundVideo{display:none;}
+}
+</style>
+
 </head>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <body>
@@ -2084,6 +2138,20 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     </section>
 
     <section class="app-page" id="page-library" data-page="library">
+        <video
+            class="library-video-bg"
+            id="libraryBackgroundVideo"
+            muted
+            loop
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+            aria-hidden="true"
+        >
+            <source src="videos/library-bg.mp4" type="video/mp4">
+        </video>
+        <div class="library-video-overlay" aria-hidden="true"></div>
+
         <p class="page-subheading">Медиатека</p>
 
         <div class="catalog-tabs" role="tablist" aria-label="Категории музыки">
@@ -3751,10 +3819,26 @@ if(crown){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
 
+    const libraryVideo = document.getElementById('libraryBackgroundVideo');
+
+    function syncLibraryVideo(pageName){
+        if(!libraryVideo) return;
+
+        if(pageName === 'library'){
+            const playPromise = libraryVideo.play();
+            if(playPromise && typeof playPromise.catch === 'function'){
+                playPromise.catch(() => {});
+            }
+        }else{
+            libraryVideo.pause();
+        }
+    }
+
     function openPage(name){
         const target = pages.find(page => page.dataset.page === name) || pages[0];
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
+        syncLibraryVideo(target.dataset.page);
         window.scrollTo({top:0, behavior:'auto'});
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
