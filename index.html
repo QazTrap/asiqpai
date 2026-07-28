@@ -2000,58 +2000,142 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 
 
 <style id="community-video-background">
-/* ===== COMMUNITY VIDEO BACKGROUND — FIXED ===== */
+/* ===== COMMUNITY VIDEO BACKGROUND ===== */
 #page-community{
     position:relative;
-    min-height:calc(100dvh - 150px);
+    isolation:isolate;
+    min-height:calc(100vh - 150px);
     padding:18px 14px 42px;
     box-sizing:border-box;
     overflow:hidden;
     border-radius:24px;
-    background:#050505;
 }
 
 #page-community .community-video-bg{
     position:absolute;
-    top:0;
-    left:0;
+    inset:0;
     width:100%;
     height:100%;
-    display:block;
     object-fit:cover;
     object-position:center;
-    z-index:0;
-    opacity:1;
-    visibility:visible;
+    z-index:-3;
     pointer-events:none;
-    background:#050505;
-    transform:translateZ(0);
-    -webkit-transform:translateZ(0);
 }
 
 #page-community .community-video-overlay{
     position:absolute;
     inset:0;
-    z-index:1;
+    z-index:-2;
     pointer-events:none;
     background:
-        linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.62)),
-        radial-gradient(circle at center,transparent 20%,rgba(0,0,0,.34) 100%);
+        linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.70)),
+        radial-gradient(circle at center,transparent 20%,rgba(0,0,0,.50) 100%);
 }
 
 #page-community .page-heading,
 #page-community .page-subheading,
-#page-community .community-card,
-#page-community .web3-footer,
-#page-community .web3-domain{
+#page-community .community-card{
     position:relative;
-    z-index:2;
+    z-index:1;
 }
 
 #page-community .community-card{
-    background:rgba(8,8,8,.66)!important;
-    -webkit-backdrop-filter:blur(8px);
-    backdrop-filter:blur(8px);
+    background:rgba(8,8,8,.72)!important;
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+}
+
+@media (prefers-reduced-motion:reduce){
+    #page-community .community-video-bg{display:none;}
+}
+</style>
+
+
+<style id="community-center-transparent-final">
+/* ===== COMMUNITY: CENTERED TRANSPARENT FINAL ===== */
+#page-community{
+    width:100% !important;
+    max-width:430px !important;
+    margin:0 auto !important;
+    padding:18px 12px 42px !important;
+    box-sizing:border-box !important;
+    align-items:stretch !important;
+    overflow:hidden !important;
+}
+
+#page-community.active{
+    display:block !important;
+}
+
+#page-community .page-heading,
+#page-community .page-subheading{
+    width:100% !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    box-sizing:border-box !important;
+    text-align:center !important;
+}
+
+#page-community .community-card{
+    width:calc(100% - 8px) !important;
+    max-width:340px !important;
+    margin:0 auto 22px !important;
+    padding:18px !important;
+    box-sizing:border-box !important;
+    transform:none !important;
+
+    background:rgba(8,8,8,.18) !important;
+    border:1px solid rgba(212,175,55,.28) !important;
+    border-radius:24px !important;
+    box-shadow:0 14px 38px rgba(0,0,0,.20) !important;
+
+    -webkit-backdrop-filter:blur(7px) saturate(115%) !important;
+    backdrop-filter:blur(7px) saturate(115%) !important;
+}
+
+#page-community .community-card:hover{
+    transform:none !important;
+}
+
+#page-community .community-card .button{
+    width:100% !important;
+    max-width:none !important;
+    min-height:58px !important;
+    margin:10px 0 !important;
+    padding:14px 12px !important;
+    box-sizing:border-box !important;
+
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:9px !important;
+
+    background:rgba(12,12,12,.16) !important;
+    color:#d9b642 !important;
+    border:1px solid rgba(212,175,55,.60) !important;
+    border-radius:17px !important;
+    box-shadow:none !important;
+
+    -webkit-backdrop-filter:blur(5px) !important;
+    backdrop-filter:blur(5px) !important;
+}
+
+#page-community .community-card .button:hover,
+#page-community .community-card .button:active{
+    background:rgba(212,175,55,.10) !important;
+    color:#f0ca4b !important;
+    box-shadow:0 0 16px rgba(212,175,55,.14) !important;
+}
+
+#page-community .community-video-overlay{
+    background:
+        linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.42)),
+        radial-gradient(circle at center,transparent 24%,rgba(0,0,0,.34) 100%) !important;
+}
+
+@media(max-width:390px){
+    #page-community{padding-left:8px !important;padding-right:8px !important;}
+    #page-community .community-card{width:calc(100% - 4px) !important;padding:16px !important;}
 }
 </style>
 
@@ -2221,15 +2305,14 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
         <video
             class="community-video-bg"
             id="communityBackgroundVideo"
-            autoplay
             muted
             loop
             playsinline
             webkit-playsinline
-            preload="auto"
+            preload="metadata"
             aria-hidden="true"
         >
-            <source src="./videos/library-bg.mp4?v=4" type="video/mp4">
+            <source src="videos/library-bg.mp4" type="video/mp4">
         </video>
         <div class="community-video-overlay" aria-hidden="true"></div>
 
@@ -3822,30 +3905,18 @@ if(crown){
 (function(){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+
     const communityVideo = document.getElementById('communityBackgroundVideo');
-
-    async function playCommunityVideo(){
-        if(!communityVideo) return;
-
-        communityVideo.muted = true;
-        communityVideo.defaultMuted = true;
-        communityVideo.setAttribute('muted', '');
-        communityVideo.setAttribute('playsinline', '');
-
-        try{
-            if(communityVideo.readyState < 2) communityVideo.load();
-            await communityVideo.play();
-        }catch(error){
-            /* Telegram/WebView sometimes needs one more play call after the tab tap. */
-            setTimeout(() => communityVideo.play().catch(() => {}), 250);
-        }
-    }
 
     function updateCommunityVideo(activePage){
         if(!communityVideo) return;
 
         if(activePage === 'community'){
-            playCommunityVideo();
+            communityVideo.muted = true;
+            const playPromise = communityVideo.play();
+            if(playPromise && typeof playPromise.catch === 'function'){
+                playPromise.catch(() => {});
+            }
         }else{
             communityVideo.pause();
         }
@@ -3860,21 +3931,10 @@ if(crown){
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
 
-    if(communityVideo){
-        communityVideo.addEventListener('loadeddata', () => {
-            if(document.getElementById('page-community')?.classList.contains('active')){
-                playCommunityVideo();
-            }
-        });
-
-        communityVideo.addEventListener('error', () => {
-            console.error('Community background video failed to load:', communityVideo.error);
-        });
-    }
-
     updateCommunityVideo(document.querySelector('.app-page.active')?.dataset.page || '');
+
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
-})()
+})();
 </script>
 
 </body>
