@@ -2156,8 +2156,8 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
                 <div class="artist-card-head"><div class="artist-title">👑 ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
                 <p class="artist-copy">Зарегистрируйтесь как артист и откройте Artist Studio.</p>
                 <div class="artist-benefits">
-                    <div class="artist-benefit">🎵 До 10 опубликованных треков или битов</div>
-                    <div class="artist-benefit">🛡 Модерация и публикация в каталоге</div>
+                    <div class="artist-benefit">🎵 Неограниченная публикация треков и битов</div>
+                    <div class="artist-benefit">🛡 Все релизы проходят модерацию</div>
                     <div class="artist-benefit">🏆 Первые 100 — Founding Artist</div>
                 </div>
                 <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Ваше имя артиста" autocomplete="off" disabled>
@@ -2168,7 +2168,7 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
                 <div class="artist-card-head"><div class="artist-title">🎤 Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
                 <div class="artist-number" id="artistStudioName">—</div>
                 <div class="artist-studio-grid">
-                    <div class="artist-stat"><strong id="artistPublishedCount">0 / 10</strong><span>Published</span></div>
+                    <div class="artist-stat"><strong id="artistPublishedCount">0</strong><span>Published</span></div>
                     <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
                     <div class="artist-stat"><strong id="artistFilesStatus">ОЖИДАНИЕ</strong><span>Files Status</span></div>
                     <div class="artist-stat"><strong>MP3 + COVER</strong><span>Что отправить</span></div>
@@ -2592,6 +2592,32 @@ const artistContactButton = document.getElementById("artistContactButton");
 let artistState = null;
 let artistBusy = false;
 
+function normalizeArtistName(value){
+    return cleanText(String(value || ""), 60).toLocaleUpperCase("ru-RU");
+}
+
+function countPublishedTracksByArtist(artistName){
+    const normalizedName = normalizeArtistName(artistName);
+    if(!normalizedName || !Array.isArray(playlist)) return 0;
+
+    return playlist.filter(track =>
+        normalizeArtistName(track?.artist) === normalizedName &&
+        ["TRACK", "INSTRUMENTAL"].includes(String(track?.meta || "").toUpperCase())
+    ).length;
+}
+
+function getArtistPublishedCount(artist){
+    const catalogCount = countPublishedTracksByArtist(artist?.artistName);
+    const backendCount = Number(artist?.publishedCount);
+
+    // Уже добавленные релизы из tracks.json учитываются автоматически.
+    // Значение с сервера сохраняется как запасной вариант для будущих артистов.
+    return Math.max(
+        catalogCount,
+        Number.isFinite(backendCount) && backendCount > 0 ? Math.floor(backendCount) : 0
+    );
+}
+
 function renderArtist(){
     const artist = artistState?.artist;
     const wallet = tonConnectUI.account?.address || "";
@@ -2599,7 +2625,7 @@ function renderArtist(){
         artistMembershipView.hidden = true;
         artistStudioView.hidden = false;
         artistStudioName.textContent = artist.artistName;
-        artistPublishedCount.textContent = `${artist.publishedCount} / ${artist.publicationLimit}`;
+        artistPublishedCount.textContent = String(getArtistPublishedCount(artist));
         artistNumber.textContent = `#${String(artist.artistNumber).padStart(4,"0")}`;
         artistStudioBadge.textContent = artist.foundingArtist ? "FOUNDING ARTIST" : "ACTIVE";
         const statusLabels = {
@@ -2632,7 +2658,7 @@ function renderArtist(){
         artistRegisterButton.textContent = "Проверяем оплату…";
     }else{
         artistRegisterButton.textContent = "REGISTER — 50,000 ASIQ";
-        artistStatus.textContent = "Разовая регистрация. Лимит публикаций: 10.";
+        artistStatus.textContent = "Разовая регистрация. Публикации без лимита после модерации.";
     }
 }
 
@@ -3839,6 +3865,7 @@ async function loadPlaylist(){
     updatePlayModeButton();
     await loadTrack(currentTrack, { notify:false });
     renderTrackCatalog();
+    renderArtist();
 
     const isTelegramLaunch = Boolean(
         window.Telegram?.WebApp?.initData &&
