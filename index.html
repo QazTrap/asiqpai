@@ -2000,15 +2000,16 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 
 
 <style id="community-video-background">
-/* ===== COMMUNITY VIDEO BACKGROUND ===== */
+/* ===== COMMUNITY VIDEO BACKGROUND — FIXED ===== */
 #page-community{
     position:relative;
     isolation:isolate;
-    min-height:calc(100vh - 150px);
+    min-height:calc(100dvh - 130px);
     padding:18px 14px 42px;
     box-sizing:border-box;
     overflow:hidden;
     border-radius:24px;
+    background:#050505;
 }
 
 #page-community .community-video-bg{
@@ -2016,37 +2017,39 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     inset:0;
     width:100%;
     height:100%;
+    min-width:100%;
+    min-height:100%;
+    display:block;
     object-fit:cover;
     object-position:center;
-    z-index:-3;
+    z-index:0;
+    opacity:1;
+    visibility:visible;
     pointer-events:none;
+    background:#050505;
 }
 
 #page-community .community-video-overlay{
     position:absolute;
     inset:0;
-    z-index:-2;
+    z-index:1;
     pointer-events:none;
     background:
-        linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.70)),
-        radial-gradient(circle at center,transparent 20%,rgba(0,0,0,.50) 100%);
+        linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.64)),
+        radial-gradient(circle at center,transparent 18%,rgba(0,0,0,.42) 100%);
 }
 
 #page-community .page-heading,
 #page-community .page-subheading,
 #page-community .community-card{
     position:relative;
-    z-index:1;
+    z-index:2;
 }
 
 #page-community .community-card{
-    background:rgba(8,8,8,.72)!important;
-    -webkit-backdrop-filter:blur(10px);
-    backdrop-filter:blur(10px);
-}
-
-@media (prefers-reduced-motion:reduce){
-    #page-community .community-video-bg{display:none;}
+    background:rgba(8,8,8,.68)!important;
+    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(8px);
 }
 </style>
 
@@ -2216,14 +2219,15 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
         <video
             class="community-video-bg"
             id="communityBackgroundVideo"
+            autoplay
             muted
             loop
             playsinline
             webkit-playsinline
-            preload="metadata"
+            preload="auto"
             aria-hidden="true"
         >
-            <source src="videos/library-bg.mp4" type="video/mp4">
+            <source src="./videos/library-bg.mp4?v=2" type="video/mp4">
         </video>
         <div class="community-video-overlay" aria-hidden="true"></div>
 
@@ -3819,14 +3823,36 @@ if(crown){
 
     const communityVideo = document.getElementById('communityBackgroundVideo');
 
+
+    if(communityVideo){
+        communityVideo.addEventListener('error', () => {
+            console.error('Community video could not be loaded:', communityVideo.currentSrc);
+        });
+    }
+
     function updateCommunityVideo(activePage){
         if(!communityVideo) return;
 
         if(activePage === 'community'){
             communityVideo.muted = true;
+            communityVideo.defaultMuted = true;
+            communityVideo.setAttribute('muted', '');
+
+            if(communityVideo.readyState === 0){
+                communityVideo.load();
+            }
+
             const playPromise = communityVideo.play();
             if(playPromise && typeof playPromise.catch === 'function'){
-                playPromise.catch(() => {});
+                playPromise.catch(() => {
+                    const retry = () => {
+                        communityVideo.play().catch(() => {});
+                        document.removeEventListener('touchstart', retry);
+                        document.removeEventListener('click', retry);
+                    };
+                    document.addEventListener('touchstart', retry, {once:true, passive:true});
+                    document.addEventListener('click', retry, {once:true});
+                });
             }
         }else{
             communityVideo.pause();
