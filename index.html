@@ -1999,56 +1999,54 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 </style>
 
 
-<style id="library-video-background">
-/* ===== LIBRARY VIDEO BACKGROUND ===== */
-#page-library{
+<style id="community-video-background">
+/* ===== COMMUNITY VIDEO BACKGROUND ===== */
+#page-community{
     position:relative;
-    min-height:calc(100vh - 150px);
     isolation:isolate;
+    min-height:calc(100vh - 150px);
+    padding:18px 14px 42px;
+    box-sizing:border-box;
+    overflow:hidden;
+    border-radius:24px;
 }
 
-#page-library .library-video-bg,
-#page-library .library-video-overlay{
-    position:fixed;
+#page-community .community-video-bg{
+    position:absolute;
     inset:0;
     width:100%;
     height:100%;
+    object-fit:cover;
+    object-position:center;
+    z-index:-3;
     pointer-events:none;
 }
 
-#page-library .library-video-bg{
-    z-index:0;
-    object-fit:cover;
-    object-position:center;
-    background:#050505;
-}
-
-#page-library .library-video-overlay{
-    z-index:1;
+#page-community .community-video-overlay{
+    position:absolute;
+    inset:0;
+    z-index:-2;
+    pointer-events:none;
     background:
-        linear-gradient(to bottom,rgba(5,5,5,.52),rgba(5,5,5,.72) 48%,rgba(5,5,5,.92)),
-        radial-gradient(circle at 50% 18%,transparent,rgba(0,0,0,.35) 72%);
+        linear-gradient(180deg,rgba(0,0,0,.48),rgba(0,0,0,.70)),
+        radial-gradient(circle at center,transparent 20%,rgba(0,0,0,.50) 100%);
 }
 
-#page-library > :not(.library-video-bg):not(.library-video-overlay){
+#page-community .page-heading,
+#page-community .page-subheading,
+#page-community .community-card{
     position:relative;
-    z-index:2;
+    z-index:1;
 }
 
-#page-library .track-item{
-    background:rgba(12,12,12,.78);
-    -webkit-backdrop-filter:blur(8px);
-    backdrop-filter:blur(8px);
-}
-
-#page-library .catalog-tab{
-    background:rgba(12,12,12,.76);
-    -webkit-backdrop-filter:blur(8px);
-    backdrop-filter:blur(8px);
+#page-community .community-card{
+    background:rgba(8,8,8,.72)!important;
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
 }
 
 @media (prefers-reduced-motion:reduce){
-    #libraryBackgroundVideo{display:none;}
+    #page-community .community-video-bg{display:none;}
 }
 </style>
 
@@ -2138,20 +2136,6 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     </section>
 
     <section class="app-page" id="page-library" data-page="library">
-        <video
-            class="library-video-bg"
-            id="libraryBackgroundVideo"
-            muted
-            loop
-            playsinline
-            webkit-playsinline
-            preload="metadata"
-            aria-hidden="true"
-        >
-            <source src="videos/library-bg.mp4" type="video/mp4">
-        </video>
-        <div class="library-video-overlay" aria-hidden="true"></div>
-
         <p class="page-subheading">Медиатека</p>
 
         <div class="catalog-tabs" role="tablist" aria-label="Категории музыки">
@@ -2229,6 +2213,20 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     </section>
 
     <section class="app-page" id="page-community" data-page="community">
+        <video
+            class="community-video-bg"
+            id="communityBackgroundVideo"
+            muted
+            loop
+            playsinline
+            webkit-playsinline
+            preload="metadata"
+            aria-hidden="true"
+        >
+            <source src="videos/library-bg.mp4" type="video/mp4">
+        </video>
+        <div class="community-video-overlay" aria-hidden="true"></div>
+
         <h2 class="page-heading">🌐 COMMUNITY</h2>
         <p class="page-subheading">Официальные страницы и сообщество ASIQPAI</p>
         <div class="community-card">
@@ -3819,18 +3817,19 @@ if(crown){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
 
-    const libraryVideo = document.getElementById('libraryBackgroundVideo');
+    const communityVideo = document.getElementById('communityBackgroundVideo');
 
-    function syncLibraryVideo(pageName){
-        if(!libraryVideo) return;
+    function updateCommunityVideo(activePage){
+        if(!communityVideo) return;
 
-        if(pageName === 'library'){
-            const playPromise = libraryVideo.play();
+        if(activePage === 'community'){
+            communityVideo.muted = true;
+            const playPromise = communityVideo.play();
             if(playPromise && typeof playPromise.catch === 'function'){
                 playPromise.catch(() => {});
             }
         }else{
-            libraryVideo.pause();
+            communityVideo.pause();
         }
     }
 
@@ -3838,10 +3837,12 @@ if(crown){
         const target = pages.find(page => page.dataset.page === name) || pages[0];
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
-        syncLibraryVideo(target.dataset.page);
+        updateCommunityVideo(target.dataset.page);
         window.scrollTo({top:0, behavior:'auto'});
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
+
+    updateCommunityVideo(document.querySelector('.app-page.active')?.dataset.page || '');
 
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
 })();
