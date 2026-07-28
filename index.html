@@ -2003,8 +2003,7 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 /* ===== COMMUNITY VIDEO BACKGROUND — FIXED ===== */
 #page-community{
     position:relative;
-    isolation:isolate;
-    min-height:calc(100dvh - 130px);
+    min-height:calc(100dvh - 150px);
     padding:18px 14px 42px;
     box-sizing:border-box;
     overflow:hidden;
@@ -2014,11 +2013,10 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 
 #page-community .community-video-bg{
     position:absolute;
-    inset:0;
+    top:0;
+    left:0;
     width:100%;
     height:100%;
-    min-width:100%;
-    min-height:100%;
     display:block;
     object-fit:cover;
     object-position:center;
@@ -2027,6 +2025,8 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     visibility:visible;
     pointer-events:none;
     background:#050505;
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
 }
 
 #page-community .community-video-overlay{
@@ -2035,19 +2035,21 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
     z-index:1;
     pointer-events:none;
     background:
-        linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.64)),
-        radial-gradient(circle at center,transparent 18%,rgba(0,0,0,.42) 100%);
+        linear-gradient(180deg,rgba(0,0,0,.30),rgba(0,0,0,.62)),
+        radial-gradient(circle at center,transparent 20%,rgba(0,0,0,.34) 100%);
 }
 
 #page-community .page-heading,
 #page-community .page-subheading,
-#page-community .community-card{
+#page-community .community-card,
+#page-community .web3-footer,
+#page-community .web3-domain{
     position:relative;
     z-index:2;
 }
 
 #page-community .community-card{
-    background:rgba(8,8,8,.68)!important;
+    background:rgba(8,8,8,.66)!important;
     -webkit-backdrop-filter:blur(8px);
     backdrop-filter:blur(8px);
 }
@@ -2227,7 +2229,7 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
             preload="auto"
             aria-hidden="true"
         >
-            <source src="./videos/library-bg.mp4?v=2" type="video/mp4">
+            <source src="./videos/library-bg.mp4?v=4" type="video/mp4">
         </video>
         <div class="community-video-overlay" aria-hidden="true"></div>
 
@@ -3820,40 +3822,30 @@ if(crown){
 (function(){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
-
     const communityVideo = document.getElementById('communityBackgroundVideo');
 
+    async function playCommunityVideo(){
+        if(!communityVideo) return;
 
-    if(communityVideo){
-        communityVideo.addEventListener('error', () => {
-            console.error('Community video could not be loaded:', communityVideo.currentSrc);
-        });
+        communityVideo.muted = true;
+        communityVideo.defaultMuted = true;
+        communityVideo.setAttribute('muted', '');
+        communityVideo.setAttribute('playsinline', '');
+
+        try{
+            if(communityVideo.readyState < 2) communityVideo.load();
+            await communityVideo.play();
+        }catch(error){
+            /* Telegram/WebView sometimes needs one more play call after the tab tap. */
+            setTimeout(() => communityVideo.play().catch(() => {}), 250);
+        }
     }
 
     function updateCommunityVideo(activePage){
         if(!communityVideo) return;
 
         if(activePage === 'community'){
-            communityVideo.muted = true;
-            communityVideo.defaultMuted = true;
-            communityVideo.setAttribute('muted', '');
-
-            if(communityVideo.readyState === 0){
-                communityVideo.load();
-            }
-
-            const playPromise = communityVideo.play();
-            if(playPromise && typeof playPromise.catch === 'function'){
-                playPromise.catch(() => {
-                    const retry = () => {
-                        communityVideo.play().catch(() => {});
-                        document.removeEventListener('touchstart', retry);
-                        document.removeEventListener('click', retry);
-                    };
-                    document.addEventListener('touchstart', retry, {once:true, passive:true});
-                    document.addEventListener('click', retry, {once:true});
-                });
-            }
+            playCommunityVideo();
         }else{
             communityVideo.pause();
         }
@@ -3868,10 +3860,21 @@ if(crown){
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
 
-    updateCommunityVideo(document.querySelector('.app-page.active')?.dataset.page || '');
+    if(communityVideo){
+        communityVideo.addEventListener('loadeddata', () => {
+            if(document.getElementById('page-community')?.classList.contains('active')){
+                playCommunityVideo();
+            }
+        });
 
+        communityVideo.addEventListener('error', () => {
+            console.error('Community background video failed to load:', communityVideo.error);
+        });
+    }
+
+    updateCommunityVideo(document.querySelector('.app-page.active')?.dataset.page || '');
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
-})();
+})()
 </script>
 
 </body>
