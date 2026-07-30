@@ -1877,6 +1877,7 @@ body{
 }
 #page-wallet .asiq-wallet-card,
 #page-wallet .asiq-swap-button,
+#page-wallet .daily-reward-card,
 #page-wallet .withdraw-card{
     width:100% !important;
     max-width:340px !important;
@@ -1909,6 +1910,7 @@ body{
 #page-wallet .asiq-wallet-address{margin-top:7px !important;color:#777064 !important;font-size:10.5px !important;line-height:1.35 !important;text-align:center !important;word-break:break-all !important;}
 #page-wallet .asiq-swap-button{min-height:54px !important;margin-bottom:18px !important;padding:0 18px !important;display:flex !important;align-items:center !important;justify-content:center !important;gap:10px !important;border:1px solid rgba(212,175,55,.32) !important;border-radius:16px !important;background:linear-gradient(145deg,rgba(24,24,24,.97),rgba(9,9,9,.99)) !important;color:#e4c15a !important;font-size:14px !important;font-weight:900 !important;letter-spacing:.8px !important;text-decoration:none !important;box-shadow:0 12px 28px rgba(0,0,0,.30) !important;}
 #page-wallet .asiq-swap-button i{width:27px !important;height:27px !important;display:grid !important;place-items:center !important;border:1px solid rgba(212,175,55,.24) !important;border-radius:9px !important;background:rgba(212,175,55,.06) !important;color:#d4af37 !important;font-size:12px !important;}
+#page-wallet .daily-reward-card{margin:0 auto 18px !important;}
 #page-wallet .buy-text{color:#2ECC71 !important;font-weight:900 !important;}
 #page-wallet .sell-text{color:#FF5A5A !important;font-weight:900 !important;}
 #page-wallet .asiq-text{color:#FFD700 !important;font-weight:900 !important;}
@@ -2181,16 +2183,6 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
             </div>
         </div>
 
-        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
-            <div class="daily-reward-icon">🎁</div>
-            <div class="daily-reward-title">Daily Reward</div>
-            <div class="daily-reward-amount">+25 ASIQ</div>
-            <p class="daily-reward-note">Получайте ежедневную награду во внутренний баланс приложения.</p>
-            <div class="daily-reward-balance" id="dailyRewardBalance">Награды в приложении: — ASIQ</div>
-            <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Загрузка…</button>
-            <div class="daily-reward-timer" id="dailyRewardTimer">Проверяем доступность награды</div>
-        </div>
-
     </section>
 
     <section class="app-page active" id="page-music" data-page="music">
@@ -2288,6 +2280,15 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
 </span>
         </a>
 
+        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
+            <div class="daily-reward-icon">🎁</div>
+            <div class="daily-reward-title">Daily Reward</div>
+            <div class="daily-reward-amount">+25 ASIQ</div>
+            <p class="daily-reward-note">Получайте ежедневную награду во внутренний баланс приложения.</p>
+            <div class="daily-reward-balance" id="dailyRewardBalance">Награды в приложении: — ASIQ</div>
+            <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Загрузка…</button>
+            <div class="daily-reward-timer" id="dailyRewardTimer">Проверяем доступность награды</div>
+        </div>
 
         <div class="withdraw-card" id="withdrawCard">
             <div class="withdraw-head"><div class="withdraw-title"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i><span>Withdraw ASIQ</span></div><div class="withdraw-badge"><i class="fa-solid fa-wallet" aria-hidden="true"></i><span>TON WALLET</span></div></div>
