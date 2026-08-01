@@ -4880,17 +4880,96 @@ function getAdjacentTrackIndex(direction){
     return (currentTrack + direction + playlist.length) % playlist.length;
 }
 
-function updateMediaSessionMetadata(track){
+let mediaMetadataRequestId = 0;
+
+function getMediaArtworkType(path){
+    const cleanPath = String(path || "").split(/[?#]/, 1)[0].toLowerCase();
+    if(cleanPath.endsWith(".png")) return "image/png";
+    if(cleanPath.endsWith(".webp")) return "image/webp";
+    if(cleanPath.endsWith(".gif")) return "image/gif";
+    return "image/jpeg";
+}
+
+function getAbsoluteMediaUrl(path){
+    const safePath = encodeURI(String(path || "")).replace(/#/g, "%23");
+    return new URL(safePath, window.location.href).href;
+}
+
+function loadMediaArtwork(path){
+    return new Promise(resolve => {
+        if(!path){
+            resolve(null);
+            return;
+        }
+
+        let artworkUrl;
+        try{
+            artworkUrl = getAbsoluteMediaUrl(path);
+        }catch{
+            resolve(null);
+            return;
+        }
+
+        const image = new Image();
+        let completed = false;
+
+        const finish = value => {
+            if(completed) return;
+            completed = true;
+            clearTimeout(timeoutId);
+            image.onload = null;
+            image.onerror = null;
+            resolve(value);
+        };
+
+        const timeoutId = window.setTimeout(() => finish(null), 7000);
+
+        image.onload = () => {
+            const width = Math.max(1, image.naturalWidth || 512);
+            const height = Math.max(1, image.naturalHeight || 512);
+
+            finish({
+                src: artworkUrl,
+                sizes: `${width}x${height}`,
+                type: getMediaArtworkType(path)
+            });
+        };
+
+        image.onerror = () => finish(null);
+        image.decoding = "async";
+        image.src = artworkUrl;
+    });
+}
+
+async function updateMediaSessionMetadata(track){
     if(!("mediaSession" in navigator) || !("MediaMetadata" in window)) return;
 
+    const requestId = ++mediaMetadataRequestId;
+    const baseMetadata = {
+        title: track.title || "ASIQPAI",
+        artist: track.artist || "ASIQPAI",
+        album: track.meta || "ASIQPAI Music"
+    };
+
     try{
-        const artworkUrl = new URL(track.cover, window.location.href).href;
+        // Сначала сразу обновляем название, чтобы не оставались данные
+        // предыдущего трека, пока загружается обложка.
+        navigator.mediaSession.metadata = new MediaMetadata(baseMetadata);
+
+        const artworkCandidates = [track.cover, "images/logo.png"];
+        let artwork = null;
+
+        for(const candidate of artworkCandidates){
+            artwork = await loadMediaArtwork(candidate);
+            if(artwork) break;
+        }
+
+        // За время загрузки пользователь мог переключить трек.
+        if(requestId !== mediaMetadataRequestId) return;
 
         navigator.mediaSession.metadata = new MediaMetadata({
-            title: track.title || "ASIQPAI",
-            artist: track.artist || "ASIQPAI",
-            album: track.meta || "ASIQPAI Music",
-            artwork: [{ src: artworkUrl }]
+            ...baseMetadata,
+            ...(artwork ? { artwork:[artwork] } : {})
         });
     }catch(error){
         console.warn("Не удалось обновить системную карточку трека", error);
@@ -4933,7 +5012,10 @@ async function loadTrack(index, options = {}){
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
 
-    updateMediaSessionMetadata(track);
+    void updateMediaSessionMetadata(track);
+    // Telegram на iOS может сбрасывать системные обработчики после смены src.
+    // Регистрируем их заново для каждого загруженного трека.
+    setupMediaSessionActions();
 
 
     const likedTracks = SafeStorage.getJSON("likedTracks", {});
@@ -5020,8 +5102,10 @@ function setupMediaSessionActions(){
     const setAction = (action, handler) => {
         try{
             navigator.mediaSession.setActionHandler(action, handler);
+            return true;
         }catch(error){
             console.warn(`Media Session не поддерживает действие ${action}`, error);
+            return false;
         }
     };
 
@@ -5035,10 +5119,22 @@ function setupMediaSessionActions(){
         updateMediaSessionPosition();
     });
 
-    // iOS отдает приоритет кнопкам ±10 секунд, если эти действия доступны.
-    // Явно отключаем их, чтобы системный плеер показывал Previous / Next.
-    setAction("seekbackward", null);
-    setAction("seekforward", null);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+    if(isIOS){
+        // В Telegram WebView iOS иногда оставляет системные кнопки ±10 секунд,
+        // даже когда nexttrack/previoustrack зарегистрированы. Их внешний вид
+        // определяет iOS, поэтому используем эти команды как запасные кнопки
+        // переключения треков вместо перемотки внутри текущего файла.
+        setAction("seekbackward", () => void playPreviousTrack());
+        setAction("seekforward", () => void playNextTrack());
+    }else{
+        // На платформах с полной поддержкой Media Session оставляем только
+        // обычные системные кнопки Previous / Next.
+        setAction("seekbackward", null);
+        setAction("seekforward", null);
+    }
 }
 
 setupMediaSessionActions();
@@ -5096,6 +5192,7 @@ player.addEventListener("ended", async function(){
 player.addEventListener("play", function(){
     updateTrackCatalogState();
     if("mediaSession" in navigator){
+        setupMediaSessionActions();
         navigator.mediaSession.playbackState = "playing";
     }
 });
@@ -5165,6 +5262,7 @@ player.addEventListener("error", function(){
 player.addEventListener("loadedmetadata", function(){
     duration.textContent = formatTime(player.duration);
     lastRenderedSecond = -1;
+    setupMediaSessionActions();
     renderPlayerProgress();
     updateMediaSessionPosition();
 });
