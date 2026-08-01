@@ -4,6 +4,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/dark-nights-cover.jpg",
+    "artwork": "images/dark-nights-cover.jpg",
     "file": "music/track.mp3",
     "accent": "212,175,55",
     "priceAsiq": 400
@@ -13,6 +14,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Демон.jpg",
+    "artwork": "images/Демон.jpg",
     "file": "music/Демон.mp3",
     "accent": "175,42,42"
   },
@@ -21,6 +23,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/Crypto Zombie.jpg",
+    "artwork": "images/Crypto Zombie.jpg",
     "file": "music/Crypto Zombie.mp3",
     "accent": "212,175,55",
     "priceAsiq": 7000
@@ -30,6 +33,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Дрим Трап.jpg",
+    "artwork": "images/Дрим Трап.jpg",
     "file": "music/Дрим Трап.mp3",
     "accent": "175,42,42"
   },
@@ -38,6 +42,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/BORZ.jpg",
+    "artwork": "images/BORZ.jpg",
     "file": "music/BORZ.mp3",
     "accent": "212,175,55",
     "priceAsiq": 600
@@ -47,6 +52,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/Lux.jpg",
+    "artwork": "images/Lux.jpg",
     "file": "music/Lux.mp3",
     "accent": "212,175,55",
     "priceAsiq": 5000
@@ -56,6 +62,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Контроль.jpg",
+    "artwork": "images/Контроль.jpg",
     "file": "music/Контроль.mp3",
     "accent": "175,42,42"
   },
@@ -64,6 +71,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Barys.jpg",
+    "artwork": "images/Barys.jpg",
     "file": "music/Barys.mp3",
     "accent": "175,42,42"
   },
@@ -72,6 +80,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Тёмный лорд.jpg",
+    "artwork": "images/Тёмный лорд.jpg",
     "file": "music/Тёмный лорд.mp3",
     "accent": "175,42,42"
   },
@@ -80,6 +89,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/Разъём.jpg",
+    "artwork": "images/Разъём.jpg",
     "file": "music/Razem.mp3",
     "accent": "212,175,55",
     "priceAsiq": 1200
@@ -89,6 +99,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/Крипто банк.jpg",
+    "artwork": "images/Крипто банк.jpg",
     "file": "music/Крипто банк.mp3",
     "accent": "212,175,55",
     "priceAsiq": 800
@@ -98,6 +109,7 @@
     "artist": "Gromann",
     "meta": "TRACK",
     "cover": "images/555.png",
+    "artwork": "images/555.png",
     "file": "music/Эфир и ум.mp3",
     "accent": "175,42,42"
   },
@@ -106,6 +118,7 @@
     "artist": "ASIQPAI",
     "meta": "INSTRUMENTAL",
     "cover": "images/Woah.jpg",
+    "artwork": "images/Woah.jpg",
     "file": "music/Woah.mp3",
     "accent": "212,175,55",
     "priceAsiq": 500
@@ -115,6 +128,7 @@
     "artist": "ASIQPAI",
     "meta": "TRACK",
     "cover": "images/Baby.jpg",
+    "artwork": "images/Baby.jpg",
     "file": "music/Baby.mp3",
     "accent": "184,134,255"
   }
