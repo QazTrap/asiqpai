@@ -4703,6 +4703,52 @@ player.addEventListener("pause", updateTrackCatalogState);
 // ПРОГРЕСС
 // =======================
 
+let progressAnimationFrame = 0;
+let progressIsSeeking = false;
+let lastRenderedSecond = -1;
+
+function renderPlayerProgress(){
+    const audioDuration = Number(player.duration);
+    const audioTime = Number(player.currentTime);
+
+    if(!Number.isFinite(audioDuration) || audioDuration <= 0) return;
+
+    if(!progressIsSeeking){
+        progress.value = (audioTime / audioDuration) * 100;
+    }
+
+    const wholeSecond = Math.floor(audioTime);
+    if(wholeSecond !== lastRenderedSecond){
+        currentTime.textContent = formatTime(audioTime);
+        lastRenderedSecond = wholeSecond;
+    }
+}
+
+function animatePlayerProgress(){
+    renderPlayerProgress();
+
+    if(!player.paused && !player.ended){
+        progressAnimationFrame = requestAnimationFrame(
+            animatePlayerProgress
+        );
+    }else{
+        progressAnimationFrame = 0;
+    }
+}
+
+function startPlayerProgressAnimation(){
+    cancelAnimationFrame(progressAnimationFrame);
+    progressAnimationFrame = requestAnimationFrame(
+        animatePlayerProgress
+    );
+}
+
+function stopPlayerProgressAnimation(){
+    cancelAnimationFrame(progressAnimationFrame);
+    progressAnimationFrame = 0;
+    renderPlayerProgress();
+}
+
 player.addEventListener("error", function(){
     const track = playlist[currentTrack];
     console.warn("Ошибка загрузки MP3");
@@ -4710,21 +4756,14 @@ player.addEventListener("error", function(){
 
 player.addEventListener("loadedmetadata", function(){
     duration.textContent = formatTime(player.duration);
+    lastRenderedSecond = -1;
+    renderPlayerProgress();
 });
 
-player.addEventListener("timeupdate", function(){
-
-    if(player.duration){
-
-        progress.value =
-        (player.currentTime / player.duration) * 100;
-
-        currentTime.textContent =
-        formatTime(player.currentTime);
-
-    }
-
-});
+player.addEventListener("play", startPlayerProgressAnimation);
+player.addEventListener("pause", stopPlayerProgressAnimation);
+player.addEventListener("ended", stopPlayerProgressAnimation);
+player.addEventListener("timeupdate", renderPlayerProgress);
 
 
 
@@ -4732,11 +4771,26 @@ progress.addEventListener("input", function(){
 
     if(player.duration){
 
-        player.currentTime =
-        (progress.value / 100) * player.duration;
+        const selectedTime =
+            (Number(progress.value) / 100) * player.duration;
+
+        player.currentTime = selectedTime;
+        currentTime.textContent = formatTime(selectedTime);
+        lastRenderedSecond = Math.floor(selectedTime);
 
     }
 
+});
+
+progress.addEventListener("pointerdown", function(){
+    progressIsSeeking = true;
+});
+
+["pointerup", "pointercancel", "change"].forEach(eventName => {
+    progress.addEventListener(eventName, function(){
+        progressIsSeeking = false;
+        renderPlayerProgress();
+    });
 });
 
 // =======================
