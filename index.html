@@ -36,7 +36,6 @@ const SafeStorage = (() => {
     const allowedKeys = new Set([
         "currentTrack",
         "playMode",
-        "playerCategoryFilters",
         "likedTracks",
         "gp",
         "goldLicenseClaimed",
@@ -3454,71 +3453,6 @@ input:focus-visible{
     .home-hero .logo{animation:none!important}
 }
 
-/* Two independent queue filters in the lower-right player corner. */
-.player-category-buttons{
-    position:absolute;
-    right:8px;
-    top:50%;
-    z-index:3;
-    display:flex;
-    flex-direction:column;
-    align-items:stretch;
-    gap:4px;
-    width:54px;
-    transform:translateY(-50%);
-}
-
-.player-category-filter{
-    width:54px;
-    height:22px;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-    padding:0 5px;
-    border:1px solid rgba(212,175,55,.20);
-    border-radius:999px;
-    background:linear-gradient(145deg,rgba(32,31,27,.96),rgba(7,7,6,.98));
-    color:rgba(212,175,55,.42);
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 5px rgba(0,0,0,.24);
-    font-size:6.5px;
-    line-height:1;
-    font-weight:900;
-    letter-spacing:.3px;
-    white-space:nowrap;
-    cursor:pointer;
-    -webkit-tap-highlight-color:transparent;
-    transition:color .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
-}
-
-.player-category-filter i{
-    font-size:7px;
-}
-
-.player-category-filter.active{
-    border-color:rgba(212,175,55,.72);
-    background:linear-gradient(145deg,rgba(212,175,55,.26),rgba(62,48,12,.34));
-    color:#e3bd55;
-    box-shadow:inset 0 1px 0 rgba(255,245,205,.09),0 0 9px rgba(212,175,55,.12);
-}
-
-.player-category-filter:active{
-    transform:none!important;
-    filter:brightness(1.15);
-}
-
-@media (max-width:370px){
-    .player-category-buttons{
-        right:5px;
-        width:50px;
-    }
-    .player-category-filter{
-        width:50px;
-        padding:0 4px;
-        font-size:6px;
-    }
-}
-
 /* Final responsive geometry: phones, tablets, landscape and safe areas. */
 :root{
     --asiq-side-gap:clamp(7px,3vw,14px);
@@ -3718,14 +3652,6 @@ body{
                 <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
                 <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
                 <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
-                <div class="player-category-buttons" role="group" aria-label="Фильтр очереди плеера">
-                    <button class="player-category-filter active" type="button" data-player-category="tracks" aria-pressed="true">
-                        <i class="fa-solid fa-microphone-lines" aria-hidden="true"></i><span>TRACKS</span>
-                    </button>
-                    <button class="player-category-filter active" type="button" data-player-category="instrumentals" aria-pressed="true">
-                        <i class="fa-solid fa-wave-square" aria-hidden="true"></i><span>BEATS</span>
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -3894,21 +3820,6 @@ if(!Number.isSafeInteger(currentTrack) || currentTrack < 0 || currentTrack > 999
 let playMode = SafeStorage.get("playMode", "sequence");
 if(!["sequence", "repeat", "shuffle"].includes(playMode)){
     playMode = "sequence";
-}
-let playerCategoryFilters = SafeStorage.getJSON("playerCategoryFilters", {
-    tracks:true,
-    instrumentals:true
-});
-if(!playerCategoryFilters || typeof playerCategoryFilters !== "object"){
-    playerCategoryFilters = { tracks:true, instrumentals:true };
-}
-playerCategoryFilters = {
-    tracks:playerCategoryFilters.tracks !== false,
-    instrumentals:playerCategoryFilters.instrumentals !== false
-};
-if(!playerCategoryFilters.tracks && !playerCategoryFilters.instrumentals){
-    playerCategoryFilters.tracks = true;
-    playerCategoryFilters.instrumentals = true;
 }
 
 // =======================
@@ -4924,47 +4835,19 @@ async function playLoadedTrack(){
     }
 }
 
-function getPlayerCategoryIndices(category = null){
-    return playlist
-        .map((track, index) => {
-            const trackCategory = getTrackCategory(track);
-            const included = category
-                ? trackCategory === category
-                : Boolean(playerCategoryFilters[trackCategory]);
-            return included ? index : -1;
-        })
-        .filter(index => index >= 0);
-}
-
 function getRandomTrackIndex(){
-    const indices = getPlayerCategoryIndices();
-    if(indices.length === 0) return currentTrack;
-    if(indices.length === 1) return indices[0];
+    if(playlist.length <= 1) return currentTrack;
 
     let randomIndex;
     do{
-        randomIndex = indices[Math.floor(Math.random() * indices.length)];
+        randomIndex = Math.floor(Math.random() * playlist.length);
     }while(randomIndex === currentTrack);
     return randomIndex;
 }
 
 function getAdjacentTrackIndex(direction){
-    const indices = getPlayerCategoryIndices();
-    if(indices.length === 0) return currentTrack;
-
-    const position = indices.indexOf(currentTrack);
-    if(position < 0) return direction < 0 ? indices.at(-1) : indices[0];
-
-    return indices[(position + direction + indices.length) % indices.length];
-}
-
-function updatePlayerCategoryButtons(){
-    document.querySelectorAll(".player-category-filter").forEach(button => {
-        const category = button.dataset.playerCategory;
-        const active = Boolean(playerCategoryFilters[category]);
-        button.classList.toggle("active", active);
-        button.setAttribute("aria-pressed", active ? "true" : "false");
-    });
+    if(playlist.length === 0) return currentTrack;
+    return (currentTrack + direction + playlist.length) % playlist.length;
 }
 
 function updateMediaSessionMetadata(track){
@@ -5020,12 +4903,6 @@ async function loadTrack(index, options = {}){
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
 
-    const loadedCategory = getTrackCategory(track);
-    if(!playerCategoryFilters[loadedCategory]){
-        playerCategoryFilters[loadedCategory] = true;
-        SafeStorage.setJSON("playerCategoryFilters", playerCategoryFilters);
-    }
-    updatePlayerCategoryButtons();
     updateMediaSessionMetadata(track);
 
 
@@ -5141,43 +5018,6 @@ function setupMediaSessionActions(){
 }
 
 setupMediaSessionActions();
-
-document.querySelectorAll(".player-category-filter").forEach(button => {
-    button.addEventListener("click", async function(){
-        const category = button.dataset.playerCategory;
-        if(!["tracks", "instrumentals"].includes(category)) return;
-
-        const nextValue = !playerCategoryFilters[category];
-        const otherCategory = category === "tracks" ? "instrumentals" : "tracks";
-
-        if(!nextValue && !playerCategoryFilters[otherCategory]){
-            showToast("Оставьте включённым хотя бы один раздел", "warning");
-            return;
-        }
-
-        const shouldContinuePlaying = !player.paused && !player.ended;
-        playerCategoryFilters[category] = nextValue;
-        SafeStorage.setJSON("playerCategoryFilters", playerCategoryFilters);
-        updatePlayerCategoryButtons();
-
-        try{
-            window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
-        }catch{}
-
-        const enabledIndices = getPlayerCategoryIndices();
-        if(!enabledIndices.includes(currentTrack) && enabledIndices.length > 0){
-            currentTrack = enabledIndices[0];
-            await loadTrack(currentTrack);
-            renderTrackCatalog();
-
-            if(shouldContinuePlaying){
-                await playLoadedTrack();
-            }else{
-                updateTrackCatalogState();
-            }
-        }
-    });
-});
 
 likeButton.addEventListener("click", function(){
     likeButton.classList.toggle("active");
