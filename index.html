@@ -1449,8 +1449,9 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
     backdrop-filter:none;
 }
 
-.artist-card{width:min(92vw,390px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04)}
-.artist-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.artist-title{font-size:20px;font-weight:950;color:#f4d67a}.artist-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.08);color:#e9c75d;font-size:10px;font-weight:950}.artist-copy{margin:11px 0;color:#a99d7c;font-size:12px;line-height:1.55}.artist-benefits{display:grid;gap:7px;margin:13px 0}.artist-benefit{padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.025);color:#d8d0b8;font-size:11px}.artist-input{width:100%;box-sizing:border-box;margin:4px 0 10px;padding:13px 12px;border:1px solid rgba(212,175,55,.18);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:15px;font-weight:850}.artist-button{width:100%;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104;font-size:14px;font-weight:950;cursor:pointer}.artist-button:disabled,.artist-input:disabled{opacity:.5;cursor:not-allowed}.artist-status{margin-top:10px;color:#8b826c;font-size:10.5px;line-height:1.45}.artist-studio-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}.artist-stat,.artist-action{padding:13px 10px;border:1px solid rgba(212,175,55,.13);border-radius:13px;background:rgba(212,175,55,.045);text-align:center}.artist-stat strong{display:block;color:#fff0b4;font-size:18px}.artist-stat span,.artist-action{color:#bcae87;font-size:10px;font-weight:850}.artist-action{cursor:not-allowed;opacity:.65}.artist-number{margin-top:10px;color:#f2d171;font-size:12px;font-weight:950}.artist-next-step{margin-top:14px;padding:13px;border:1px solid rgba(212,175,55,.18);border-radius:13px;background:rgba(212,175,55,.055);color:#d8d0b8;font-size:11px;line-height:1.55}.artist-next-step strong{display:block;margin-bottom:4px;color:#f2d171;font-size:12px}.artist-contact-button{display:block;width:100%;box-sizing:border-box;margin-top:10px;padding:12px 14px;border:1px solid rgba(212,175,55,.26);border-radius:12px;background:rgba(212,175,55,.1);color:#f4d67a;text-align:center;text-decoration:none;font-size:12px;font-weight:950}.artist-contact-button[hidden]{display:none}
+.submit-card{width:min(92vw,340px);margin:0 auto 30px;padding:20px 18px;box-sizing:border-box;border:1px solid rgba(212,175,55,.28);border-radius:22px;background:radial-gradient(circle at 90% 8%,rgba(212,175,55,.14),transparent 36%),linear-gradient(145deg,rgba(18,16,10,.98),rgba(7,8,10,.99));box-shadow:0 18px 42px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);text-align:left}
+.submit-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.submit-title{font-size:20px;font-weight:950;color:#f4d67a}.submit-badge{padding:5px 8px;border-radius:999px;border:1px solid rgba(212,175,55,.25);background:rgba(212,175,55,.08);color:#e9c75d;font-size:10px;font-weight:950}.submit-copy{margin:11px 0 15px;color:#a99d7c;font-size:12px;line-height:1.55}.submit-prices{display:grid;gap:8px;margin:0 0 15px}.submit-price{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.025);color:#e5ddc7;font-size:12px;font-weight:850}.submit-price strong{color:#f2d171}.submit-button{width:100%;padding:13px 16px;border:none;border-radius:12px;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104;font-size:14px;font-weight:950;cursor:pointer}.submit-button:disabled{opacity:.5;cursor:not-allowed}.submit-status{margin-top:10px;color:#8b826c;font-size:10.5px;line-height:1.45}
+.submit-modal{position:fixed;inset:0;z-index:25000;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.74);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}.submit-modal[hidden]{display:none}.submit-modal-card{width:min(92vw,360px);max-height:calc(100vh - 36px);overflow:auto;box-sizing:border-box;padding:20px;border:1px solid rgba(212,175,55,.32);border-radius:22px;background:linear-gradient(160deg,#18150d,#08090b);box-shadow:0 22px 60px rgba(0,0,0,.65)}.submit-modal-title{margin:0 0 8px;color:#f4d67a;font-size:22px;font-weight:950}.submit-warning{margin:0 0 16px;color:#aaa08a;font-size:11px;line-height:1.5}.submit-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px}.submit-type{padding:13px 8px;border:1px solid rgba(212,175,55,.18);border-radius:12px;background:#0c0d10;color:#d8d0b8;font-weight:900;cursor:pointer}.submit-type.active{border-color:#d4af37;background:rgba(212,175,55,.12);color:#ffe98a}.submit-label{display:block;margin:10px 0 6px;color:#cdbb84;font-size:11px;font-weight:850;text-align:left}.submit-input{width:100%;box-sizing:border-box;padding:12px;border:1px solid rgba(212,175,55,.16);border-radius:12px;outline:none;background:#0b0d10;color:#fff;font-size:14px}.submit-total{display:flex;justify-content:space-between;margin:15px 0 11px;padding:12px;border-radius:12px;background:rgba(212,175,55,.07);color:#d9c88f;font-size:12px;font-weight:900}.submit-total strong{color:#ffe47a}.submit-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:9px}.submit-cancel,.submit-pay{padding:13px;border-radius:12px;font-weight:950;cursor:pointer}.submit-cancel{border:1px solid rgba(255,255,255,.12);background:#111;color:#aaa}.submit-pay{border:none;background:linear-gradient(135deg,#f1d477,#b78922);color:#171104}.submit-pay:disabled{opacity:.5;cursor:wait}
 
 .nav-tab{
     min-width:0;
@@ -2153,65 +2154,18 @@ body{padding-bottom:calc(118px + env(safe-area-inset-bottom)) !important;}
         </div>
 
 
-        <div class="artist-card" id="artistCard" aria-live="polite">
-            <div id="artistMembershipView">
-                <div class="artist-card-head"><div class="artist-title">👑 ASIQPAI Artist</div><div class="artist-badge">50,000 ASIQ</div></div>
-                <p class="artist-copy">Зарегистрируйтесь как артист и откройте Artist Studio.</p>
-                <div class="artist-benefits">
-                    <div class="artist-benefit">🎵 Неограниченная публикация треков и битов</div>
-                    <div class="artist-benefit">🛡 Все релизы проходят модерацию</div>
-                    <div class="artist-benefit">🏆 Первые 100 — Founding Artist</div>
-                </div>
-                <input class="artist-input" id="artistNameInput" maxlength="60" placeholder="Ваше имя артиста" autocomplete="off" disabled>
-                <button class="artist-button" id="artistRegisterButton" type="button" disabled>Загрузка…</button>
-                <div class="artist-status" id="artistStatus">Проверяем статус Artist Membership</div>
+        <div class="submit-card" id="submitCard" aria-live="polite">
+            <div class="submit-card-head">
+                <div class="submit-title">🎵 Submit Track</div>
+                <div class="submit-badge">ASIQ</div>
             </div>
-            <div id="artistStudioView" hidden>
-                <div class="artist-card-head"><div class="artist-title">🎤 Artist Studio</div><div class="artist-badge" id="artistStudioBadge">ACTIVE</div></div>
-                <div class="artist-number" id="artistStudioName">—</div>
-                <div class="artist-studio-grid">
-                    <div class="artist-stat"><strong id="artistPublishedCount">0</strong><span>Published</span></div>
-                    <div class="artist-stat"><strong id="artistNumber">#0000</strong><span>Artist Number</span></div>
-                    <div class="artist-stat"><strong id="artistFilesStatus">ОЖИДАНИЕ</strong><span>Files Status</span></div>
-                    <div class="artist-stat"><strong>MP3 + COVER</strong><span>Что отправить</span></div>
-                </div>
-                <div class="artist-next-step">
-                    <strong>Регистрация завершена</strong>
-                    Отправьте администратору MP3-файл и квадратную обложку JPG или PNG. После проверки релиз будет добавлен в каталог вручную.
-                </div>
-                <a class="artist-contact-button" id="artistContactButton" href="#" target="_blank" rel="noopener noreferrer">Отправить файлы администратору</a>
+            <p class="submit-copy">Publish your music on ASIQPAI.</p>
+            <div class="submit-prices">
+                <div class="submit-price"><span>🎵 Track</span><strong>5 000 ASIQ</strong></div>
+                <div class="submit-price"><span>🎹 Instrumental</span><strong>2 500 ASIQ</strong></div>
             </div>
-        </div>
-
-    </section>
-
-    <section class="app-page active" id="page-music" data-page="music">
-        <audio id="player" preload="auto"></audio>
-
-        <div class="player" id="musicPlayer">
-            <div class="player-cover-wrap">
-                <img id="trackCover" class="player-cover" src="images/dark-nights-cover.jpg" alt="Обложка бита Dark Nights">
-                <div class="cover-shade"></div>
-                <div class="cover-badge">ASIQPAI ORIGINAL</div>
-            </div>
-            <div class="track-info">
-                <div class="track-copy">
-                    <div id="trackName">Әңгіме</div>
-                    <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
-                </div>
-                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
-            </div>
-            <div class="progress-container">
-                <span id="currentTime">0:00</span>
-                <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
-                <span id="duration">0:00</span>
-            </div>
-            <button id="playModeButton" class="play-mode-button" type="button" aria-label="Режим воспроизведения: по порядку" title="По порядку"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
-            <div class="controls">
-                <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
-                <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
-                <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
-            </div>
+            <button class="submit-button" id="openSubmitButton" type="button">SUBMIT TRACK</button>
+            <div class="submit-status" id="submitStatus">Публикация доступна после модерации.</div>
         </div>
 
     </section>
@@ -2522,7 +2476,6 @@ tonConnectUI.onStatusChange(async wallet => {
 
     loadAsiqBalance(walletAddress);
     renderWithdraw();
-    renderArtist();
 });
 
 if(tonConnectUI.account?.address){
@@ -2580,180 +2533,92 @@ async function apiRequest(path, options = {}){
 
 
 // =======================
-// ASIQPAI ARTIST MEMBERSHIP
+// SUBMIT TRACK
 // =======================
+const openSubmitButton = document.getElementById("openSubmitButton");
+const submitStatus = document.getElementById("submitStatus");
+const submitModal = document.getElementById("submitModal");
+const cancelSubmitButton = document.getElementById("cancelSubmitButton");
+const paySubmitButton = document.getElementById("paySubmitButton");
+const submissionArtist = document.getElementById("submissionArtist");
+const submissionTitle = document.getElementById("submissionTitle");
+const submissionTotal = document.getElementById("submissionTotal");
+const submitModalStatus = document.getElementById("submitModalStatus");
+const submissionTypeButtons = [...document.querySelectorAll("[data-submission-type]")];
+let selectedSubmissionType = "track";
+let submissionBusy = false;
+const SUBMISSION_PRICES = Object.freeze({ track:5000, instrumental:2500 });
 
-const artistMembershipView = document.getElementById("artistMembershipView");
-const artistStudioView = document.getElementById("artistStudioView");
-const artistNameInput = document.getElementById("artistNameInput");
-const artistRegisterButton = document.getElementById("artistRegisterButton");
-const artistStatus = document.getElementById("artistStatus");
-const artistStudioName = document.getElementById("artistStudioName");
-const artistStudioBadge = document.getElementById("artistStudioBadge");
-const artistPublishedCount = document.getElementById("artistPublishedCount");
-const artistNumber = document.getElementById("artistNumber");
-const artistFilesStatus = document.getElementById("artistFilesStatus");
-const artistContactButton = document.getElementById("artistContactButton");
-let artistState = null;
-let artistBusy = false;
-
-function normalizeArtistName(value){
-    return cleanText(String(value || ""), 60).toLocaleUpperCase("ru-RU");
+function renderSubmissionType(){
+    submissionTypeButtons.forEach(button => {
+        button.classList.toggle("active", button.dataset.submissionType === selectedSubmissionType);
+    });
+    submissionTotal.textContent = `${SUBMISSION_PRICES[selectedSubmissionType].toLocaleString("ru-RU")} ASIQ`;
 }
-
-function countPublishedTracksByArtist(artistName){
-    const normalizedName = normalizeArtistName(artistName);
-    if(!normalizedName || !Array.isArray(playlist)) return 0;
-
-    return playlist.filter(track =>
-        normalizeArtistName(track?.artist) === normalizedName &&
-        ["TRACK", "INSTRUMENTAL"].includes(String(track?.meta || "").toUpperCase())
-    ).length;
+function closeSubmitModal(){
+    if(submissionBusy) return;
+    submitModal.hidden = true;
+    submitModalStatus.textContent = "";
 }
-
-function getArtistPublishedCount(artist){
-    const catalogCount = countPublishedTracksByArtist(artist?.artistName);
-    const backendCount = Number(artist?.publishedCount);
-
-    // Уже добавленные релизы из tracks.json учитываются автоматически.
-    // Значение с сервера сохраняется как запасной вариант для будущих артистов.
-    return Math.max(
-        catalogCount,
-        Number.isFinite(backendCount) && backendCount > 0 ? Math.floor(backendCount) : 0
-    );
-}
-
-function renderArtist(){
-    const artist = artistState?.artist;
-    const wallet = tonConnectUI.account?.address || "";
-    if(artist){
-        artistMembershipView.hidden = true;
-        artistStudioView.hidden = false;
-        artistStudioName.textContent = artist.artistName;
-        artistPublishedCount.textContent = String(getArtistPublishedCount(artist));
-        artistNumber.textContent = `#${String(artist.artistNumber).padStart(4,"0")}`;
-        artistStudioBadge.textContent = artist.foundingArtist ? "FOUNDING ARTIST" : "ACTIVE";
-        const statusLabels = {
-            waiting_files:"ЖДЁМ ФАЙЛЫ",
-            files_received:"ФАЙЛЫ ПОЛУЧЕНЫ",
-            published:"ОПУБЛИКОВАНО"
-        };
-        artistFilesStatus.textContent = statusLabels[artist.onboardingStatus] || "ЖДЁМ ФАЙЛЫ";
-        const contactUrl = artistState?.filesContactUrl || "";
-        const contactName = artistState?.filesContact || "администратору";
-        artistContactButton.textContent = `Отправить файлы ${contactName}`;
-        artistContactButton.hidden = !contactUrl;
-        if(contactUrl) artistContactButton.href = contactUrl;
-        return;
-    }
-
-    artistMembershipView.hidden = false;
-    artistStudioView.hidden = true;
+function openSubmitModal(){
     const telegramReady = Boolean(getTelegramInitData());
-    const ready = telegramReady && Boolean(wallet) && !artistBusy;
-    artistNameInput.disabled = !ready;
-    artistRegisterButton.disabled = !ready;
-    if(!telegramReady){
-        artistRegisterButton.textContent = "Откройте в Telegram";
-        artistStatus.textContent = "Регистрация доступна внутри Telegram Mini App.";
-    }else if(!wallet){
-        artistRegisterButton.textContent = "Подключите TON-кошелёк";
-        artistStatus.textContent = "Для оплаты Artist Membership подключите кошелёк.";
-    }else if(artistBusy){
-        artistRegisterButton.textContent = "Проверяем оплату…";
-    }else{
-        artistRegisterButton.textContent = "REGISTER — 50,000 ASIQ";
-        artistStatus.textContent = "Разовая регистрация. Публикации без лимита после модерации.";
-    }
+    const wallet = tonConnectUI.account?.address || "";
+    if(!telegramReady){ submitStatus.textContent = "Откройте приложение внутри Telegram."; return; }
+    if(!wallet){ submitStatus.textContent = "Сначала подключите TON-кошелёк."; return; }
+    submitModal.hidden = false;
+    renderSubmissionType();
+    submissionArtist.focus();
 }
-
-async function loadArtist(){
-    if(!getTelegramInitData()){
-        artistState = { isArtist:false, artist:null };
-        renderArtist();
-        return;
-    }
-    try{
-        artistState = await apiRequest("/api/artist/me");
-    }catch(error){
-        console.warn("Artist status:", error.message);
-        artistState = { isArtist:false, artist:null };
-        artistStatus.textContent = "Не удалось загрузить статус артиста.";
-    }
-    renderArtist();
-}
-
-async function verifyArtistPayment(orderId){
-    for(let attempt = 0; attempt < 12; attempt += 1){
-        const result = await apiRequest("/api/artist/verify", {
-            method:"POST",
-            body:JSON.stringify({ orderId })
+async function verifySubmissionPayment(orderId){
+    for(let attempt=0; attempt<12; attempt+=1){
+        const result = await apiRequest("/api/submissions/verify", {
+            method:"POST", body:JSON.stringify({orderId})
         });
-        if(result.status === "active" && result.artist){
-            artistState = {
-                isArtist:true,
-                artist:result.artist,
-                filesContact:result.filesContact,
-                filesContactUrl:result.filesContactUrl
-            };
-            SafeStorage.remove("artistRegistrationOrderId");
-            renderArtist();
-            showToast("Artist Membership активирован", "success");
-            return true;
-        }
-        artistStatus.textContent = `Ищем перевод ASIQ… ${attempt + 1}/12`;
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        if(result.status === "paid") return result;
+        submitModalStatus.textContent = `Ищем перевод ASIQ… ${attempt+1}/12`;
+        await new Promise(resolve => setTimeout(resolve,5000));
     }
-    return false;
+    return null;
 }
-
-artistRegisterButton?.addEventListener("click", async () => {
-    if(artistBusy) return;
-    const walletAddress = tonConnectUI.account?.address || "";
-    const artistName = artistNameInput.value.trim();
-    if(artistName.length < 2){
-        artistStatus.textContent = "Введите имя артиста минимум из 2 символов.";
-        artistNameInput.focus();
-        return;
-    }
-    if(!walletAddress){ renderArtist(); return; }
-
-    artistBusy = true;
-    renderArtist();
+submissionTypeButtons.forEach(button => button.addEventListener("click",()=>{
+    selectedSubmissionType = button.dataset.submissionType;
+    renderSubmissionType();
+}));
+openSubmitButton?.addEventListener("click",openSubmitModal);
+cancelSubmitButton?.addEventListener("click",closeSubmitModal);
+submitModal?.addEventListener("click",event=>{ if(event.target===submitModal) closeSubmitModal(); });
+paySubmitButton?.addEventListener("click",async()=>{
+    if(submissionBusy) return;
+    const walletAddress=tonConnectUI.account?.address||"";
+    const artistName=submissionArtist.value.trim();
+    const title=submissionTitle.value.trim();
+    if(artistName.length<2){ submitModalStatus.textContent="Введите имя артиста."; return; }
+    if(title.length<2){ submitModalStatus.textContent="Введите название работы."; return; }
+    if(!walletAddress){ closeSubmitModal(); submitStatus.textContent="Подключите TON-кошелёк."; return; }
+    submissionBusy=true; paySubmitButton.disabled=true;
     try{
-        const savedOrderId = SafeStorage.get("artistRegistrationOrderId", "");
-        if(savedOrderId){
-            artistStatus.textContent = "Проверяем ранее отправленную оплату…";
-            const activated = await verifyArtistPayment(savedOrderId);
-            if(!activated){
-                artistStatus.textContent = "Ранее отправленная оплата ещё не найдена. Подождите и попробуйте проверить снова — повторно платить не нужно.";
-            }
+        submitModalStatus.textContent="Создаём заявку…";
+        const order=await apiRequest("/api/submissions/create",{
+            method:"POST",
+            body:JSON.stringify({walletAddress,artistName,title,type:selectedSubmissionType})
+        });
+        submitModalStatus.textContent=`Подтвердите перевод ${Number(order.amountAsiq).toLocaleString("ru-RU")} ASIQ в кошельке.`;
+        await tonConnectUI.sendTransaction(order.transaction);
+        submitModalStatus.textContent="Перевод отправлен. Ждём подтверждение блокчейна…";
+        const verified=await verifySubmissionPayment(order.orderId);
+        if(verified){
+            submitModalStatus.textContent="✅ Заявка оплачена и отправлена на модерацию.";
+            submitStatus.textContent="Заявка отправлена. Администратор свяжется с Вами для получения файлов.";
+            showToast("Заявка на публикацию создана", "success");
+            setTimeout(()=>{ submissionBusy=false; paySubmitButton.disabled=false; closeSubmitModal(); },1600);
             return;
         }
-
-        artistStatus.textContent = "Создаём заявку…";
-        const order = await apiRequest("/api/artist/register", {
-            method:"POST",
-            body:JSON.stringify({ artistName, walletAddress })
-        });
-        artistStatus.textContent = "Подтвердите перевод 50,000 ASIQ в кошельке.";
-        SafeStorage.set("artistRegistrationOrderId", order.orderId);
-        await tonConnectUI.sendTransaction(order.transaction);
-        artistStatus.textContent = "Перевод отправлен. Ждём подтверждение блокчейна…";
-        const activated = await verifyArtistPayment(order.orderId);
-        if(!activated){
-            artistStatus.textContent = "Оплата ещё не найдена. Нажмите кнопку снова через минуту — повторно платить не потребуется.";
-        }
+        submitModalStatus.textContent="Оплата пока не найдена. Повторно платить не нужно — свяжитесь с администратором.";
     }catch(error){
-        console.error("Artist registration:", error);
-        const message = String(error?.message || "");
-        if(/reject|cancel|declin/i.test(message)){
-            SafeStorage.remove("artistRegistrationOrderId");
-        }
-        artistStatus.textContent = message || "Регистрация не завершена.";
+        console.error("Submit Track:",error);
+        submitModalStatus.textContent=String(error?.message||"Не удалось создать заявку.");
     }finally{
-        artistBusy = false;
-        renderArtist();
+        submissionBusy=false; paySubmitButton.disabled=false;
     }
 });
 
@@ -3870,7 +3735,6 @@ async function loadPlaylist(){
     updatePlayModeButton();
     await loadTrack(currentTrack, { notify:false });
     renderTrackCatalog();
-    renderArtist();
 
     const isTelegramLaunch = Boolean(
         window.Telegram?.WebApp?.initData &&
@@ -3890,7 +3754,6 @@ const crown = document.getElementById("crown");
 // Загружаем функции приложения, не связанные с Gold Points.
 loadDailyReward();
 loadWithdraw();
-loadArtist();
 
 // Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
 if(crown){
@@ -3969,5 +3832,26 @@ if(crown){
 })();
 </script>
 
+
+<div class="submit-modal" id="submitModal" hidden>
+    <div class="submit-modal-card" role="dialog" aria-modal="true" aria-labelledby="submitModalTitle">
+        <h2 class="submit-modal-title" id="submitModalTitle">Submit Track</h2>
+        <p class="submit-warning">Пожалуйста, убедитесь, что Ваша работа полностью готова и соответствует требованиям ASIQPAI. Некачественный или нарушающий правила материал может быть отклонён.</p>
+        <div class="submit-type-grid">
+            <button class="submit-type active" type="button" data-submission-type="track">🎵 Track<br>5 000 ASIQ</button>
+            <button class="submit-type" type="button" data-submission-type="instrumental">🎹 Instrumental<br>2 500 ASIQ</button>
+        </div>
+        <label class="submit-label" for="submissionArtist">Имя артиста</label>
+        <input class="submit-input" id="submissionArtist" maxlength="60" autocomplete="off" placeholder="Ваше имя артиста">
+        <label class="submit-label" for="submissionTitle">Название работы</label>
+        <input class="submit-input" id="submissionTitle" maxlength="120" autocomplete="off" placeholder="Название трека или инструментала">
+        <div class="submit-total"><span>К оплате</span><strong id="submissionTotal">5 000 ASIQ</strong></div>
+        <div class="submit-actions">
+            <button class="submit-cancel" id="cancelSubmitButton" type="button">Отмена</button>
+            <button class="submit-pay" id="paySubmitButton" type="button">PAY WITH ASIQ</button>
+        </div>
+        <div class="submit-status" id="submitModalStatus"></div>
+    </div>
+</div>
 </body>
 </html>
