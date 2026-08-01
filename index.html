@@ -2321,6 +2321,18 @@ body.app-scroll-locked{
     overflow-y:hidden!important;
 }
 
+html.app-scroll-locked{
+    height:100%!important;
+}
+
+body.app-scroll-locked{
+    position:fixed!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    height:100dvh!important;
+}
+
 body::before{
     content:"";
     position:fixed;
@@ -2749,9 +2761,14 @@ input:focus-visible{
 .submission-close{
     width:38px!important;
     height:38px!important;
-    border-color:var(--asiq-line)!important;
-    background:rgba(255,255,255,.035)!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
     color:#c6b881!important;
+    font-size:25px!important;
+    line-height:1!important;
+    box-shadow:none!important;
 }
 
 .submission-type-button{
@@ -5142,7 +5159,7 @@ if(crown){
 (function(){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
-    const preferredLockedPages = new Set(['music', 'home', 'community']);
+    const alwaysLockedPages = new Set(['music', 'home', 'community']);
     let scrollModeFrame = 0;
 
     const communityVideo = document.getElementById('communityBackgroundVideo');
@@ -5156,18 +5173,8 @@ if(crown){
         window.scrollTo({top:0, behavior:'auto'});
 
         scrollModeFrame = requestAnimationFrame(() => {
-            const viewportHeight = Math.round(
-                window.visualViewport?.height || window.innerHeight
-            );
-            const contentHeight = Math.ceil(
-                Math.max(
-                    document.body.scrollHeight,
-                    document.documentElement.scrollHeight
-                )
-            );
-            const contentFits = contentHeight <= viewportHeight + 24;
-            const shouldLock =
-                preferredLockedPages.has(target.dataset.page) && contentFits;
+            const pageName = target.dataset.page;
+            const shouldLock = alwaysLockedPages.has(pageName);
 
             document.documentElement.classList.toggle(
                 'app-scroll-locked',
@@ -5221,6 +5228,29 @@ if(crown){
         refreshScrollMode,
         {passive:true}
     );
+
+    document.addEventListener('touchmove', event => {
+        if(!document.body.classList.contains('app-scroll-locked')) return;
+
+        const interactiveTarget = event.target instanceof Element
+            ? event.target.closest(
+                '.submission-modal-panel, input[type="range"]'
+            )
+            : null;
+
+        if(!interactiveTarget){
+            event.preventDefault();
+        }
+    }, {passive:false});
+
+    window.addEventListener('scroll', () => {
+        if(
+            document.body.classList.contains('app-scroll-locked') &&
+            (window.scrollX !== 0 || window.scrollY !== 0)
+        ){
+            window.scrollTo(0, 0);
+        }
+    }, {passive:true});
 
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
 })();
