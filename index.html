@@ -2297,6 +2297,7 @@ html{
     min-height:100%;
     background:var(--asiq-bg);
     scroll-behavior:smooth;
+    overscroll-behavior-y:none;
 }
 
 body{
@@ -2312,6 +2313,12 @@ body{
         radial-gradient(circle at 50% -8%,rgba(214,180,76,.12),transparent 30%),
         radial-gradient(circle at 0 62%,rgba(214,180,76,.035),transparent 28%),
         linear-gradient(180deg,#080806 0%,#040404 44%,#070705 100%)!important;
+    overscroll-behavior-y:none;
+}
+
+html.app-scroll-locked,
+body.app-scroll-locked{
+    overflow-y:hidden!important;
 }
 
 body::before{
@@ -5135,8 +5142,47 @@ if(crown){
 (function(){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
+    const preferredLockedPages = new Set(['music', 'home', 'community']);
+    let scrollModeFrame = 0;
 
     const communityVideo = document.getElementById('communityBackgroundVideo');
+
+    function updatePageScroll(target){
+        if(!target) return;
+
+        cancelAnimationFrame(scrollModeFrame);
+        document.documentElement.classList.remove('app-scroll-locked');
+        document.body.classList.remove('app-scroll-locked');
+        window.scrollTo({top:0, behavior:'auto'});
+
+        scrollModeFrame = requestAnimationFrame(() => {
+            const viewportHeight = Math.round(
+                window.visualViewport?.height || window.innerHeight
+            );
+            const contentHeight = Math.ceil(
+                Math.max(
+                    document.body.scrollHeight,
+                    document.documentElement.scrollHeight
+                )
+            );
+            const contentFits = contentHeight <= viewportHeight + 24;
+            const shouldLock =
+                preferredLockedPages.has(target.dataset.page) && contentFits;
+
+            document.documentElement.classList.toggle(
+                'app-scroll-locked',
+                shouldLock
+            );
+            document.body.classList.toggle(
+                'app-scroll-locked',
+                shouldLock
+            );
+
+            if(shouldLock){
+                window.scrollTo({top:0, behavior:'auto'});
+            }
+        });
+    }
 
     function updateCommunityVideo(activePage){
         if(!communityVideo) return;
@@ -5157,11 +5203,24 @@ if(crown){
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
         updateCommunityVideo(target.dataset.page);
-        window.scrollTo({top:0, behavior:'auto'});
+        updatePageScroll(target);
         try{ window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); }catch{}
     }
 
-    updateCommunityVideo(document.querySelector('.app-page.active')?.dataset.page || '');
+    const initialPage = document.querySelector('.app-page.active');
+    updateCommunityVideo(initialPage?.dataset.page || '');
+    updatePageScroll(initialPage);
+
+    const refreshScrollMode = () => {
+        updatePageScroll(document.querySelector('.app-page.active'));
+    };
+
+    window.addEventListener('resize', refreshScrollMode, {passive:true});
+    window.visualViewport?.addEventListener(
+        'resize',
+        refreshScrollMode,
+        {passive:true}
+    );
 
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
 })();
