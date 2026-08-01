@@ -39,7 +39,7 @@
     "meta": "INSTRUMENTAL",
     "cover": "images/BORZ.jpg",
     "file": "music/BORZ.mp3",
-    "accent": "212,175,55"
+    "accent": "212,175,55",
     "priceAsiq": 600
   },
   {
@@ -48,7 +48,7 @@
     "meta": "INSTRUMENTAL",
     "cover": "images/Lux.jpg",
     "file": "music/Lux.mp3",
-    "accent": "212,175,55"
+    "accent": "212,175,55",
     "priceAsiq": 5000
   },
   {
@@ -90,7 +90,7 @@
     "meta": "INSTRUMENTAL",
     "cover": "images/Крипто банк.jpg",
     "file": "music/Крипто банк.mp3",
-    "accent": "212,175,55"
+    "accent": "212,175,55",
     "priceAsiq": 800
   },
   {
