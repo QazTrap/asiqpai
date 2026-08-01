@@ -160,6 +160,9 @@ function normalizeTrack(track){
         artist: cleanText(track.artist || "ASIQPAI", 50) || "ASIQPAI",
         meta: cleanText(track.meta || "TRACK", 50) || "TRACK",
         cover: track.cover,
+        artwork: isSafeAssetPath(track.artwork, "image")
+            ? track.artwork
+            : null,
         file: track.file,
         accent: normalizeAccent(track.accent),
         priceAsiq: Number.isSafeInteger(Number(track.priceAsiq)) && Number(track.priceAsiq) > 0
@@ -4952,11 +4955,13 @@ async function updateMediaSessionMetadata(track){
     };
 
     try{
-        // Сначала сразу обновляем название, чтобы не оставались данные
-        // предыдущего трека, пока загружается обложка.
-        navigator.mediaSession.metadata = new MediaMetadata(baseMetadata);
-
-        const artworkCandidates = [track.cover, "images/logo.png"];
+        // Для iOS предпочтительнее отдельная квадратная картинка 512x512
+        // с простым ASCII-именем из поля artwork в tracks.json.
+        const artworkCandidates = [
+            track.artwork,
+            track.cover,
+            "images/logo.png"
+        ].filter(Boolean);
         let artwork = null;
 
         for(const candidate of artworkCandidates){
@@ -4967,6 +4972,9 @@ async function updateMediaSessionMetadata(track){
         // За время загрузки пользователь мог переключить трек.
         if(requestId !== mediaMetadataRequestId) return;
 
+        // Отправляем метаданные один раз сразу вместе с готовой обложкой.
+        // Telegram WebView может сохранить первый пустой вариант и не
+        // перерисовать картинку при втором обновлении.
         navigator.mediaSession.metadata = new MediaMetadata({
             ...baseMetadata,
             ...(artwork ? { artwork:[artwork] } : {})
@@ -5119,22 +5127,11 @@ function setupMediaSessionActions(){
         updateMediaSessionPosition();
     });
 
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-    if(isIOS){
-        // В Telegram WebView iOS иногда оставляет системные кнопки ±10 секунд,
-        // даже когда nexttrack/previoustrack зарегистрированы. Их внешний вид
-        // определяет iOS, поэтому используем эти команды как запасные кнопки
-        // переключения треков вместо перемотки внутри текущего файла.
-        setAction("seekbackward", () => void playPreviousTrack());
-        setAction("seekforward", () => void playNextTrack());
-    }else{
-        // На платформах с полной поддержкой Media Session оставляем только
-        // обычные системные кнопки Previous / Next.
-        setAction("seekbackward", null);
-        setAction("seekforward", null);
-    }
+    // Не выдаём перемотку за переключение треков. После каждой смены src
+    // обработчики регистрируются заново, а системной панели сообщаем только
+    // настоящие действия Previous / Next.
+    setAction("seekbackward", null);
+    setAction("seekforward", null);
 }
 
 setupMediaSessionActions();
