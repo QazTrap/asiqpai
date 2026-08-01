@@ -36,6 +36,7 @@ const SafeStorage = (() => {
     const allowedKeys = new Set([
         "currentTrack",
         "playMode",
+        "playerCategoryFilters",
         "likedTracks",
         "gp",
         "goldLicenseClaimed",
@@ -3452,6 +3453,193 @@ input:focus-visible{
     html{scroll-behavior:auto}
     .home-hero .logo{animation:none!important}
 }
+
+/* Two independent queue filters in the lower-right player corner. */
+.player-category-buttons{
+    position:absolute;
+    right:8px;
+    top:50%;
+    z-index:3;
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    gap:4px;
+    width:54px;
+    transform:translateY(-50%);
+}
+
+.player-category-filter{
+    width:54px;
+    height:22px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:0 5px;
+    border:1px solid rgba(212,175,55,.20);
+    border-radius:999px;
+    background:linear-gradient(145deg,rgba(32,31,27,.96),rgba(7,7,6,.98));
+    color:rgba(212,175,55,.42);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 2px 5px rgba(0,0,0,.24);
+    font-size:6.5px;
+    line-height:1;
+    font-weight:900;
+    letter-spacing:.3px;
+    white-space:nowrap;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition:color .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+
+.player-category-filter i{
+    font-size:7px;
+}
+
+.player-category-filter.active{
+    border-color:rgba(212,175,55,.72);
+    background:linear-gradient(145deg,rgba(212,175,55,.26),rgba(62,48,12,.34));
+    color:#e3bd55;
+    box-shadow:inset 0 1px 0 rgba(255,245,205,.09),0 0 9px rgba(212,175,55,.12);
+}
+
+.player-category-filter:active{
+    transform:none!important;
+    filter:brightness(1.15);
+}
+
+@media (max-width:370px){
+    .player-category-buttons{
+        right:5px;
+        width:50px;
+    }
+    .player-category-filter{
+        width:50px;
+        padding:0 4px;
+        font-size:6px;
+    }
+}
+
+/* Final responsive geometry: phones, tablets, landscape and safe areas. */
+:root{
+    --asiq-side-gap:clamp(7px,3vw,14px);
+}
+
+body{
+    min-height:100dvh;
+    padding-left:max(var(--asiq-side-gap),env(safe-area-inset-left))!important;
+    padding-right:max(var(--asiq-side-gap),env(safe-area-inset-right))!important;
+}
+
+.app-shell{
+    width:min(100%,430px)!important;
+    min-height:calc(100dvh - var(--nav-height) - 44px)!important;
+}
+
+#page-music .player{
+    width:min(
+        calc(100vw - (var(--asiq-side-gap) * 2)),
+        clamp(280px,calc(100dvh - var(--nav-height) - 210px),360px)
+    )!important;
+    max-width:360px!important;
+}
+
+.player-cover-wrap{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1 / 1!important;
+}
+
+@media (max-height:720px) and (orientation:portrait){
+    #page-music{
+        padding-top:0!important;
+    }
+
+    #page-music .player{
+        padding:10px 10px 13px!important;
+        margin-bottom:8px!important;
+    }
+
+    #page-music .player-cover-wrap{
+        border-radius:17px!important;
+    }
+
+    #page-music .track-info{
+        margin-top:9px!important;
+    }
+
+    #page-music .progress-container{
+        margin-top:9px!important;
+    }
+
+    #page-music .controls{
+        margin-top:11px!important;
+    }
+}
+
+@media (max-width:330px){
+    :root{
+        --nav-height:72px;
+    }
+
+    .app-bottom-nav{
+        height:var(--nav-height)!important;
+        padding:5px!important;
+        border-radius:20px!important;
+    }
+
+    .nav-tab{
+        min-height:58px!important;
+        padding:6px 1px 5px!important;
+        gap:3px!important;
+    }
+
+    .nav-tab i{
+        font-size:17px!important;
+    }
+
+    .nav-tab span{
+        font-size:6.5px!important;
+    }
+
+    #trackName{
+        font-size:18px!important;
+    }
+}
+
+@media (orientation:landscape) and (max-height:560px){
+    :root{
+        --nav-height:64px;
+    }
+
+    body{
+        padding-top:6px!important;
+        padding-bottom:calc(var(--nav-height) + 16px + env(safe-area-inset-bottom))!important;
+    }
+
+    #page-music .player{
+        width:min(300px,calc(100vw - 24px))!important;
+    }
+
+    .app-bottom-nav{
+        height:var(--nav-height)!important;
+        padding:4px 7px!important;
+        border-radius:18px!important;
+    }
+
+    .nav-tab{
+        min-height:52px!important;
+        padding:4px 2px!important;
+        gap:2px!important;
+    }
+
+    .nav-tab i{
+        font-size:16px!important;
+    }
+
+    .nav-tab span{
+        font-size:6.5px!important;
+    }
+}
 </style>
 
 </head>
@@ -3530,6 +3718,14 @@ input:focus-visible{
                 <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
                 <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
                 <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
+                <div class="player-category-buttons" role="group" aria-label="Фильтр очереди плеера">
+                    <button class="player-category-filter active" type="button" data-player-category="tracks" aria-pressed="true">
+                        <i class="fa-solid fa-microphone-lines" aria-hidden="true"></i><span>TRACKS</span>
+                    </button>
+                    <button class="player-category-filter active" type="button" data-player-category="instrumentals" aria-pressed="true">
+                        <i class="fa-solid fa-wave-square" aria-hidden="true"></i><span>BEATS</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -3698,6 +3894,21 @@ if(!Number.isSafeInteger(currentTrack) || currentTrack < 0 || currentTrack > 999
 let playMode = SafeStorage.get("playMode", "sequence");
 if(!["sequence", "repeat", "shuffle"].includes(playMode)){
     playMode = "sequence";
+}
+let playerCategoryFilters = SafeStorage.getJSON("playerCategoryFilters", {
+    tracks:true,
+    instrumentals:true
+});
+if(!playerCategoryFilters || typeof playerCategoryFilters !== "object"){
+    playerCategoryFilters = { tracks:true, instrumentals:true };
+}
+playerCategoryFilters = {
+    tracks:playerCategoryFilters.tracks !== false,
+    instrumentals:playerCategoryFilters.instrumentals !== false
+};
+if(!playerCategoryFilters.tracks && !playerCategoryFilters.instrumentals){
+    playerCategoryFilters.tracks = true;
+    playerCategoryFilters.instrumentals = true;
 }
 
 // =======================
@@ -4600,9 +4811,8 @@ function showToast(message, type = ""){
     window.setTimeout(() => toast.remove(), 2500);
 }
 
-function updatePlayerAccent(track){
-    const rgb = track.accent || "212,175,55";
-    document.documentElement.style.setProperty("--player-accent-rgb", rgb);
+function updatePlayerAccent(){
+    document.documentElement.style.setProperty("--player-accent-rgb", "212,175,55");
 }
 
 
@@ -4714,13 +4924,83 @@ async function playLoadedTrack(){
     }
 }
 
+function getPlayerCategoryIndices(category = null){
+    return playlist
+        .map((track, index) => {
+            const trackCategory = getTrackCategory(track);
+            const included = category
+                ? trackCategory === category
+                : Boolean(playerCategoryFilters[trackCategory]);
+            return included ? index : -1;
+        })
+        .filter(index => index >= 0);
+}
+
 function getRandomTrackIndex(){
-    if(playlist.length <= 1) return currentTrack;
+    const indices = getPlayerCategoryIndices();
+    if(indices.length === 0) return currentTrack;
+    if(indices.length === 1) return indices[0];
+
     let randomIndex;
     do{
-        randomIndex = Math.floor(Math.random() * playlist.length);
+        randomIndex = indices[Math.floor(Math.random() * indices.length)];
     }while(randomIndex === currentTrack);
     return randomIndex;
+}
+
+function getAdjacentTrackIndex(direction){
+    const indices = getPlayerCategoryIndices();
+    if(indices.length === 0) return currentTrack;
+
+    const position = indices.indexOf(currentTrack);
+    if(position < 0) return direction < 0 ? indices.at(-1) : indices[0];
+
+    return indices[(position + direction + indices.length) % indices.length];
+}
+
+function updatePlayerCategoryButtons(){
+    document.querySelectorAll(".player-category-filter").forEach(button => {
+        const category = button.dataset.playerCategory;
+        const active = Boolean(playerCategoryFilters[category]);
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+}
+
+function updateMediaSessionMetadata(track){
+    if(!("mediaSession" in navigator) || !("MediaMetadata" in window)) return;
+
+    try{
+        const artworkUrl = new URL(track.cover, window.location.href).href;
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: track.title || "ASIQPAI",
+            artist: track.artist || "ASIQPAI",
+            album: track.meta || "ASIQPAI Music",
+            artwork: [{ src: artworkUrl }]
+        });
+    }catch(error){
+        console.warn("Не удалось обновить системную карточку трека", error);
+    }
+}
+
+function updateMediaSessionPosition(){
+    if(!("mediaSession" in navigator) || !navigator.mediaSession.setPositionState) return;
+
+    const audioDuration = Number(player.duration);
+    const audioTime = Number(player.currentTime);
+
+    if(!Number.isFinite(audioDuration) || audioDuration <= 0) return;
+
+    try{
+        navigator.mediaSession.setPositionState({
+            duration: audioDuration,
+            playbackRate: player.playbackRate || 1,
+            position: Math.min(Math.max(audioTime, 0), audioDuration)
+        });
+    }catch(error){
+        console.warn("Не удалось обновить позицию системного плеера", error);
+    }
 }
 
 async function loadTrack(index, options = {}){
@@ -4739,6 +5019,14 @@ async function loadTrack(index, options = {}){
     trackMeta.textContent = `${track.artist} • ${track.meta}`;
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
+
+    const loadedCategory = getTrackCategory(track);
+    if(!playerCategoryFilters[loadedCategory]){
+        playerCategoryFilters[loadedCategory] = true;
+        SafeStorage.setJSON("playerCategoryFilters", playerCategoryFilters);
+    }
+    updatePlayerCategoryButtons();
+    updateMediaSessionMetadata(track);
 
 
     const likedTracks = SafeStorage.getJSON("likedTracks", {});
@@ -4777,49 +5065,119 @@ playButton.onclick = async function(){
     }
 };
 
+async function playNextTrack(){
+    currentTrack = playMode === "shuffle"
+        ? getRandomTrackIndex()
+        : getAdjacentTrackIndex(1);
+
+    await loadTrack(currentTrack);
+    renderTrackCatalog();
+    await playLoadedTrack();
+}
+
 // =======================
 // NEXT
 // =======================
 
-document.getElementById("nextButton").onclick = async function(){
-
+document.getElementById("nextButton").onclick = function(){
     trackHaptic();
-
-    currentTrack = playMode === "shuffle"
-        ? getRandomTrackIndex()
-        : (currentTrack + 1) % playlist.length;
-
-    await loadTrack(currentTrack);
-    renderTrackCatalog();
-    playLoadedTrack();
+    void playNextTrack();
 };
 
 // =======================
 // PREVIOUS
 // =======================
 
-document.getElementById("prevButton").onclick = async function(){
-
-    trackHaptic();
-
+async function playPreviousTrack(){
     if(playMode === "shuffle"){
 
         currentTrack = getRandomTrackIndex();
 
     }else{
-
-        currentTrack--;
-
-        if(currentTrack < 0){
-            currentTrack = playlist.length - 1;
-        }
-
+        currentTrack = getAdjacentTrackIndex(-1);
     }
 
     await loadTrack(currentTrack);
     renderTrackCatalog();
-    playLoadedTrack();
+    await playLoadedTrack();
+}
+
+document.getElementById("prevButton").onclick = function(){
+    trackHaptic();
+    void playPreviousTrack();
 };
+
+function setupMediaSessionActions(){
+    if(!("mediaSession" in navigator)) return;
+
+    const setAction = (action, handler) => {
+        try{
+            navigator.mediaSession.setActionHandler(action, handler);
+        }catch(error){
+            console.warn(`Media Session не поддерживает действие ${action}`, error);
+        }
+    };
+
+    setAction("play", () => void playLoadedTrack());
+    setAction("pause", () => player.pause());
+    setAction("nexttrack", () => void playNextTrack());
+    setAction("previoustrack", () => void playPreviousTrack());
+    setAction("seekto", details => {
+        if(!Number.isFinite(details.seekTime) || !Number.isFinite(player.duration)) return;
+        player.currentTime = Math.min(Math.max(details.seekTime, 0), player.duration);
+        updateMediaSessionPosition();
+    });
+    setAction("seekbackward", details => {
+        const step = Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
+        player.currentTime = Math.max(player.currentTime - step, 0);
+        updateMediaSessionPosition();
+    });
+    setAction("seekforward", details => {
+        const step = Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
+        const end = Number.isFinite(player.duration) ? player.duration : player.currentTime + step;
+        player.currentTime = Math.min(player.currentTime + step, end);
+        updateMediaSessionPosition();
+    });
+}
+
+setupMediaSessionActions();
+
+document.querySelectorAll(".player-category-filter").forEach(button => {
+    button.addEventListener("click", async function(){
+        const category = button.dataset.playerCategory;
+        if(!["tracks", "instrumentals"].includes(category)) return;
+
+        const nextValue = !playerCategoryFilters[category];
+        const otherCategory = category === "tracks" ? "instrumentals" : "tracks";
+
+        if(!nextValue && !playerCategoryFilters[otherCategory]){
+            showToast("Оставьте включённым хотя бы один раздел", "warning");
+            return;
+        }
+
+        const shouldContinuePlaying = !player.paused && !player.ended;
+        playerCategoryFilters[category] = nextValue;
+        SafeStorage.setJSON("playerCategoryFilters", playerCategoryFilters);
+        updatePlayerCategoryButtons();
+
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.selectionChanged();
+        }catch{}
+
+        const enabledIndices = getPlayerCategoryIndices();
+        if(!enabledIndices.includes(currentTrack) && enabledIndices.length > 0){
+            currentTrack = enabledIndices[0];
+            await loadTrack(currentTrack);
+            renderTrackCatalog();
+
+            if(shouldContinuePlaying){
+                await playLoadedTrack();
+            }else{
+                updateTrackCatalogState();
+            }
+        }
+    });
+});
 
 likeButton.addEventListener("click", function(){
     likeButton.classList.toggle("active");
@@ -4864,15 +5222,25 @@ player.addEventListener("ended", async function(){
 
     currentTrack = playMode === "shuffle"
         ? getRandomTrackIndex()
-        : (currentTrack + 1) % playlist.length;
+        : getAdjacentTrackIndex(1);
 
     await loadTrack(currentTrack);
     renderTrackCatalog();
     playLoadedTrack();
 });
 
-player.addEventListener("play", updateTrackCatalogState);
-player.addEventListener("pause", updateTrackCatalogState);
+player.addEventListener("play", function(){
+    updateTrackCatalogState();
+    if("mediaSession" in navigator){
+        navigator.mediaSession.playbackState = "playing";
+    }
+});
+player.addEventListener("pause", function(){
+    updateTrackCatalogState();
+    if("mediaSession" in navigator){
+        navigator.mediaSession.playbackState = "paused";
+    }
+});
 
 // =======================
 // ПРОГРЕСС
@@ -4896,6 +5264,7 @@ function renderPlayerProgress(){
     if(wholeSecond !== lastRenderedSecond){
         currentTime.textContent = formatTime(audioTime);
         lastRenderedSecond = wholeSecond;
+        updateMediaSessionPosition();
     }
 }
 
@@ -4933,6 +5302,7 @@ player.addEventListener("loadedmetadata", function(){
     duration.textContent = formatTime(player.duration);
     lastRenderedSecond = -1;
     renderPlayerProgress();
+    updateMediaSessionPosition();
 });
 
 player.addEventListener("play", startPlayerProgressAnimation);
@@ -5403,7 +5773,10 @@ if(crown){
 
         scrollModeFrame = requestAnimationFrame(() => {
             const pageName = target.dataset.page;
-            const shouldLock = alwaysLockedPages.has(pageName);
+            const viewportWidth = window.visualViewport?.width || window.innerWidth;
+            const viewportHeight = window.visualViewport?.height || window.innerHeight;
+            const isShortOrLandscape = viewportHeight < 590 || viewportWidth > viewportHeight;
+            const shouldLock = alwaysLockedPages.has(pageName) && !isShortOrLandscape;
 
             document.documentElement.classList.toggle(
                 'app-scroll-locked',
