@@ -2472,7 +2472,9 @@ input:focus-visible{
 }
 
 .track-info{
-    margin:16px 4px 3px!important;
+    display:block!important;
+    margin:16px 0 3px!important;
+    text-align:left!important;
 }
 
 #trackName{
@@ -2490,24 +2492,33 @@ input:focus-visible{
 }
 
 .like-button{
-    width:42px!important;
-    height:42px!important;
+    width:38px!important;
+    height:38px!important;
     border:1px solid rgba(var(--player-accent-rgb),.16)!important;
+    border-radius:50%!important;
     background:rgba(var(--player-accent-rgb),.045)!important;
     color:rgba(var(--player-accent-rgb),.84)!important;
-    font-size:18px!important;
+    font-size:16px!important;
 }
 
 .progress-container{
     grid-template-columns:34px minmax(0,1fr) 34px!important;
     gap:8px!important;
-    margin:17px 4px 0!important;
+    margin:17px 0 0!important;
 }
 
 #currentTime,
 #duration{
     color:#8b8984!important;
     font-size:10.5px!important;
+}
+
+#currentTime{
+    text-align:left!important;
+}
+
+#duration{
+    text-align:right!important;
 }
 
 #progress{
@@ -2552,10 +2563,12 @@ input:focus-visible{
 }
 
 .controls{
-    grid-template-columns:48px 62px 48px!important;
+    width:100%!important;
+    max-width:304px!important;
+    grid-template-columns:38px 42px 62px 42px 38px!important;
     justify-content:center;
-    gap:24px!important;
-    margin:17px auto 2px!important;
+    gap:13px!important;
+    margin:22px auto 3px!important;
 }
 
 #prevButton,
@@ -2581,13 +2594,27 @@ input:focus-visible{
     filter:brightness(1.08);
 }
 
+#playButton .fa-play{
+    transform:translateX(1.5px);
+}
+
 .play-mode-button{
-    left:20px!important;
-    bottom:27px!important;
-    width:34px!important;
-    height:34px!important;
+    position:static!important;
+    left:auto!important;
+    bottom:auto!important;
+    justify-self:center!important;
+    width:38px!important;
+    height:38px!important;
+    border:1px solid rgba(var(--player-accent-rgb),.16)!important;
+    border-radius:50%!important;
+    background:rgba(var(--player-accent-rgb),.045)!important;
     color:#716f6a!important;
-    font-size:15px!important;
+    font-size:13px!important;
+}
+
+.controls .like-button{
+    position:static!important;
+    justify-self:center!important;
 }
 
 .play-mode-button.active{
@@ -3286,18 +3313,18 @@ input:focus-visible{
                     <div id="trackName">Әңгіме</div>
                     <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
                 </div>
-                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
             </div>
             <div class="progress-container">
                 <span id="currentTime">0:00</span>
                 <input type="range" id="progress" value="0" min="0" max="100" aria-label="Позиция трека">
                 <span id="duration">0:00</span>
             </div>
-            <button id="playModeButton" class="play-mode-button" type="button" aria-label="Режим воспроизведения: по порядку" title="По порядку"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
             <div class="controls">
+                <button id="playModeButton" class="play-mode-button" type="button" aria-label="Режим воспроизведения: по порядку" title="По порядку"><i class="fa-solid fa-arrow-right-arrow-left"></i></button>
                 <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
                 <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
                 <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
+                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
             </div>
         </div>
 
