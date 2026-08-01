@@ -2472,7 +2472,10 @@ input:focus-visible{
 }
 
 .track-info{
-    display:block!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 38px!important;
+    align-items:center!important;
+    gap:10px!important;
     margin:16px 0 3px!important;
     text-align:left!important;
 }
@@ -2494,11 +2497,13 @@ input:focus-visible{
 .like-button{
     width:38px!important;
     height:38px!important;
-    border:1px solid rgba(var(--player-accent-rgb),.16)!important;
+    padding:0!important;
+    border:0!important;
     border-radius:50%!important;
-    background:rgba(var(--player-accent-rgb),.045)!important;
+    background:transparent!important;
     color:rgba(var(--player-accent-rgb),.84)!important;
-    font-size:16px!important;
+    font-size:20px!important;
+    box-shadow:none!important;
 }
 
 .progress-container{
@@ -2563,9 +2568,10 @@ input:focus-visible{
 }
 
 .controls{
+    position:relative!important;
     width:100%!important;
     max-width:304px!important;
-    grid-template-columns:38px 42px 62px 42px 38px!important;
+    grid-template-columns:42px 62px 42px!important;
     justify-content:center;
     gap:13px!important;
     margin:22px auto 3px!important;
@@ -2599,10 +2605,11 @@ input:focus-visible{
 }
 
 .play-mode-button{
-    position:static!important;
-    left:auto!important;
+    position:absolute!important;
+    left:16px!important;
+    top:50%!important;
     bottom:auto!important;
-    justify-self:center!important;
+    transform:translateY(-50%)!important;
     width:38px!important;
     height:38px!important;
     border:1px solid rgba(var(--player-accent-rgb),.16)!important;
@@ -2610,11 +2617,6 @@ input:focus-visible{
     background:rgba(var(--player-accent-rgb),.045)!important;
     color:#716f6a!important;
     font-size:13px!important;
-}
-
-.controls .like-button{
-    position:static!important;
-    justify-self:center!important;
 }
 
 .play-mode-button.active{
@@ -3313,6 +3315,7 @@ input:focus-visible{
                     <div id="trackName">Әңгіме</div>
                     <span id="trackMeta">ASIQPAI • INSTRUMENTAL</span>
                 </div>
+                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
             </div>
             <div class="progress-container">
                 <span id="currentTime">0:00</span>
@@ -3324,7 +3327,6 @@ input:focus-visible{
                 <button id="prevButton" type="button" aria-label="Предыдущий трек"><i class="fa-solid fa-backward-step"></i></button>
                 <button id="playButton" type="button" aria-label="Воспроизвести"><i class="fa-solid fa-play"></i></button>
                 <button id="nextButton" type="button" aria-label="Следующий трек"><i class="fa-solid fa-forward-step"></i></button>
-                <button id="likeButton" class="like-button" type="button" aria-label="Добавить в избранное"><i class="fa-regular fa-heart"></i></button>
             </div>
         </div>
 
