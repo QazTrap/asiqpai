@@ -4529,7 +4529,7 @@ function withdrawDate(value){
 }
 function renderWithdraw(){
     const balance = Number(withdrawState?.rewardBalance ?? dailyRewardState?.rewardBalance ?? 0);
-    const min = Number(withdrawState?.minimum || 5000);
+    const min = Number(withdrawState?.minimum || 25);
     const max = Number(withdrawState?.maximum || 10000);
     const wallet = tonConnectUI.account?.address || "";
     const pending = Boolean(withdrawState?.hasPending);
