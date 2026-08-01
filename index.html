@@ -3574,6 +3574,36 @@ body{
         font-size:6.5px!important;
     }
 }
+
+/* Play/Pause stays visually icon-only; the large touch target is preserved. */
+#page-music #playButton{
+    width:62px!important;
+    height:62px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    outline:0!important;
+    background:transparent!important;
+    color:#d6b44c!important;
+    font-size:32px!important;
+    box-shadow:none!important;
+    filter:none!important;
+    text-shadow:0 0 12px rgba(214,180,76,.16)!important;
+}
+
+#page-music #playButton:hover,
+#page-music #playButton:focus,
+#page-music #playButton:active{
+    border:0!important;
+    background:transparent!important;
+    color:#f0cf68!important;
+    box-shadow:none!important;
+    filter:none!important;
+}
+
+#page-music #playButton:active{
+    transform:scale(.88)!important;
+}
 </style>
 
 </head>
@@ -5004,17 +5034,11 @@ function setupMediaSessionActions(){
         player.currentTime = Math.min(Math.max(details.seekTime, 0), player.duration);
         updateMediaSessionPosition();
     });
-    setAction("seekbackward", details => {
-        const step = Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
-        player.currentTime = Math.max(player.currentTime - step, 0);
-        updateMediaSessionPosition();
-    });
-    setAction("seekforward", details => {
-        const step = Number.isFinite(details.seekOffset) ? details.seekOffset : 10;
-        const end = Number.isFinite(player.duration) ? player.duration : player.currentTime + step;
-        player.currentTime = Math.min(player.currentTime + step, end);
-        updateMediaSessionPosition();
-    });
+
+    // iOS отдает приоритет кнопкам ±10 секунд, если эти действия доступны.
+    // Явно отключаем их, чтобы системный плеер показывал Previous / Next.
+    setAction("seekbackward", null);
+    setAction("seekforward", null);
 }
 
 setupMediaSessionActions();
