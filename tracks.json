@@ -17,6 +17,15 @@
     "accent": "175,42,42"
   },
   {
+    "title": "Crypto Zombie",
+    "artist": "ASIQPAI",
+    "meta": "INSTRUMENTAL",
+    "cover": "images/Crypto Zombie.jpg",
+    "file": "music/Crypto Zombie.mp3",
+    "accent": "212,175,55",
+    "priceAsiq": 7000
+  },
+  {
     "title": "Дрим Трап",
     "artist": "ASIQPAI",
     "meta": "TRACK",
@@ -39,6 +48,7 @@
     "cover": "images/Lux.jpg",
     "file": "music/Lux.mp3",
     "accent": "212,175,55"
+    "priceAsiq": 5000
   },
   {
     "title": "Контроль",
