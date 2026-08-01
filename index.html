@@ -2631,15 +2631,194 @@ input:focus-visible{
     transform:translateY(-50%)!important;
     width:38px!important;
     height:38px!important;
-    border:1px solid rgba(var(--player-accent-rgb),.16)!important;
-    border-radius:50%!important;
-    background:rgba(var(--player-accent-rgb),.045)!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
     color:#716f6a!important;
     font-size:13px!important;
+    box-shadow:none!important;
+    transition:color .18s ease,text-shadow .18s ease!important;
+}
+
+.play-mode-button i{
+    width:18px!important;
+    height:18px!important;
+    display:grid!important;
+    place-items:center!important;
+    line-height:1!important;
+    transform:none!important;
+}
+
+.play-mode-button:hover,
+.play-mode-button:active,
+.play-mode-button.mode-flash{
+    transform:translateY(-50%)!important;
+    border:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    animation:none!important;
 }
 
 .play-mode-button.active{
     color:rgb(var(--player-accent-rgb))!important;
+}
+
+/* AIMP experiment disabled: previous ASIQPAI player remains active. */
+@media (max-width:0px){
+/* ===== AIMP × ASIQPAI PLAYER ===== */
+.player{
+    padding:14px!important;
+    border:1px solid rgba(201,196,178,.30)!important;
+    background:
+        radial-gradient(circle at 8px 8px,#77746a 0 1px,#1a1a18 1.5px 3px,transparent 3.5px),
+        radial-gradient(circle at calc(100% - 8px) 8px,#77746a 0 1px,#1a1a18 1.5px 3px,transparent 3.5px),
+        radial-gradient(circle at 8px calc(100% - 8px),#77746a 0 1px,#1a1a18 1.5px 3px,transparent 3.5px),
+        radial-gradient(circle at calc(100% - 8px) calc(100% - 8px),#77746a 0 1px,#1a1a18 1.5px 3px,transparent 3.5px),
+        repeating-linear-gradient(100deg,rgba(255,255,255,.016) 0 1px,rgba(0,0,0,.025) 1px 3px),
+        linear-gradient(145deg,#252624 0%,#111212 48%,#070808 100%)!important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.035),
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset 0 -1px 0 rgba(0,0,0,.92),
+        0 22px 58px rgba(0,0,0,.56)!important;
+}
+
+.player::before{
+    inset:0!important;
+    left:0!important;
+    right:0!important;
+    top:0!important;
+    bottom:0!important;
+    width:auto!important;
+    height:auto!important;
+    z-index:0!important;
+    border-radius:inherit!important;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,.012) 0 1px,
+            transparent 1px 4px
+        )!important;
+    filter:none!important;
+    opacity:.72!important;
+}
+
+.player::after{
+    z-index:0!important;
+    background:
+        linear-gradient(115deg,rgba(255,255,255,.055),transparent 20%,transparent 75%,rgba(255,255,255,.018))!important;
+    box-shadow:inset 0 0 28px rgba(0,0,0,.42);
+}
+
+.player.playing{
+    border-color:rgba(var(--player-accent-rgb),.42)!important;
+    box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.035),
+        inset 0 1px 0 rgba(255,255,255,.12),
+        0 0 22px rgba(var(--player-accent-rgb),.10),
+        0 22px 58px rgba(0,0,0,.56)!important;
+}
+
+.player-cover-wrap{
+    border:1px solid rgba(210,205,188,.27)!important;
+    border-radius:18px!important;
+    box-shadow:
+        inset 0 0 0 2px rgba(0,0,0,.55),
+        0 2px 0 rgba(255,255,255,.055),
+        0 15px 34px rgba(0,0,0,.50)!important;
+}
+
+.track-info{
+    margin:13px 0 0!important;
+    padding:11px 12px 6px!important;
+    border:1px solid rgba(202,197,179,.17)!important;
+    border-bottom:0!important;
+    border-radius:13px 13px 0 0!important;
+    background:
+        linear-gradient(180deg,rgba(5,7,7,.97),rgba(12,14,13,.98))!important;
+    box-shadow:
+        inset 0 8px 18px rgba(0,0,0,.44),
+        inset 0 1px 0 rgba(255,255,255,.028)!important;
+}
+
+#trackName{
+    color:#f5f4ed!important;
+    font-size:20px!important;
+    letter-spacing:.25px!important;
+    text-shadow:0 1px 0 #000;
+}
+
+#trackMeta{
+    color:rgba(var(--player-accent-rgb),.88)!important;
+    text-shadow:0 0 10px rgba(var(--player-accent-rgb),.12);
+}
+
+.progress-container{
+    margin:0!important;
+    padding:5px 12px 10px!important;
+    border:1px solid rgba(202,197,179,.17)!important;
+    border-top:0!important;
+    border-radius:0 0 13px 13px!important;
+    background:
+        linear-gradient(180deg,rgba(12,14,13,.98),rgba(5,7,7,.98))!important;
+    box-shadow:inset 0 -8px 18px rgba(0,0,0,.30)!important;
+}
+
+.controls{
+    width:100%!important;
+    max-width:100%!important;
+    min-height:78px!important;
+    margin:13px auto 1px!important;
+    padding:8px 14px!important;
+    border:1px solid rgba(202,197,179,.20)!important;
+    border-radius:15px!important;
+    background:
+        repeating-linear-gradient(100deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px),
+        linear-gradient(180deg,#1a1b1a 0%,#0b0c0c 52%,#151614 100%)!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        inset 0 -1px 0 rgba(0,0,0,.82),
+        0 7px 18px rgba(0,0,0,.25)!important;
+}
+
+#prevButton,
+#nextButton{
+    width:42px!important;
+    height:42px!important;
+    border:1px solid rgba(206,201,183,.19)!important;
+    border-radius:50%!important;
+    background:
+        linear-gradient(145deg,#242523,#0b0c0c)!important;
+    color:#d7d4ca!important;
+    font-size:18px!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.09),
+        0 4px 9px rgba(0,0,0,.34)!important;
+}
+
+#playButton{
+    border:2px solid rgba(235,225,188,.58)!important;
+    box-shadow:
+        inset 0 1px 1px rgba(255,255,255,.36),
+        inset 0 -4px 8px rgba(0,0,0,.24),
+        0 7px 17px rgba(var(--player-accent-rgb),.19),
+        0 5px 12px rgba(0,0,0,.42)!important;
+}
+
+.play-mode-button{
+    left:22px!important;
+    border-color:rgba(206,201,183,.19)!important;
+    background:linear-gradient(145deg,#222320,#090a0a)!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 4px 9px rgba(0,0,0,.30)!important;
+}
+
+.like-button{
+    color:rgba(var(--player-accent-rgb),.88)!important;
+    text-shadow:0 0 10px rgba(var(--player-accent-rgb),.17);
+}
 }
 
 /* Home / submission */
@@ -4671,10 +4850,6 @@ playModeButton.addEventListener("click", function(){
     SafeStorage.set("playMode", playMode);
     updatePlayModeButton();
 
-    playModeButton.classList.remove("mode-flash");
-    void playModeButton.offsetWidth;
-    playModeButton.classList.add("mode-flash");
-
     if(window.Telegram?.WebApp?.HapticFeedback){
         Telegram.WebApp.HapticFeedback.impactOccurred("light");
     }
@@ -4703,6 +4878,52 @@ player.addEventListener("pause", updateTrackCatalogState);
 // ПРОГРЕСС
 // =======================
 
+let progressAnimationFrame = 0;
+let progressIsSeeking = false;
+let lastRenderedSecond = -1;
+
+function renderPlayerProgress(){
+    const audioDuration = Number(player.duration);
+    const audioTime = Number(player.currentTime);
+
+    if(!Number.isFinite(audioDuration) || audioDuration <= 0) return;
+
+    if(!progressIsSeeking){
+        progress.value = (audioTime / audioDuration) * 100;
+    }
+
+    const wholeSecond = Math.floor(audioTime);
+    if(wholeSecond !== lastRenderedSecond){
+        currentTime.textContent = formatTime(audioTime);
+        lastRenderedSecond = wholeSecond;
+    }
+}
+
+function animatePlayerProgress(){
+    renderPlayerProgress();
+
+    if(!player.paused && !player.ended){
+        progressAnimationFrame = requestAnimationFrame(
+            animatePlayerProgress
+        );
+    }else{
+        progressAnimationFrame = 0;
+    }
+}
+
+function startPlayerProgressAnimation(){
+    cancelAnimationFrame(progressAnimationFrame);
+    progressAnimationFrame = requestAnimationFrame(
+        animatePlayerProgress
+    );
+}
+
+function stopPlayerProgressAnimation(){
+    cancelAnimationFrame(progressAnimationFrame);
+    progressAnimationFrame = 0;
+    renderPlayerProgress();
+}
+
 player.addEventListener("error", function(){
     const track = playlist[currentTrack];
     console.warn("Ошибка загрузки MP3");
@@ -4710,21 +4931,14 @@ player.addEventListener("error", function(){
 
 player.addEventListener("loadedmetadata", function(){
     duration.textContent = formatTime(player.duration);
+    lastRenderedSecond = -1;
+    renderPlayerProgress();
 });
 
-player.addEventListener("timeupdate", function(){
-
-    if(player.duration){
-
-        progress.value =
-        (player.currentTime / player.duration) * 100;
-
-        currentTime.textContent =
-        formatTime(player.currentTime);
-
-    }
-
-});
+player.addEventListener("play", startPlayerProgressAnimation);
+player.addEventListener("pause", stopPlayerProgressAnimation);
+player.addEventListener("ended", stopPlayerProgressAnimation);
+player.addEventListener("timeupdate", renderPlayerProgress);
 
 
 
@@ -4732,11 +4946,26 @@ progress.addEventListener("input", function(){
 
     if(player.duration){
 
-        player.currentTime =
-        (progress.value / 100) * player.duration;
+        const selectedTime =
+            (Number(progress.value) / 100) * player.duration;
+
+        player.currentTime = selectedTime;
+        currentTime.textContent = formatTime(selectedTime);
+        lastRenderedSecond = Math.floor(selectedTime);
 
     }
 
+});
+
+progress.addEventListener("pointerdown", function(){
+    progressIsSeeking = true;
+});
+
+["pointerup", "pointercancel", "change"].forEach(eventName => {
+    progress.addEventListener(eventName, function(){
+        progressIsSeeking = false;
+        renderPlayerProgress();
+    });
 });
 
 // =======================
