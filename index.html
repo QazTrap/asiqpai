@@ -3607,6 +3607,397 @@ body{
 #page-music #playButton:active{
     transform:scale(.88)!important;
 }
+
+/* ===== ASIQPAI BANK CARD ===== */
+#page-wallet .asiq-wallet-card.asiq-bank-card{
+    position:relative!important;
+    isolation:isolate;
+    display:flex!important;
+    flex-direction:column;
+    width:min(100%,360px)!important;
+    max-width:360px!important;
+    min-height:214px;
+    aspect-ratio:1.586 / 1;
+    margin:0 auto 18px!important;
+    padding:19px 20px 18px!important;
+    overflow:hidden;
+    border:1px solid rgba(244,216,117,.48)!important;
+    border-radius:23px!important;
+    background:
+        radial-gradient(circle at 90% 12%,rgba(244,216,117,.18),transparent 28%),
+        radial-gradient(circle at 8% 105%,rgba(181,133,26,.18),transparent 38%),
+        linear-gradient(135deg,#1d1b16 0%,#0b0b0a 47%,#17130b 100%)!important;
+    color:#f7e8b0!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.11),
+        inset 0 -1px 0 rgba(0,0,0,.65),
+        0 22px 50px rgba(0,0,0,.52),
+        0 0 24px rgba(212,175,55,.11)!important;
+    transform:none!important;
+}
+
+#page-wallet .asiq-wallet-card.asiq-bank-card::before{
+    content:""!important;
+    display:block!important;
+    position:absolute;
+    z-index:-2;
+    inset:-55% -30%;
+    background:linear-gradient(112deg,transparent 37%,rgba(255,255,255,.075) 48%,transparent 58%);
+    transform:rotate(-7deg);
+    pointer-events:none;
+}
+
+#page-wallet .asiq-wallet-card.asiq-bank-card::after{
+    content:""!important;
+    display:block!important;
+    position:absolute;
+    z-index:-1;
+    right:-63px;
+    bottom:-75px;
+    width:215px;
+    height:215px;
+    border:1px solid rgba(244,216,117,.10);
+    border-radius:50%;
+    box-shadow:
+        0 0 0 20px rgba(212,175,55,.035),
+        0 0 0 45px rgba(212,175,55,.025);
+    pointer-events:none;
+}
+
+#page-wallet .asiq-bank-top{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+}
+
+#page-wallet .asiq-bank-brand{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    min-width:0;
+    text-align:left;
+}
+
+#page-wallet .asiq-bank-logo{
+    width:34px;
+    height:30px;
+    flex:0 0 34px;
+    object-fit:contain;
+    filter:sepia(.35) saturate(1.15) drop-shadow(0 5px 9px rgba(212,175,55,.20));
+}
+
+#page-wallet .asiq-bank-brand-copy{
+    display:grid;
+    gap:2px;
+}
+
+#page-wallet .asiq-bank-brand-copy strong{
+    color:#f5dc83;
+    font-size:16px;
+    line-height:1;
+    font-weight:900;
+    letter-spacing:1.4px;
+}
+
+#page-wallet .asiq-bank-brand-copy small{
+    color:#8e8469;
+    font-size:7px;
+    line-height:1;
+    font-weight:850;
+    letter-spacing:1.7px;
+}
+
+#page-wallet .asiq-bank-card .asiq-refresh-button{
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px;
+    border:1px solid rgba(244,216,117,.22)!important;
+    border-radius:50%!important;
+    background:rgba(255,255,255,.035)!important;
+    color:#d8b958!important;
+    backdrop-filter:blur(8px);
+}
+
+#page-wallet .asiq-bank-chip-row{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    height:31px;
+    margin:11px 0 6px;
+}
+
+#page-wallet .asiq-bank-chip{
+    position:relative;
+    width:42px;
+    height:29px;
+    overflow:hidden;
+    border:1px solid rgba(255,244,194,.48);
+    border-radius:7px;
+    background:
+        linear-gradient(90deg,transparent 47%,rgba(91,64,7,.30) 48%,rgba(91,64,7,.30) 52%,transparent 53%),
+        linear-gradient(0deg,transparent 47%,rgba(91,64,7,.30) 48%,rgba(91,64,7,.30) 52%,transparent 53%),
+        linear-gradient(135deg,#f3d87a,#a87b19 55%,#e9c75f);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.38),0 4px 12px rgba(0,0,0,.22);
+}
+
+#page-wallet .asiq-bank-chip::before,
+#page-wallet .asiq-bank-chip::after{
+    content:"";
+    position:absolute;
+    top:5px;
+    bottom:5px;
+    width:11px;
+    border:1px solid rgba(82,55,3,.32);
+    border-radius:4px;
+}
+
+#page-wallet .asiq-bank-chip::before{left:-3px}
+#page-wallet .asiq-bank-chip::after{right:-3px}
+
+#page-wallet .asiq-bank-contactless{
+    color:rgba(244,216,117,.68);
+    font-size:16px;
+    transform:rotate(90deg);
+}
+
+#page-wallet .asiq-bank-balance-label{
+    position:relative;
+    z-index:2;
+    margin-top:1px;
+    color:#8e8469;
+    font-size:7.5px;
+    line-height:1;
+    font-weight:850;
+    letter-spacing:1.8px;
+    text-align:left;
+}
+
+#page-wallet .asiq-bank-card .asiq-balance-value{
+    position:relative;
+    z-index:2;
+    display:flex!important;
+    align-items:baseline;
+    gap:8px;
+    min-height:43px;
+    margin:4px 0 8px!important;
+    color:#f7df87!important;
+    font-size:clamp(34px,10.8vw,44px)!important;
+    line-height:1!important;
+    font-weight:900!important;
+    letter-spacing:-1px!important;
+    text-align:left!important;
+    text-shadow:0 3px 18px rgba(212,175,55,.14)!important;
+    font-variant-numeric:tabular-nums;
+}
+
+#page-wallet .asiq-bank-card .asiq-balance-symbol{
+    display:inline!important;
+    margin:0!important;
+    color:#bb9b3f!important;
+    font-size:12px!important;
+    line-height:1!important;
+    font-weight:900!important;
+    letter-spacing:1.6px!important;
+}
+
+#page-wallet .asiq-bank-bottom{
+    position:relative;
+    z-index:2;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:14px;
+    min-height:28px;
+    margin-top:auto;
+    text-align:left;
+}
+
+#page-wallet .asiq-bank-holder{
+    min-width:0;
+    flex:1;
+}
+
+#page-wallet .asiq-bank-holder-label{
+    display:block;
+    margin-bottom:3px;
+    color:#786f58;
+    font-size:6.5px;
+    line-height:1;
+    font-weight:850;
+    letter-spacing:1.5px;
+}
+
+#page-wallet .asiq-bank-card .asiq-wallet-status{
+    margin:0!important;
+    overflow:hidden;
+    color:#d8ccaa!important;
+    font-size:10px!important;
+    line-height:1.2!important;
+    font-weight:750!important;
+    text-align:left!important;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#page-wallet .asiq-bank-card .asiq-wallet-address{
+    margin:3px 0 0!important;
+    overflow:hidden;
+    color:#817962!important;
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+    font-size:8px!important;
+    line-height:1.1!important;
+    text-align:left!important;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    word-break:normal!important;
+}
+
+#page-wallet .asiq-bank-network{
+    display:grid;
+    justify-items:end;
+    flex:0 0 auto;
+}
+
+#page-wallet .asiq-bank-network strong{
+    color:#f0d675;
+    font-size:15px;
+    line-height:1;
+    font-weight:950;
+    font-style:italic;
+    letter-spacing:.5px;
+}
+
+#page-wallet .asiq-bank-network small{
+    margin-top:3px;
+    color:#756d57;
+    font-size:6px;
+    line-height:1;
+    font-weight:850;
+    letter-spacing:1.3px;
+}
+
+#page-wallet .asiq-swap-button.asiq-bank-swap{
+    position:relative;
+    isolation:isolate;
+    width:min(100%,360px)!important;
+    max-width:360px!important;
+    min-height:64px!important;
+    margin:0 auto 18px!important;
+    padding:10px 13px!important;
+    display:grid!important;
+    grid-template-columns:38px minmax(0,1fr) 24px;
+    align-items:center!important;
+    justify-content:stretch!important;
+    gap:11px!important;
+    overflow:hidden;
+    border:1px solid rgba(244,216,117,.34)!important;
+    border-radius:18px!important;
+    background:
+        radial-gradient(circle at 92% 0,rgba(244,216,117,.11),transparent 40%),
+        linear-gradient(145deg,#181611,#080808 66%,#121008)!important;
+    color:#e8d58f!important;
+    text-align:left;
+    text-decoration:none!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.055),
+        0 15px 34px rgba(0,0,0,.40),
+        0 0 18px rgba(212,175,55,.07)!important;
+    transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease!important;
+}
+
+#page-wallet .asiq-swap-button.asiq-bank-swap::before{
+    content:"";
+    position:absolute;
+    z-index:-1;
+    inset:0;
+    background:linear-gradient(110deg,transparent 15%,rgba(255,255,255,.045) 47%,transparent 72%);
+    pointer-events:none;
+}
+
+#page-wallet .asiq-bank-swap .asiq-swap-main-icon{
+    width:38px!important;
+    height:38px!important;
+    display:grid!important;
+    place-items:center!important;
+    border:1px solid rgba(244,216,117,.28)!important;
+    border-radius:12px!important;
+    background:linear-gradient(145deg,rgba(212,175,55,.14),rgba(212,175,55,.035))!important;
+    color:#e5c65e!important;
+    font-size:14px!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+
+#page-wallet .asiq-swap-copy{
+    min-width:0;
+    display:grid;
+    gap:4px;
+}
+
+#page-wallet .asiq-swap-copy strong{
+    overflow:hidden;
+    font-size:13px;
+    line-height:1;
+    font-weight:950;
+    letter-spacing:.9px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#page-wallet .asiq-swap-copy small{
+    overflow:hidden;
+    color:#756f60;
+    font-size:8px;
+    line-height:1;
+    font-weight:800;
+    letter-spacing:1.15px;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+#page-wallet .asiq-bank-swap .asiq-swap-chevron{
+    width:24px!important;
+    height:24px!important;
+    display:grid!important;
+    place-items:center!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:transparent!important;
+    color:#8f7b3d!important;
+    font-size:11px!important;
+    box-shadow:none!important;
+}
+
+@media (hover:hover){
+    #page-wallet .asiq-swap-button.asiq-bank-swap:hover{
+        transform:translateY(-2px)!important;
+        border-color:rgba(244,216,117,.52)!important;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 18px 40px rgba(0,0,0,.46),0 0 24px rgba(212,175,55,.12)!important;
+    }
+}
+
+#page-wallet .asiq-swap-button.asiq-bank-swap:active{
+    transform:scale(.985)!important;
+}
+
+@media (max-width:345px){
+    #page-wallet .asiq-wallet-card.asiq-bank-card{
+        min-height:202px;
+        padding:16px!important;
+    }
+
+    #page-wallet .asiq-bank-chip-row{
+        margin-top:9px;
+    }
+
+    #page-wallet .asiq-bank-card .asiq-balance-value{
+        font-size:34px!important;
+    }
+}
 </style>
 
 </head>
@@ -3727,53 +4118,57 @@ body{
     <section class="app-page" id="page-wallet" data-page="wallet">
         <div id="ton-connect"></div>
 
-        <div class="asiq-wallet-card" id="asiqWalletCard" aria-live="polite">
-            <div class="asiq-wallet-head">
-                <div class="asiq-wallet-label"><i class="fa-solid fa-wallet" aria-hidden="true"></i><span>ASIQ Wallet</span></div>
+        <div class="asiq-wallet-card asiq-bank-card" id="asiqWalletCard" aria-live="polite">
+            <div class="asiq-bank-top">
+                <div class="asiq-bank-brand">
+                    <img class="asiq-bank-logo" src="images/crow.png" alt="" aria-hidden="true">
+                    <div class="asiq-bank-brand-copy">
+                        <strong>ASIQPAI</strong>
+                        <small>DIGITAL WALLET</small>
+                    </div>
+                </div>
                 <button class="asiq-refresh-button" id="asiqRefreshButton" type="button" aria-label="Обновить баланс ASIQ" title="Обновить баланс" disabled><i class="fa-solid fa-rotate"></i></button>
             </div>
+            <div class="asiq-bank-chip-row" aria-hidden="true">
+                <span class="asiq-bank-chip"></span>
+                <span class="asiq-bank-contactless"><i class="fa-solid fa-wifi"></i></span>
+            </div>
+            <div class="asiq-bank-balance-label">AVAILABLE BALANCE</div>
             <div class="asiq-balance-value" id="asiqBalanceValue">— <span class="asiq-balance-symbol">ASIQ</span></div>
-            <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
-            <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
+            <div class="asiq-bank-bottom">
+                <div class="asiq-bank-holder">
+                    <span class="asiq-bank-holder-label">WALLET STATUS</span>
+                    <div class="asiq-wallet-status" id="asiqWalletStatus">Подключите TON-кошелёк</div>
+                    <div class="asiq-wallet-address" id="asiqWalletAddress"></div>
+                </div>
+                <div class="asiq-bank-network" aria-label="TON Network">
+                    <strong>TON</strong>
+                    <small>NETWORK</small>
+                </div>
+            </div>
         </div>
 
         <a
-            class="asiq-swap-button"
+            class="asiq-swap-button asiq-bank-swap"
             href="https://app.dedust.io/swap/GRAM/EQDtaiYQRMlcGHXVkcK873McLzx-JQUZtyR8W1O6e2XISp52"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Buy or sell ASIQ on DeDust"
         >
-            <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
-            <span>
-    <span class="buy-text">BUY</span>
-    <span class="separator"> / </span>
-    <span class="sell-text">SELL</span>
-    <span class="separator"> </span>
-    <span class="asiq-text">ASIQ</span>
-</span>
+            <i class="fa-solid fa-arrow-right-arrow-left asiq-swap-main-icon" aria-hidden="true"></i>
+            <span class="asiq-swap-copy">
+                <strong>
+                    <span class="buy-text">BUY</span>
+                    <span class="separator"> / </span>
+                    <span class="sell-text">SELL</span>
+                    <span class="separator"> </span>
+                    <span class="asiq-text">ASIQ</span>
+                </strong>
+                <small>DEDUST · ASIQ / GRAM</small>
+            </span>
+            <i class="fa-solid fa-chevron-right asiq-swap-chevron" aria-hidden="true"></i>
         </a>
 
-        <div class="daily-reward-card" id="dailyRewardCard" aria-live="polite">
-            <div class="daily-reward-icon">🎁</div>
-            <div class="daily-reward-title">Daily Reward</div>
-            <div class="daily-reward-amount">+25 ASIQ</div>
-            <p class="daily-reward-note">Получайте ежедневную награду во внутренний баланс приложения.</p>
-            <div class="daily-reward-balance" id="dailyRewardBalance">Награды в приложении: — ASIQ</div>
-            <button class="daily-reward-button" id="dailyRewardButton" type="button" disabled>Загрузка…</button>
-            <div class="daily-reward-timer" id="dailyRewardTimer">Проверяем доступность награды</div>
-        </div>
-
-        <div class="withdraw-card" id="withdrawCard">
-            <div class="withdraw-head"><div class="withdraw-title"><i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i><span>Withdraw ASIQ</span></div><div class="withdraw-badge"><i class="fa-solid fa-wallet" aria-hidden="true"></i><span>TON WALLET</span></div></div>
-            <div class="withdraw-balance" id="withdrawBalance">Доступно: — ASIQ</div>
-            <div class="withdraw-row">
-                <input class="withdraw-input" id="withdrawAmount" type="number" inputmode="decimal" min="25" step="25" placeholder="Количество ASIQ" disabled>
-                <button class="withdraw-max" id="withdrawMaxButton" type="button" disabled>MAX</button>
-            </div>
-            <button class="withdraw-button" id="withdrawButton" type="button" disabled>Подключите TON-кошелёк</button>
-            <p class="withdraw-note" id="withdrawNote">Минимум 25 ASIQ. При отклонении сумма автоматически возвращается.</p>
-        </div>
     </section>
 
     <section class="app-page" id="page-community" data-page="community">
@@ -3995,7 +4390,6 @@ tonConnectUI.onStatusChange(async wallet => {
     }
 
     loadAsiqBalance(walletAddress);
-    renderWithdraw();
     renderSubmission();
 });
 
@@ -4317,6 +4711,10 @@ submissionPayButton?.addEventListener("click", async () => {
 // DAILY REWARD (INTERNAL ASIQ REWARD BALANCE)
 // =======================
 
+// Функции Daily Reward и Withdraw сохранены только как архивный код.
+// Блок не выполняется и не отправляет запросы на backend.
+if(false){
+
 const dailyRewardCard = document.getElementById("dailyRewardCard");
 const dailyRewardBalance = document.getElementById("dailyRewardBalance");
 const dailyRewardButton = document.getElementById("dailyRewardButton");
@@ -4529,7 +4927,7 @@ function withdrawDate(value){
 }
 function renderWithdraw(){
     const balance = Number(withdrawState?.rewardBalance ?? dailyRewardState?.rewardBalance ?? 0);
-    const min = Number(withdrawState?.minimum || 25);
+    const min = Number(withdrawState?.minimum || 5000);
     const max = Number(withdrawState?.maximum || 10000);
     const wallet = tonConnectUI.account?.address || "";
     const pending = Boolean(withdrawState?.hasPending);
@@ -4590,6 +4988,8 @@ withdrawMaxButton?.addEventListener("click",()=>{
     withdrawAmount.value = String(Math.min(balance,Number(withdrawState?.maximum || 10000)));
 });
 withdrawButton?.addEventListener("click",createWithdraw);
+
+}
 
 
 async function syncServerProfile(){
@@ -5667,9 +6067,7 @@ loadPlaylist();
     <script>
 const crown = document.getElementById("crown");
 
-// Загружаем функции приложения, не связанные с Gold Points.
-loadDailyReward();
-loadWithdraw();
+// Daily Reward и Withdraw ASIQ отключены.
 loadSubmission();
 
 // Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
