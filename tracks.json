@@ -7,7 +7,7 @@
     "artwork": "images/dark-nights-cover.jpg",
     "file": "music/track.mp3",
     "accent": "212,175,55",
-    "priceAsiq": 400
+    "priceAsiq": 1000
   },
   {
     "title": "Демон",
@@ -45,7 +45,7 @@
     "artwork": "images/BORZ.jpg",
     "file": "music/BORZ.mp3",
     "accent": "212,175,55",
-    "priceAsiq": 600
+    "priceAsiq": 1000
   },
   {
     "title": "Lux",
@@ -92,7 +92,7 @@
     "artwork": "images/Разъём.jpg",
     "file": "music/Razem.mp3",
     "accent": "212,175,55",
-    "priceAsiq": 1200
+    "priceAsiq": 1000
   },
   {
     "title": "Крипто банк",
@@ -102,7 +102,7 @@
     "artwork": "images/Крипто банк.jpg",
     "file": "music/Крипто банк.mp3",
     "accent": "212,175,55",
-    "priceAsiq": 800
+    "priceAsiq": 1000
   },
   {
     "title": "Эфир и ум",
@@ -121,7 +121,7 @@
     "artwork": "images/Woah.jpg",
     "file": "music/Woah.mp3",
     "accent": "212,175,55",
-    "priceAsiq": 500
+    "priceAsiq": 1000
   },
   {
     "title": "Baby",
