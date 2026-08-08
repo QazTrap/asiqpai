@@ -10,6 +10,16 @@
     "priceAsiq": 1000
   },
   {
+    "title": "ASIQ",
+    "artist": "ASIQPAI",
+    "meta": "INSTRUMENTAL",
+    "cover": "images/ASIQ.png",
+    "artwork": "images/ASIQ.ong",
+    "file": "music/ASIQ.mp3",
+    "accent": "212,175,55",
+    "priceAsiq": 1000
+  },
+  {
     "title": "Демон",
     "artist": "ASIQPAI",
     "meta": "TRACK",
