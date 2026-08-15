@@ -5429,7 +5429,7 @@ async function loadTrack(index, options = {}){
     trackCover.src = encodeURI(track.cover).replace(/#/g, "%23");
     trackCover.alt = `Обложка ${track.title}`;
 
-    void updateMediaSessionMetadata(track);
+    updateMediaSessionMetadata(track);
     // Telegram на iOS может сбрасывать системные обработчики после смены src.
     // Регистрируем их заново для каждого загруженного трека.
     setupMediaSessionActions();
