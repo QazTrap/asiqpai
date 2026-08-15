@@ -5597,8 +5597,16 @@ player.addEventListener("ended", async function(){
 
 player.addEventListener("play", function(){
     updateTrackCatalogState();
+
     if("mediaSession" in navigator){
         setupMediaSessionActions();
+
+        const track = playlist[currentTrack];
+
+        if(track){
+            updateMediaSessionMetadata(track);
+        }
+
         navigator.mediaSession.playbackState = "playing";
     }
 });
