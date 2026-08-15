@@ -5362,43 +5362,34 @@ function loadMediaArtwork(path){
     });
 }
 
-async function updateMediaSessionMetadata(track){
+function updateMediaSessionMetadata(track){
     if(!("mediaSession" in navigator) || !("MediaMetadata" in window)) return;
 
-    const requestId = ++mediaMetadataRequestId;
-    const baseMetadata = {
-        title: track.title || "ASIQPAI",
-        artist: track.artist || "ASIQPAI",
-        album: track.meta || "ASIQPAI Music"
-    };
-
     try{
-        // Для iOS предпочтительнее отдельная квадратная картинка 512x512
-        // с простым ASCII-именем из поля artwork в tracks.json.
-        const artworkCandidates = [
-            track.artwork,
-            track.cover,
-            "images/logo.png"
-        ].filter(Boolean);
-        let artwork = null;
+        const artworkPath =
+            track.artwork ||
+            track.cover ||
+            "images/logo.png";
 
-        for(const candidate of artworkCandidates){
-            artwork = await loadMediaArtwork(candidate);
-            if(artwork) break;
-        }
+        const artworkUrl = getAbsoluteMediaUrl(artworkPath);
 
-        // За время загрузки пользователь мог переключить трек.
-        if(requestId !== mediaMetadataRequestId) return;
-
-        // Отправляем метаданные один раз сразу вместе с готовой обложкой.
-        // Telegram WebView может сохранить первый пустой вариант и не
-        // перерисовать картинку при втором обновлении.
         navigator.mediaSession.metadata = new MediaMetadata({
-            ...baseMetadata,
-            ...(artwork ? { artwork:[artwork] } : {})
+            title: track.title || "ASIQPAI",
+            artist: track.artist || "ASIQPAI",
+            album: track.meta || "ASIQPAI Music",
+            artwork: [
+                {
+                    src: artworkUrl,
+                    type: getMediaArtworkType(artworkPath)
+                }
+            ]
         });
+
     }catch(error){
-        console.warn("Не удалось обновить системную карточку трека", error);
+        console.warn(
+            "Не удалось обновить системную карточку трека",
+            error
+        );
     }
 }
 
