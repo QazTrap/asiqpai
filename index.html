@@ -39,7 +39,8 @@ const SafeStorage = (() => {
         "likedTracks",
         "gp",
         "goldLicenseClaimed",
-        "submissionOrderId"
+        "submissionOrderId",
+        "presalePassOrderId"
     ]);
 
     const maxValueLength = 20000;
@@ -1581,6 +1582,283 @@ body{padding-bottom:calc(var(--nav-height) + 24px + env(safe-area-inset-bottom))
     line-height:1.5;
 }
 .submission-success[hidden]{display:none!important}
+
+/* ===== ASIQPAI PRESALE PASS ===== */
+.presale-pass-card{
+    position:relative;
+    width:min(92vw,390px);
+    margin:0 auto 34px;
+    padding:20px 18px;
+    box-sizing:border-box;
+    overflow:hidden;
+    border:1px solid rgba(244,214,122,.34);
+    border-radius:22px;
+    background:
+        radial-gradient(circle at 88% 12%,rgba(255,216,89,.19),transparent 34%),
+        radial-gradient(circle at 5% 100%,rgba(126,88,12,.16),transparent 43%),
+        linear-gradient(145deg,rgba(20,17,9,.99),rgba(6,7,9,.99));
+    box-shadow:0 18px 42px rgba(0,0,0,.46),inset 0 1px 0 rgba(255,255,255,.055);
+}
+.presale-pass-card::after{
+    content:"";
+    position:absolute;
+    right:-46px;
+    top:-52px;
+    width:150px;
+    height:150px;
+    border:1px solid rgba(244,214,122,.08);
+    border-radius:50%;
+    box-shadow:0 0 55px rgba(212,175,55,.10);
+    pointer-events:none;
+}
+.presale-pass-card.is-active{
+    border-color:rgba(102,224,155,.40);
+    background:
+        radial-gradient(circle at 88% 12%,rgba(71,205,130,.17),transparent 35%),
+        linear-gradient(145deg,rgba(13,22,16,.99),rgba(6,8,8,.99));
+}
+.presale-pass-head{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+}
+.presale-pass-title{
+    color:#f6da81;
+    font-size:20px;
+    line-height:1.2;
+    font-weight:950;
+}
+.presale-pass-kicker{
+    display:block;
+    margin-bottom:5px;
+    color:#8f8467;
+    font-size:9px;
+    letter-spacing:1.8px;
+    text-transform:uppercase;
+}
+.presale-pass-badge{
+    flex:0 0 auto;
+    padding:6px 9px;
+    border:1px solid rgba(244,214,122,.27);
+    border-radius:999px;
+    background:rgba(212,175,55,.09);
+    color:#e9c75d;
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1px;
+}
+.presale-pass-copy{
+    position:relative;
+    z-index:1;
+    margin:12px 0 14px;
+    color:#aaa084;
+    font-size:11.5px;
+    line-height:1.55;
+}
+.presale-pass-benefits{
+    position:relative;
+    z-index:1;
+    display:grid;
+    gap:8px;
+    margin:0 0 14px;
+}
+.presale-pass-benefit{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:9px 11px;
+    border:1px solid rgba(212,175,55,.12);
+    border-radius:12px;
+    background:rgba(255,255,255,.025);
+    color:#d7cfba;
+    font-size:10.5px;
+    font-weight:800;
+}
+.presale-pass-check{
+    color:#f4d67a;
+    font-size:11px;
+}
+.presale-pass-price{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:13px;
+    padding:12px 13px;
+    border:1px solid rgba(244,214,122,.18);
+    border-radius:13px;
+    background:rgba(212,175,55,.06);
+}
+.presale-pass-price span{
+    color:#978d72;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:1.2px;
+}
+.presale-pass-price strong{
+    color:#ffe89a;
+    font-size:14px;
+    font-weight:950;
+    white-space:nowrap;
+}
+.presale-pass-supply{
+    position:relative;
+    z-index:1;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin:-4px 1px 13px;
+    color:#817965;
+    font-size:9.5px;
+    font-weight:800;
+}
+.presale-pass-supply strong{
+    color:#cdbd8e;
+    font-size:10px;
+}
+.presale-pass-button{
+    position:relative;
+    z-index:1;
+    width:100%;
+    min-height:48px;
+    padding:13px 16px;
+    border:0;
+    border-radius:13px;
+    background:linear-gradient(135deg,#f7d86b,#d99d00);
+    box-shadow:0 10px 24px rgba(194,139,0,.19),inset 0 1px 0 rgba(255,255,255,.30);
+    color:#171104;
+    font-size:13px;
+    font-weight:950;
+    letter-spacing:.5px;
+    cursor:pointer;
+}
+.presale-pass-button:disabled{
+    opacity:.58;
+    box-shadow:none;
+    cursor:not-allowed;
+}
+.presale-pass-card.is-active .presale-pass-button{
+    background:linear-gradient(135deg,#7be3a7,#37b977);
+    color:#07160e;
+}
+.presale-pass-status{
+    position:relative;
+    z-index:1;
+    margin-top:10px;
+    color:#817965;
+    font-size:10px;
+    line-height:1.5;
+    text-align:center;
+}
+.presale-pass-card.is-active .presale-pass-status{color:#a8dfbf}
+.presale-pass-card.presale-pass-compact{
+    padding:0;
+    overflow:visible;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    box-shadow:none;
+}
+.presale-pass-card.presale-pass-compact::after{display:none}
+.presale-pass-compact .presale-pass-button{
+    width:calc(100% - 38px);
+    min-height:50px;
+    display:block;
+    margin:0 auto;
+    padding:13px 16px;
+    overflow:hidden;
+    isolation:isolate;
+    border:1px solid rgba(255,235,164,.86);
+    border-radius:14px;
+    background:
+        linear-gradient(105deg,
+            #6c4700 0%,
+            #d79d14 12%,
+            #fff0a7 27%,
+            #9a6500 43%,
+            #ffe487 58%,
+            #b47800 74%,
+            #f8d568 88%,
+            #714900 100%);
+    background-size:240% 100%;
+    box-shadow:
+        0 9px 22px rgba(173,118,0,.20),
+        0 0 18px rgba(244,205,91,.10),
+        inset 0 1px 0 rgba(255,255,255,.88),
+        inset 0 -1px 0 rgba(76,47,0,.62),
+        inset 0 0 14px rgba(255,244,188,.24);
+    color:#1b1202;
+    text-shadow:0 1px 0 rgba(255,246,196,.58);
+    font-size:12px;
+    font-weight:950;
+    letter-spacing:.8px;
+    animation:presaleMirrorFlow 9.5s ease-in-out infinite;
+    transition:transform .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+.presale-pass-compact .presale-pass-button::before{
+    content:"";
+    position:absolute;
+    inset:1px;
+    z-index:-1;
+    border-radius:13px;
+    background:linear-gradient(180deg,
+        rgba(255,255,255,.48) 0%,
+        rgba(255,255,255,.13) 35%,
+        rgba(73,42,0,.18) 52%,
+        rgba(255,232,143,.18) 100%);
+    pointer-events:none;
+}
+.presale-pass-compact .presale-pass-button::after{
+    content:"";
+    position:absolute;
+    top:-90%;
+    left:-42%;
+    width:30%;
+    height:280%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.76),transparent);
+    transform:skewX(-22deg);
+    filter:blur(.4px);
+    mix-blend-mode:screen;
+    pointer-events:none;
+    animation:presaleLightSweep 8s ease-in-out infinite;
+}
+.presale-pass-compact .presale-pass-button:hover{
+    transform:translateY(-1px);
+    filter:saturate(1.08) brightness(1.04);
+    box-shadow:
+        0 12px 28px rgba(173,118,0,.27),
+        0 0 24px rgba(244,205,91,.16),
+        inset 0 1px 0 rgba(255,255,255,.92),
+        inset 0 -1px 0 rgba(76,47,0,.62),
+        inset 0 0 14px rgba(255,244,188,.28);
+}
+.presale-pass-compact .presale-pass-button:active{
+    transform:translateY(1px) scale(.985);
+}
+.presale-pass-compact .presale-pass-button:disabled{
+    opacity:.9;
+    filter:saturate(.88);
+}
+@keyframes presaleMirrorFlow{
+    0%,100%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+}
+@keyframes presaleLightSweep{
+    0%,24%{left:-42%;opacity:0}
+    34%{opacity:.85}
+    62%{left:118%;opacity:.34}
+    100%{left:118%;opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+    .presale-pass-compact .presale-pass-button,
+    .presale-pass-compact .presale-pass-button::after{animation:none}
+}
 
 .nav-tab{
     min-width:0;
@@ -4043,6 +4321,11 @@ body{
             <div class="artist-status" id="submissionCardStatus">Проверяем подключение</div>
         </div>
 
+        <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite">
+            <button class="presale-pass-button" id="presalePassButton" type="button" disabled>PRESALE — 5 000 ⭐</button>
+            <div class="presale-pass-status" id="presalePassStatus" hidden></div>
+        </div>
+
         <div class="submission-modal" id="submissionModal" hidden aria-hidden="true">
             <div class="submission-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submissionModalTitle">
                 <div class="submission-modal-head">
@@ -4722,6 +5005,190 @@ submissionPayButton?.addEventListener("click", async () => {
     }finally{
         submissionBusy = false;
         renderSubmission();
+    }
+});
+
+// =======================
+// ASIQPAI PRESALE PASS — TELEGRAM STARS
+// =======================
+
+const PRESALE_PASS_PRICE_STARS = 5000;
+const presalePassCard = document.getElementById("presalePassCard");
+const presalePassButton = document.getElementById("presalePassButton");
+const presalePassStatus = document.getElementById("presalePassStatus");
+
+let presalePassBusy = false;
+let presalePassState = null;
+let presalePassNotice = "";
+
+function formatPresalePassNumber(value){
+    const number = Number(value);
+    if(!Number.isSafeInteger(number) || number < 1) return "";
+    return `#${String(number).padStart(6, "0")}`;
+}
+
+function renderPresalePass(){
+    if(!presalePassButton || !presalePassStatus) return;
+
+    const telegramReady = Boolean(getTelegramInitData());
+    const invoiceReady = typeof window.Telegram?.WebApp?.openInvoice === "function";
+    const active = Boolean(presalePassState?.active);
+    const passNumber = formatPresalePassNumber(presalePassState?.passNumber);
+
+    presalePassCard?.classList.toggle("is-active", active);
+
+    if(active){
+        presalePassButton.disabled = true;
+        presalePassButton.textContent = `PRESALE ACTIVE${passNumber ? ` — ${passNumber}` : ""}`;
+        presalePassStatus.textContent = "Ваш статус Early Supporter активирован и привязан к Telegram-профилю.";
+        return;
+    }
+
+    presalePassButton.disabled = presalePassBusy || !telegramReady || !invoiceReady;
+
+    if(presalePassBusy){
+        presalePassButton.textContent = "PRESALE — 5 000 ⭐";
+        presalePassStatus.textContent = "Не закрывайте приложение — подтверждаем покупку.";
+    }else if(!telegramReady || !invoiceReady){
+        presalePassButton.textContent = "PRESALE — 5 000 ⭐";
+        presalePassStatus.textContent = "Покупка доступна внутри Telegram Mini App.";
+    }else{
+        presalePassButton.textContent = `PRESALE — ${formatAsiqAmount(PRESALE_PASS_PRICE_STARS)} ⭐`;
+        presalePassStatus.textContent = presalePassNotice || "Разовая цифровая покупка. Pass не является инвестицией и не гарантирует прибыль.";
+    }
+}
+
+async function getPresalePassState(){
+    return apiRequest("/api/presale/pass");
+}
+
+async function getPresalePassOrder(orderId){
+    return apiRequest(`/api/presale/orders/${encodeURIComponent(orderId)}`);
+}
+
+function applyPresalePassState(result){
+    if(!result) return false;
+    presalePassState = {
+        ...(presalePassState || {}),
+        ...result
+    };
+    if(result.active || result.status === "paid"){
+        presalePassState = {
+            ...presalePassState,
+            active:true,
+            passNumber:result.passNumber || null
+        };
+        presalePassNotice = "";
+        SafeStorage.remove("presalePassOrderId");
+        renderPresalePass();
+        showToast("ASIQPAI Presale Pass активирован", "success");
+        return true;
+    }
+    return false;
+}
+
+async function verifyPresalePassPayment(orderId, attempts = 10){
+    for(let attempt = 0; attempt < attempts; attempt += 1){
+        const result = await getPresalePassOrder(orderId);
+        if(applyPresalePassState(result)) return true;
+
+        if(result.status === "expired" || result.status === "cancelled"){
+            SafeStorage.remove("presalePassOrderId");
+            presalePassNotice = "Счёт закрыт. При желании создайте новый.";
+            presalePassStatus.textContent = presalePassNotice;
+            return false;
+        }
+
+        presalePassStatus.textContent = `Ждём подтверждение Telegram… ${attempt + 1}/${attempts}`;
+        await new Promise(resolve => setTimeout(resolve, 2500));
+    }
+
+    presalePassNotice = "Платёж ещё обрабатывается. Повторно платить не нужно — статус проверится при следующем открытии.";
+    presalePassStatus.textContent = presalePassNotice;
+    return false;
+}
+
+async function loadPresalePass(){
+    renderPresalePass();
+    if(!getTelegramInitData()) return;
+
+    try{
+        const state = await getPresalePassState();
+        if(applyPresalePassState(state)) return;
+        renderPresalePass();
+
+        const savedOrderId = SafeStorage.get("presalePassOrderId", "");
+        if(savedOrderId){
+            const order = await getPresalePassOrder(savedOrderId);
+            applyPresalePassState(order);
+        }
+    }catch(error){
+        console.warn("Presale Pass status:", error.message);
+        presalePassNotice = "Presale Pass будет доступен после подключения серверной оплаты.";
+        presalePassStatus.textContent = presalePassNotice;
+    }finally{
+        renderPresalePass();
+    }
+}
+
+presalePassButton?.addEventListener("click", async () => {
+    if(presalePassButton.disabled || presalePassBusy || presalePassState?.active) return;
+
+    const confirmationText = "ASIQPAI Presale Pass — разовая цифровая покупка за 5 000 Stars. Pass даёт статус Early Supporter и уникальный номер, но не является токеном, долей или гарантией прибыли. Продолжить?";
+    const confirmed = typeof window.Telegram?.WebApp?.showConfirm === "function"
+        ? await new Promise(resolve => window.Telegram.WebApp.showConfirm(confirmationText, resolve))
+        : window.confirm(confirmationText);
+
+    if(!confirmed){
+        presalePassNotice = "Покупка не начата. Stars не списаны.";
+        presalePassStatus.textContent = presalePassNotice;
+        return;
+    }
+
+    presalePassNotice = "";
+    presalePassBusy = true;
+    renderPresalePass();
+
+    try{
+        const order = await apiRequest("/api/presale/orders", {
+            method:"POST",
+            body:JSON.stringify({product:"asiqpai-presale-pass"})
+        });
+
+        if(order?.active){
+            applyPresalePassState(order);
+            return;
+        }
+
+        if(!order?.orderId || !order?.invoiceUrl){
+            throw new Error("Сервер не вернул ссылку на счёт Telegram Stars.");
+        }
+
+        SafeStorage.set("presalePassOrderId", order.orderId);
+        presalePassStatus.textContent = "Подтвердите покупку в окне Telegram Stars.";
+
+        const invoiceStatus = await new Promise(resolve => {
+            window.Telegram.WebApp.openInvoice(order.invoiceUrl, resolve);
+        });
+
+        if(invoiceStatus === "paid" || invoiceStatus === "pending"){
+            presalePassStatus.textContent = "Оплата принята. Активируем Ваш Pass…";
+            await verifyPresalePassPayment(order.orderId);
+        }else if(invoiceStatus === "cancelled"){
+            SafeStorage.remove("presalePassOrderId");
+            presalePassNotice = "Покупка отменена. Списание Stars не произошло.";
+            presalePassStatus.textContent = presalePassNotice;
+        }else{
+            presalePassNotice = "Платёж не прошёл. Попробуйте ещё раз позднее.";
+            presalePassStatus.textContent = presalePassNotice;
+        }
+    }catch(error){
+        console.error("Presale Pass:", error);
+        presalePassNotice = error.message || "Не удалось открыть оплату Telegram Stars.";
+        presalePassStatus.textContent = presalePassNotice;
+    }finally{
+        presalePassBusy = false;
+        renderPresalePass();
     }
 });
 
@@ -6087,6 +6554,7 @@ const crown = document.getElementById("crown");
 
 // Daily Reward и Withdraw ASIQ отключены.
 loadSubmission();
+loadPresalePass();
 
 // Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
 if(crown){
