@@ -3386,10 +3386,19 @@ input:focus-visible{
 
 #page-wallet .asiq-wallet-card,
 #page-wallet .asiq-swap-button,
+#page-wallet .presale-pass-card,
 #page-wallet .daily-reward-card,
 #page-wallet .withdraw-card{
     width:min(100%,var(--asiq-card-width))!important;
     max-width:var(--asiq-card-width)!important;
+}
+
+#page-wallet .presale-pass-card{
+    margin:0 auto 18px!important;
+}
+
+#page-wallet .presale-pass-button{
+    width:100%!important;
 }
 
 #page-wallet .asiq-wallet-card,
@@ -4321,11 +4330,6 @@ body{
             <div class="artist-status" id="submissionCardStatus">Проверяем подключение</div>
         </div>
 
-        <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite">
-            <button class="presale-pass-button" id="presalePassButton" type="button" disabled>PRESALE — 5 000 ⭐</button>
-            <div class="presale-pass-status" id="presalePassStatus" hidden></div>
-        </div>
-
         <div class="submission-modal" id="submissionModal" hidden aria-hidden="true">
             <div class="submission-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submissionModalTitle">
                 <div class="submission-modal-head">
@@ -4469,6 +4473,11 @@ body{
             </span>
             <i class="fa-solid fa-chevron-right asiq-swap-chevron" aria-hidden="true"></i>
         </a>
+
+        <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite">
+            <button class="presale-pass-button" id="presalePassButton" type="button" disabled>PRESALE — 5 000 ⭐</button>
+            <div class="presale-pass-status" id="presalePassStatus" hidden></div>
+        </div>
 
     </section>
 
