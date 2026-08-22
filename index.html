@@ -38,6 +38,7 @@ const SafeStorage = (() => {
         "playMode",
         "likedTracks",
         "gp",
+        "asiqPoints",
         "goldLicenseClaimed",
         "submissionOrderId",
         "presalePassOrderId"
@@ -2107,8 +2108,83 @@ body{
     transition:transform .08s ease-out, filter .08s ease-out !important;
 }
 
-/* Gold Points полностью отключены */
-#gpPanel, #gpCounter, .gpTitle, .plusOne{display:none!important;}
+/* ===== ASIQ POINTS ===== */
+#gpPanel, #gpCounter, .gpTitle{display:none!important;}
+
+.asiq-points-panel{
+    width:min(78vw,260px);
+    margin:-8px auto 22px;
+    padding:10px 14px 11px;
+    box-sizing:border-box;
+    border:1px solid rgba(255,215,0,.22);
+    border-radius:16px;
+    background:linear-gradient(180deg,rgba(24,20,8,.82),rgba(10,10,10,.78));
+    box-shadow:0 10px 26px rgba(0,0,0,.34),0 0 18px rgba(255,215,0,.07);
+    -webkit-backdrop-filter:blur(10px);
+    backdrop-filter:blur(10px);
+    user-select:none;
+}
+
+.asiq-points-label{
+    color:#9d8a4c;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:2px;
+    text-transform:uppercase;
+}
+
+#asiqPointsCounter{
+    margin-top:3px;
+    color:#FFD700;
+    font-size:25px;
+    line-height:1;
+    font-weight:950;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 12px rgba(255,215,0,.30);
+}
+
+.asiq-points-tap{
+    margin-top:5px;
+    color:#756b4d;
+    font-size:9px;
+    font-weight:800;
+    letter-spacing:.4px;
+}
+
+.asiq-point-float{
+    position:fixed;
+    z-index:50000;
+    pointer-events:none;
+    color:#FFE36D;
+    font-size:24px;
+    font-weight:950;
+    text-shadow:0 0 12px rgba(255,215,0,.75);
+    transform:translate(-50%,-50%);
+    animation:asiqPointFloat .72s ease-out forwards;
+}
+
+@keyframes asiqPointFloat{
+    0%{opacity:0;transform:translate(-50%,-30%) scale(.72)}
+    18%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+    100%{opacity:0;transform:translate(-50%,-125%) scale(1.18)}
+}
+
+#page-wallet .asiq-points-wallet{
+    width:min(92vw,340px);
+    margin:0 auto 18px;
+    padding:14px 16px 15px;
+    border-radius:18px;
+}
+#page-wallet .asiq-points-wallet #asiqPointsCounter{
+    font-size:30px;
+}
+#page-wallet .asiq-points-wallet .asiq-points-tap{
+    margin-top:6px;
+}
+
+@media (prefers-reduced-motion:reduce){
+    .asiq-point-float{animation-duration:.01ms!important;}
+}
 </style>
 
 
@@ -4303,9 +4379,8 @@ body{
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
         <div class="home-hero">
-            <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">    
+            <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false" role="button" tabindex="0" aria-label="Получить ASIQ Point">
         </div>
-
 
         <div class="artist-card" id="submissionCard" aria-live="polite">
             <div class="artist-card-head">
@@ -4447,6 +4522,12 @@ body{
                     <small>NETWORK</small>
                 </div>
             </div>
+        </div>
+
+        <div class="asiq-points-panel asiq-points-wallet" id="asiqPointsPanel" aria-live="polite">
+            <div class="asiq-points-label">ASIQ POINTS</div>
+            <div id="asiqPointsCounter">0</div>
+            <div class="asiq-points-tap">TAP THE CROWN ON HOME · +1</div>
         </div>
 
         <a
@@ -6540,12 +6621,68 @@ loadPlaylist();
 </script>
     <script>
 const crown = document.getElementById("crown");
+const asiqPointsCounter = document.getElementById("asiqPointsCounter");
+
+// ASIQ Points: локальные очки за тапы по короне.
+// Если у пользователя сохранились старые GP, первый запуск перенесёт их в ASIQ Points.
+const storedAsiqPoints = Number.parseInt(SafeStorage.get("asiqPoints", ""), 10);
+const legacyGP = Number.parseInt(SafeStorage.get("gp", "0"), 10);
+let asiqPoints = Number.isSafeInteger(storedAsiqPoints) && storedAsiqPoints >= 0
+    ? storedAsiqPoints
+    : (Number.isSafeInteger(legacyGP) && legacyGP >= 0 ? legacyGP : 0);
+
+function renderAsiqPoints(){
+    if(asiqPointsCounter){
+        asiqPointsCounter.textContent = asiqPoints.toLocaleString("ru-RU");
+    }
+}
+
+function saveAsiqPoints(){
+    SafeStorage.set("asiqPoints", String(asiqPoints));
+}
+
+function showAsiqPointFloat(event){
+    const point = document.createElement("div");
+    point.className = "asiq-point-float";
+    point.textContent = "+1";
+
+    const rect = crown?.getBoundingClientRect();
+    const x = Number.isFinite(event?.clientX) && event.clientX > 0
+        ? event.clientX
+        : (rect ? rect.left + rect.width / 2 : window.innerWidth / 2);
+    const y = Number.isFinite(event?.clientY) && event.clientY > 0
+        ? event.clientY
+        : (rect ? rect.top + rect.height / 2 : window.innerHeight / 2);
+
+    point.style.left = `${x}px`;
+    point.style.top = `${y}px`;
+    document.body.appendChild(point);
+    window.setTimeout(() => point.remove(), 800);
+}
+
+function addAsiqPoint(event){
+    if(asiqPoints < Number.MAX_SAFE_INTEGER){
+        asiqPoints += 1;
+    }
+    saveAsiqPoints();
+    renderAsiqPoints();
+    showAsiqPointFloat(event);
+
+    try{
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+    }catch{}
+}
+
+renderAsiqPoints();
+if(!Number.isSafeInteger(storedAsiqPoints) && asiqPoints > 0){
+    saveAsiqPoints();
+}
 
 // Daily Reward и Withdraw ASIQ отключены.
 loadSubmission();
 loadPresalePass();
 
-// Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
+// Корона: нажатие, вибрация, анимация и +1 ASIQ Point.
 if(crown){
     crown.addEventListener("pointerdown", () => {
         crown.classList.add("crown-down");
@@ -6561,7 +6698,7 @@ if(crown){
         });
     });
 
-    crown.addEventListener("click", () => {
+    crown.addEventListener("click", event => {
         crown.classList.remove("crown-down");
 
         if(crown._tapAnimation){
@@ -6578,9 +6715,13 @@ if(crown){
             easing:"cubic-bezier(.22,1.35,.36,1)"
         });
 
-        try{
-            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
-        }catch{}
+        addAsiqPoint(event);
+    });
+
+    crown.addEventListener("keydown", event => {
+        if(event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        crown.click();
     });
 }
 
