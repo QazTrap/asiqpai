@@ -4744,15 +4744,16 @@ body{
     -webkit-user-drag:none!important;
     will-change:transform;
     backface-visibility:hidden;
-    transform:translateZ(0) scale(1)!important;
-    transition:transform .085s cubic-bezier(.2,.75,.25,1)!important;
+    transform:translate3d(0,0,0) scale(1)!important;
+    transition:transform .065s ease-out!important;
 }
 
+/* Нажатие без перехода: изменение видно в тот же кадр. */
 #page-home .home-hero #crown.crown-down,
 #page-home .home-hero #crown.crown-click,
 #page-home .home-hero #crown:active{
-    transform:translateZ(0) scale(.91) translateY(5px)!important;
-    transition:transform .045s ease-out!important;
+    transform:translate3d(0,4px,0) scale(.92)!important;
+    transition:none!important;
 }
 </style>
 
@@ -7340,27 +7341,17 @@ window.setTimeout(() => loadAsiqLeaderboard(true), 1400);
 loadSubmission();
 loadPresalePass();
 
-// Корона: только визуальное нажатие; серверное начисление ASIQ Points остаётся без изменений.
+// Корона: мгновенный визуальный отклик + haptic + запрос прямо на касании.
 if(crown){
     crown.setAttribute("role", "button");
     crown.setAttribute("tabindex", "0");
     crown.setAttribute("aria-label", "Tap to earn ASIQ Points");
 
-    crown.addEventListener("pointerdown", () => {
-        crown.classList.add("crown-down");
-    });
+    let suppressNextClick = false;
+    let pressStartedAt = 0;
+    let releaseTimer = 0;
 
-    ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
-        crown.addEventListener(eventName, () => {
-            crown.classList.remove("crown-down");
-        });
-    });
-
-    crown.addEventListener("click", () => {
-        crown.classList.remove("crown-down");
-        playCrownTapAnimation();
-
-        // Лёгкая вибрация на каждый тап внутри Telegram.
+    function crownHaptic(){
         try{
             const haptic = window.Telegram?.WebApp?.HapticFeedback;
             if(haptic?.impactOccurred){
@@ -7369,11 +7360,45 @@ if(crown){
                 haptic.selectionChanged();
             }
         }catch{}
+    }
 
-        // Сначала показываем визуальный клик, затем запускаем серверное начисление.
-        requestAnimationFrame(() => {
-            submitAsiqPointTap();
-        });
+    function releaseCrownPress(){
+        window.clearTimeout(releaseTimer);
+        const elapsed = performance.now() - pressStartedAt;
+        const wait = Math.max(0, 58 - elapsed);
+        releaseTimer = window.setTimeout(() => {
+            crown.classList.remove("crown-down");
+        }, wait);
+    }
+
+    crown.addEventListener("pointerdown", event => {
+        if(event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
+
+        pressStartedAt = performance.now();
+        suppressNextClick = true;
+        crown.classList.remove("crown-click");
+        crown.classList.add("crown-down");
+
+        // Всё важное происходит сразу при касании, без ожидания click/pointerup.
+        crownHaptic();
+        submitAsiqPointTap();
+    }, {passive:true});
+
+    ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
+        crown.addEventListener(eventName, releaseCrownPress, {passive:true});
+    });
+
+    crown.addEventListener("click", () => {
+        // После pointerdown браузер создаёт click — не начисляем второй раз.
+        if(suppressNextClick){
+            suppressNextClick = false;
+            return;
+        }
+
+        // Fallback для клавиатуры и сред без Pointer Events.
+        playCrownTapAnimation();
+        crownHaptic();
+        submitAsiqPointTap();
     });
 
     crown.addEventListener("keydown", event => {
