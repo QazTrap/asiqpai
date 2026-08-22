@@ -2291,6 +2291,105 @@ body{
 @media (prefers-reduced-motion:reduce){
     .asiq-point-float{animation-duration:.01ms!important;}
 }
+
+/* ===== ASIQ POINTS LEADERBOARD ===== */
+.asiq-leaderboard-card{
+    width:min(100%,360px);
+    max-width:360px;
+    margin:0 auto 20px;
+    padding:16px;
+    box-sizing:border-box;
+    border:1px solid rgba(255,225,124,.18);
+    border-radius:22px;
+    background:
+        radial-gradient(circle at 92% 0%,rgba(255,215,0,.08),transparent 34%),
+        linear-gradient(145deg,rgba(17,16,12,.97),rgba(7,8,10,.99));
+    box-shadow:0 16px 36px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.035);
+    text-align:left;
+}
+.asiq-leaderboard-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+}
+.asiq-leaderboard-title{
+    color:#f4d67a;
+    font-size:13px;
+    font-weight:950;
+    letter-spacing:1.5px;
+}
+.asiq-leaderboard-count{
+    color:#766d57;
+    font-size:9px;
+    font-weight:850;
+    letter-spacing:.7px;
+}
+.asiq-leaderboard-list{display:grid;gap:7px;}
+.asiq-leaderboard-row{
+    display:grid;
+    grid-template-columns:38px minmax(0,1fr) auto;
+    align-items:center;
+    gap:9px;
+    min-height:42px;
+    padding:8px 10px;
+    box-sizing:border-box;
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:13px;
+    background:rgba(255,255,255,.022);
+}
+.asiq-leaderboard-row.is-me{
+    border-color:rgba(255,215,0,.28);
+    background:rgba(255,215,0,.065);
+    box-shadow:inset 0 0 18px rgba(255,215,0,.025);
+}
+.asiq-leaderboard-rank{
+    color:#d3b45f;
+    font-size:13px;
+    font-weight:950;
+    text-align:center;
+}
+.asiq-leaderboard-name{
+    min-width:0;
+    overflow:hidden;
+    color:#e7e2d7;
+    font-size:11px;
+    font-weight:850;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.asiq-leaderboard-balance{
+    color:#ffe08a;
+    font-size:11px;
+    font-weight:950;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+}
+.asiq-leaderboard-empty{
+    padding:14px 10px;
+    color:#766f60;
+    font-size:10px;
+    text-align:center;
+}
+.asiq-leaderboard-me{
+    margin-top:10px;
+    padding:10px 11px;
+    border:1px solid rgba(255,215,0,.14);
+    border-radius:13px;
+    background:rgba(255,215,0,.035);
+    color:#a99b78;
+    font-size:10px;
+    font-weight:800;
+}
+.asiq-leaderboard-me strong{color:#ffe08a;font-size:12px;}
+@media (max-width:390px){
+    .asiq-leaderboard-card{
+        width:100%;
+        max-width:360px;
+        padding:16px 15px;
+    }
+}
 </style>
 
 
@@ -4519,6 +4618,44 @@ body{
 }
 </style>
 
+
+<style>
+/* ===== HOME CENTER + SUBMIT TRACK IN WALLET ===== */
+#page-home.active{
+    min-height:calc(100dvh - var(--nav-height) - 48px - env(safe-area-inset-bottom));
+    display:flex;
+    flex-direction:column;
+    box-sizing:border-box;
+}
+#page-home .home-hero{
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0!important;
+}
+#page-home .home-hero .logo{
+    display:block;
+    margin:0 auto!important;
+}
+#page-home .presale-pass-card{
+    flex:0 0 auto;
+    margin-top:12px;
+    margin-bottom:10px;
+}
+#page-wallet #submissionCard{
+    width:min(92vw,360px)!important;
+    max-width:360px!important;
+    margin:0 auto 18px!important;
+    box-sizing:border-box!important;
+}
+@media (max-height:620px), (orientation:landscape){
+    #page-home.active{min-height:auto;display:block;}
+    #page-home .home-hero{min-height:230px;display:flex;}
+}
+</style>
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
@@ -4529,48 +4666,12 @@ body{
             <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false" role="button" tabindex="0" aria-label="Получить ASIQ Point">
         </div>
 
-        <div class="artist-card" id="submissionCard" aria-live="polite">
-            <div class="artist-card-head">
-                <div class="artist-title">🎵 Submit Track</div>
-                <div class="artist-badge">ASIQPAI</div>
-            </div>
-            <p class="artist-copy">Publish your music on ASIQPAI.</p>
-            <div class="submission-prices">
-                <div class="submission-price-row"><span>🎵 Track</span><strong>5 000 ASIQ</strong></div>
-                <div class="submission-price-row"><span>🎹 Instrumental</span><strong>2 500 ASIQ</strong></div>
-            </div>
-            <button class="artist-button" id="openSubmissionButton" type="button" disabled>Загрузка…</button>
-            <div class="artist-status" id="submissionCardStatus">Проверяем подключение</div>
-        </div>
-
         <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite">
             <button class="presale-pass-button" id="presalePassButton" type="button" disabled>PRESALE — 5 000 ⭐</button>
             <div class="presale-pass-status" id="presalePassStatus" hidden></div>
         </div>
 
-        <div class="submission-modal" id="submissionModal" hidden aria-hidden="true">
-            <div class="submission-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submissionModalTitle">
-                <div class="submission-modal-head">
-                    <div class="submission-modal-title" id="submissionModalTitle">🎵 Submit Track</div>
-                    <button class="submission-close" id="closeSubmissionButton" type="button" aria-label="Закрыть">×</button>
-                </div>
-                <p class="artist-copy">Выберите тип публикации и заполните данные работы.</p>
-                <div class="submission-type-grid">
-                    <button class="submission-type-button active" type="button" data-submission-type="track">🎵 Track<br>5 000 ASIQ</button>
-                    <button class="submission-type-button" type="button" data-submission-type="instrumental">🎹 Instrumental<br>2 500 ASIQ</button>
-                </div>
-                <input class="artist-input" id="submissionArtistInput" maxlength="60" placeholder="Имя артиста" autocomplete="off">
-                <input class="artist-input" id="submissionTitleInput" maxlength="120" placeholder="Название работы" autocomplete="off">
-                <div class="submission-warning">Пожалуйста, убедитесь, что Ваша работа полностью готова и соответствует требованиям ASIQPAI. Некачественный или нарушающий правила материал может быть отклонён.</div>
-                <button class="artist-button" id="submissionPayButton" type="button">PAY — 5 000 ASIQ</button>
-                <div class="artist-status" id="submissionStatus">После оплаты заявка будет отправлена на модерацию.</div>
-                <div class="submission-success" id="submissionSuccess" hidden>
-                    ✅ Оплата подтверждена. Теперь отправьте аудиофайл и квадратную обложку администратору ASIQPAI.
-                    <a class="artist-contact-button" id="submissionContactButton" href="https://t.me/asiqpai" target="_blank" rel="noopener noreferrer">Отправить файлы</a>
-                </div>
-            </div>
-        </div>
-
+        
     </section>
 
     <section class="app-page active" id="page-music" data-page="music">
@@ -4681,13 +4782,62 @@ body{
             </div>
             <div class="asiq-points-value-row">
                 <div class="asiq-points-value-copy">
-                    <div id="asiqPointsCounter">0</div>
+                    <div id="asiqPointsCounter">—</div>
                     <div class="asiq-points-counter-note">Collect points by tapping the crown</div>
                 </div>
             </div>
             <div class="asiq-points-divider" aria-hidden="true"></div>
             <div class="asiq-points-tap">Tap the crown on Home and earn randomized ASIQ Points with every press.</div>
         </div>
+
+        <div class="asiq-leaderboard-card" id="asiqLeaderboardCard" aria-live="polite">
+            <div class="asiq-leaderboard-head">
+                <div class="asiq-leaderboard-title">🏆 LEADERBOARD</div>
+                <div class="asiq-leaderboard-count" id="asiqLeaderboardCount">TOP 10</div>
+            </div>
+            <div class="asiq-leaderboard-list" id="asiqLeaderboardList">
+                <div class="asiq-leaderboard-empty">Загружаем рейтинг…</div>
+            </div>
+            <div class="asiq-leaderboard-me" id="asiqLeaderboardMe">Ваше место: —</div>
+        </div>
+
+        <!-- Submit Track moved from Home to Wallet -->
+        <div class="artist-card" id="submissionCard" aria-live="polite">
+            <div class="artist-card-head">
+                <div class="artist-title">🎵 Submit Track</div>
+                <div class="artist-badge">ASIQPAI</div>
+            </div>
+            <p class="artist-copy">Publish your music on ASIQPAI.</p>
+            <div class="submission-prices">
+                <div class="submission-price-row"><span>🎵 Track</span><strong>5 000 ASIQ</strong></div>
+                <div class="submission-price-row"><span>🎹 Instrumental</span><strong>2 500 ASIQ</strong></div>
+            </div>
+            <button class="artist-button" id="openSubmissionButton" type="button" disabled>Загрузка…</button>
+            <div class="artist-status" id="submissionCardStatus">Проверяем подключение</div>
+        </div>
+
+        <div class="submission-modal" id="submissionModal" hidden aria-hidden="true">
+                    <div class="submission-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submissionModalTitle">
+                        <div class="submission-modal-head">
+                            <div class="submission-modal-title" id="submissionModalTitle">🎵 Submit Track</div>
+                            <button class="submission-close" id="closeSubmissionButton" type="button" aria-label="Закрыть">×</button>
+                        </div>
+                        <p class="artist-copy">Выберите тип публикации и заполните данные работы.</p>
+                        <div class="submission-type-grid">
+                            <button class="submission-type-button active" type="button" data-submission-type="track">🎵 Track<br>5 000 ASIQ</button>
+                            <button class="submission-type-button" type="button" data-submission-type="instrumental">🎹 Instrumental<br>2 500 ASIQ</button>
+                        </div>
+                        <input class="artist-input" id="submissionArtistInput" maxlength="60" placeholder="Имя артиста" autocomplete="off">
+                        <input class="artist-input" id="submissionTitleInput" maxlength="120" placeholder="Название работы" autocomplete="off">
+                        <div class="submission-warning">Пожалуйста, убедитесь, что Ваша работа полностью готова и соответствует требованиям ASIQPAI. Некачественный или нарушающий правила материал может быть отклонён.</div>
+                        <button class="artist-button" id="submissionPayButton" type="button">PAY — 5 000 ASIQ</button>
+                        <div class="artist-status" id="submissionStatus">После оплаты заявка будет отправлена на модерацию.</div>
+                        <div class="submission-success" id="submissionSuccess" hidden>
+                            ✅ Оплата подтверждена. Теперь отправьте аудиофайл и квадратную обложку администратору ASIQPAI.
+                            <a class="artist-contact-button" id="submissionContactButton" href="https://t.me/asiqpai" target="_blank" rel="noopener noreferrer">Отправить файлы</a>
+                        </div>
+                    </div>
+                </div>
 
         <a
             class="asiq-swap-button asiq-bank-swap"
@@ -6781,23 +6931,153 @@ loadPlaylist();
     <script>
 const crown = document.getElementById("crown");
 const asiqPointsCounter = document.getElementById("asiqPointsCounter");
+const asiqLeaderboardList = document.getElementById("asiqLeaderboardList");
+const asiqLeaderboardMe = document.getElementById("asiqLeaderboardMe");
+const asiqLeaderboardCount = document.getElementById("asiqLeaderboardCount");
 
-// ASIQ Points: локальные очки за тапы по короне.
-// Если у пользователя сохранились старые GP, первый запуск перенесёт их в ASIQ Points.
-const storedAsiqPoints = Number.parseInt(SafeStorage.get("asiqPoints", ""), 10);
-const legacyGP = Number.parseInt(SafeStorage.get("gp", "0"), 10);
-let asiqPoints = Number.isSafeInteger(storedAsiqPoints) && storedAsiqPoints >= 0
-    ? storedAsiqPoints
-    : (Number.isSafeInteger(legacyGP) && legacyGP >= 0 ? legacyGP : 0);
+// ASIQ Points: сервер — единственный источник истины.
+// Баланс привязан к Telegram user_id и хранится в PostgreSQL.
+let asiqPoints = 0;
+let asiqPointsReady = false;
+let asiqPointsInFlight = 0;
+const ASIQ_POINTS_MAX_IN_FLIGHT = 5;
 
 function renderAsiqPoints(){
-    if(asiqPointsCounter){
-        asiqPointsCounter.textContent = asiqPoints.toLocaleString("ru-RU");
+    if(!asiqPointsCounter) return;
+    asiqPointsCounter.textContent = asiqPointsReady
+        ? asiqPoints.toLocaleString("ru-RU")
+        : "—";
+}
+
+function parseServerPoints(value){
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= 0 ? number : null;
+}
+
+async function loadAsiqPoints(){
+    if(!getTelegramInitData()){
+        asiqPoints = 0;
+        asiqPointsReady = false;
+        renderAsiqPoints();
+        return false;
+    }
+
+    try{
+        const data = await apiRequest("/api/points");
+        const serverBalance = parseServerPoints(data.balance);
+        if(serverBalance === null) throw new Error("Некорректный баланс ASIQ Points");
+
+        asiqPoints = serverBalance;
+        asiqPointsReady = true;
+        renderAsiqPoints();
+        return true;
+    }catch(error){
+        console.warn("ASIQ Points load error:", error.message);
+        asiqPointsReady = false;
+        renderAsiqPoints();
+        return false;
     }
 }
 
-function saveAsiqPoints(){
-    SafeStorage.set("asiqPoints", String(asiqPoints));
+let asiqLeaderboardLoading = false;
+let asiqLeaderboardLastLoadedAt = 0;
+let asiqLeaderboardRefreshTimer = 0;
+
+function leaderboardRankLabel(rank){
+    if(rank === 1) return "🥇";
+    if(rank === 2) return "🥈";
+    if(rank === 3) return "🥉";
+    return `#${rank}`;
+}
+
+function renderAsiqLeaderboard(data){
+    if(!asiqLeaderboardList || !asiqLeaderboardMe) return;
+
+    asiqLeaderboardList.replaceChildren();
+    const top = Array.isArray(data?.top) ? data.top : [];
+
+    if(top.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "asiq-leaderboard-empty";
+        empty.textContent = "Пока нет участников рейтинга";
+        asiqLeaderboardList.appendChild(empty);
+    }else{
+        for(const player of top){
+            const rank = Number(player.rank);
+            const balance = parseServerPoints(player.balance) ?? 0;
+
+            const row = document.createElement("div");
+            row.className = `asiq-leaderboard-row${player.isMe ? " is-me" : ""}`;
+
+            const rankEl = document.createElement("div");
+            rankEl.className = "asiq-leaderboard-rank";
+            rankEl.textContent = leaderboardRankLabel(rank);
+
+            const nameEl = document.createElement("div");
+            nameEl.className = "asiq-leaderboard-name";
+            nameEl.textContent = String(player.name || "Player");
+
+            const balanceEl = document.createElement("div");
+            balanceEl.className = "asiq-leaderboard-balance";
+            balanceEl.textContent = balance.toLocaleString("ru-RU");
+
+            row.append(rankEl, nameEl, balanceEl);
+            asiqLeaderboardList.appendChild(row);
+        }
+    }
+
+    const meRank = Number(data?.me?.rank);
+    const meBalance = parseServerPoints(data?.me?.balance);
+    if(Number.isInteger(meRank) && meRank > 0 && meBalance !== null){
+        asiqLeaderboardMe.replaceChildren();
+        const label = document.createTextNode("Ваше место: ");
+        const strong = document.createElement("strong");
+        strong.textContent = `#${meRank}`;
+        const balance = document.createTextNode(` · ${meBalance.toLocaleString("ru-RU")} ASIQ Points`);
+        asiqLeaderboardMe.append(label, strong, balance);
+    }else{
+        asiqLeaderboardMe.textContent = "Ваше место: —";
+    }
+
+    if(asiqLeaderboardCount){
+        const total = Number(data?.totalPlayers || 0);
+        asiqLeaderboardCount.textContent = total > 0
+            ? `${total.toLocaleString("ru-RU")} PLAYERS`
+            : "TOP 10";
+    }
+}
+
+async function loadAsiqLeaderboard(force = false){
+    if(!getTelegramInitData() || asiqLeaderboardLoading) return false;
+
+    const now = Date.now();
+    if(!force && now - asiqLeaderboardLastLoadedAt < 5000) return true;
+
+    asiqLeaderboardLoading = true;
+    try{
+        const data = await apiRequest("/api/points/leaderboard");
+        renderAsiqLeaderboard(data);
+        asiqLeaderboardLastLoadedAt = Date.now();
+        return true;
+    }catch(error){
+        console.warn("ASIQ Points leaderboard error:", error.message);
+        if(asiqLeaderboardList && asiqLeaderboardList.children.length === 0){
+            const empty = document.createElement("div");
+            empty.className = "asiq-leaderboard-empty";
+            empty.textContent = "Не удалось загрузить рейтинг";
+            asiqLeaderboardList.appendChild(empty);
+        }
+        return false;
+    }finally{
+        asiqLeaderboardLoading = false;
+    }
+}
+
+function scheduleAsiqLeaderboardRefresh(){
+    window.clearTimeout(asiqLeaderboardRefreshTimer);
+    asiqLeaderboardRefreshTimer = window.setTimeout(() => {
+        loadAsiqLeaderboard(true);
+    }, 900);
 }
 
 const ASIQ_POINT_COLORS = [
@@ -6810,21 +7090,6 @@ const ASIQ_POINT_COLORS = [
     {color:"#8FA7FF", glow:"rgba(143,167,255,.78)"}
 ];
 
-function rollAsiqPointReward(){
-    // Небольшие награды выпадают чаще, +8…+10 — редкие бонусные тапы.
-    const roll = Math.random() * 100;
-    if(roll < 42) return 1;
-    if(roll < 64) return 2;
-    if(roll < 77) return 3;
-    if(roll < 85) return 4;
-    if(roll < 90) return 5;
-    if(roll < 94) return 6;
-    if(roll < 96.5) return 7;
-    if(roll < 98) return 8;
-    if(roll < 99.2) return 9;
-    return 10;
-}
-
 function showAsiqPointFloat(reward){
     const point = document.createElement("div");
     point.className = "asiq-point-float";
@@ -6834,7 +7099,6 @@ function showAsiqPointFloat(reward){
     const centerX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
     const centerY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
 
-    // Значение появляется в случайной точке по окружности вокруг короны.
     const angle = Math.random() * Math.PI * 2;
     const crownRadius = rect ? Math.max(rect.width, rect.height) / 2 : 90;
     const ringRadius = crownRadius + 12 + Math.random() * 28;
@@ -6854,7 +7118,6 @@ function showAsiqPointFloat(reward){
     point.style.setProperty("--asiq-float-x", `${Math.cos(angle) * (22 + Math.random() * 18)}px`);
     point.style.setProperty("--asiq-float-y", `${Math.sin(angle) * (22 + Math.random() * 18) - 28}px`);
 
-    // Редкие большие бонусы выглядят заметнее, но не перекрывают корону.
     if(reward >= 8){
         point.style.fontWeight = "1000";
         point.style.setProperty("--asiq-point-size", `${size + 5}px`);
@@ -6864,33 +7127,90 @@ function showAsiqPointFloat(reward){
     window.setTimeout(() => point.remove(), 1150);
 }
 
-function addAsiqPoint(){
-    const reward = rollAsiqPointReward();
-    if(asiqPoints <= Number.MAX_SAFE_INTEGER - reward){
-        asiqPoints += reward;
-    }
-    saveAsiqPoints();
-    renderAsiqPoints();
-    showAsiqPointFloat(reward);
+function playCrownTapAnimation(){
+    if(!crown) return;
 
-    // Ровно одна вибрация на один подтверждённый тап.
+    if(crown._tapAnimation){
+        crown._tapAnimation.cancel();
+    }
+
+    crown._tapAnimation = crown.animate([
+        { transform:"scale(.90) translateY(3px)" },
+        { transform:"scale(1.06) translateY(-3px)", offset:.45 },
+        { transform:"scale(.94) translateY(1px)", offset:.72 },
+        { transform:"scale(1) translateY(0)" }
+    ], {
+        duration:460,
+        easing:"cubic-bezier(.22,1.35,.36,1)"
+    });
+}
+
+async function submitAsiqPointTap(){
+    if(!getTelegramInitData()){
+        showToast("Открой приложение внутри Telegram, чтобы получать ASIQ Points", "warning");
+        return;
+    }
+
+    if(!asiqPointsReady){
+        const loaded = await loadAsiqPoints();
+        if(!loaded){
+            showToast("Не удалось загрузить ASIQ Points", "warning");
+            return;
+        }
+    }
+
+    if(asiqPointsInFlight >= ASIQ_POINTS_MAX_IN_FLIGHT) return;
+    asiqPointsInFlight += 1;
+
     try{
-        const intensity = reward >= 8 ? "heavy" : reward >= 4 ? "medium" : "light";
-        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(intensity);
-    }catch{}
+        const data = await apiRequest("/api/points/tap", {
+            method:"POST",
+            body:"{}"
+        });
+
+        const reward = Number(data.reward);
+        const serverBalance = parseServerPoints(data.balance);
+
+        if(!Number.isInteger(reward) || reward < 1 || reward > 10 || serverBalance === null){
+            throw new Error("Некорректный ответ ASIQ Points");
+        }
+
+        // Ответы параллельных тапов могут прийти не по порядку — баланс никогда не уменьшаем.
+        asiqPoints = Math.max(asiqPoints, serverBalance);
+        asiqPointsReady = true;
+        renderAsiqPoints();
+        showAsiqPointFloat(reward);
+        scheduleAsiqLeaderboardRefresh();
+
+        try{
+            const intensity = reward >= 8 ? "heavy" : reward >= 4 ? "medium" : "light";
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(intensity);
+        }catch{}
+    }catch(error){
+        // 429 от защиты от накрутки не превращаем в поток уведомлений.
+        if(!/слишком много тапов/i.test(error?.message || "")){
+            console.warn("ASIQ Points tap error:", error.message);
+            showToast(error.message || "Не удалось начислить ASIQ Points", "warning");
+        }
+    }finally{
+        asiqPointsInFlight = Math.max(0, asiqPointsInFlight - 1);
+    }
 }
 
 renderAsiqPoints();
-if(!Number.isSafeInteger(storedAsiqPoints) && asiqPoints > 0){
-    saveAsiqPoints();
-}
+loadAsiqPoints();
+loadAsiqLeaderboard(true);
 
 // Daily Reward и Withdraw ASIQ отключены.
 loadSubmission();
 loadPresalePass();
 
-// Корона: нажатие, одна вибрация и случайная награда +1…+10 ASIQ Points.
+// Корона: визуальная отдача сразу, начисление и вибрация — после подтверждения сервера.
 if(crown){
+    crown.setAttribute("role", "button");
+    crown.setAttribute("tabindex", "0");
+    crown.setAttribute("aria-label", "Tap to earn ASIQ Points");
+
     crown.addEventListener("pointerdown", () => {
         crown.classList.add("crown-down");
     });
@@ -6901,24 +7221,10 @@ if(crown){
         });
     });
 
-    crown.addEventListener("click", event => {
+    crown.addEventListener("click", () => {
         crown.classList.remove("crown-down");
-
-        if(crown._tapAnimation){
-            crown._tapAnimation.cancel();
-        }
-
-        crown._tapAnimation = crown.animate([
-            { transform:"scale(.90) translateY(3px)" },
-            { transform:"scale(1.06) translateY(-3px)", offset:.45 },
-            { transform:"scale(.94) translateY(1px)", offset:.72 },
-            { transform:"scale(1) translateY(0)" }
-        ], {
-            duration:460,
-            easing:"cubic-bezier(.22,1.35,.36,1)"
-        });
-
-        addAsiqPoint();
+        playCrownTapAnimation();
+        submitAsiqPointTap();
     });
 
     crown.addEventListener("keydown", event => {
