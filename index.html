@@ -5134,17 +5134,6 @@ async function loadPresalePass(){
 presalePassButton?.addEventListener("click", async () => {
     if(presalePassButton.disabled || presalePassBusy || presalePassState?.active) return;
 
-    const confirmationText = "ASIQPAI Presale Pass — разовая цифровая покупка за 5 000 Stars. Pass даёт статус Early Supporter и уникальный номер, но не является токеном, долей или гарантией прибыли. Продолжить?";
-    const confirmed = typeof window.Telegram?.WebApp?.showConfirm === "function"
-        ? await new Promise(resolve => window.Telegram.WebApp.showConfirm(confirmationText, resolve))
-        : window.confirm(confirmationText);
-
-    if(!confirmed){
-        presalePassNotice = "Покупка не начата. Stars не списаны.";
-        presalePassStatus.textContent = presalePassNotice;
-        return;
-    }
-
     presalePassNotice = "";
     presalePassBusy = true;
     renderPresalePass();
