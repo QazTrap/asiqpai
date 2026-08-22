@@ -4730,30 +4730,30 @@ body{
     }
 }
 
-/* ===== FINAL CROWN PRESS ===== */
+/* ===== FINAL CROWN SHAKE ===== */
 #page-home .home-hero #crown{
     position:relative!important;
     z-index:5!important;
     pointer-events:auto!important;
     cursor:pointer!important;
     touch-action:manipulation!important;
-    transform-origin:center!important;
+    transform-origin:center center!important;
     -webkit-tap-highlight-color:transparent!important;
     -webkit-user-select:none!important;
     user-select:none!important;
     -webkit-user-drag:none!important;
     will-change:transform;
     backface-visibility:hidden;
-    transform:translate3d(0,0,0) scale(1)!important;
-    transition:transform .065s ease-out!important;
+    transform:translate3d(0,0,0) rotate(0deg);
 }
 
-/* Нажатие без перехода: изменение видно в тот же кадр. */
+/* На самой картинке нет тяжёлых hover/press эффектов. */
+#page-home .home-hero #crown:hover,
+#page-home .home-hero #crown:active,
 #page-home .home-hero #crown.crown-down,
-#page-home .home-hero #crown.crown-click,
-#page-home .home-hero #crown:active{
-    transform:translate3d(0,4px,0) scale(.92)!important;
-    transition:none!important;
+#page-home .home-hero #crown.crown-click{
+    filter:none!important;
+    box-shadow:none!important;
 }
 </style>
 
@@ -7248,12 +7248,49 @@ function showAsiqPointFloat(reward){
 function playCrownTapAnimation(){
     if(!crown) return;
 
-    window.clearTimeout(crown._tapReleaseTimer);
-    crown.classList.add("crown-click");
+    if(crown._shakeAnimation){
+        try{ crown._shakeAnimation.cancel(); }catch{}
+    }
 
-    crown._tapReleaseTimer = window.setTimeout(() => {
-        crown.classList.remove("crown-click");
-    }, 110);
+    // Случайная частота: лёгкая / средняя / быстрая.
+    const roll = Math.random();
+    let amplitude;
+    let duration;
+    let steps;
+
+    if(roll < .42){
+        amplitude = 2.8 + Math.random() * 1.4;
+        duration = 185 + Math.random() * 55;
+        steps = 4;
+    }else if(roll < .82){
+        amplitude = 4.2 + Math.random() * 1.8;
+        duration = 135 + Math.random() * 40;
+        steps = 6;
+    }else{
+        amplitude = 5.8 + Math.random() * 2.0;
+        duration = 92 + Math.random() * 34;
+        steps = 8;
+    }
+
+    const frames = [{transform:"translate3d(0,0,0) rotate(0deg)"}];
+
+    for(let i = 1; i < steps; i++){
+        const direction = i % 2 === 0 ? 1 : -1;
+        const fade = 1 - (i / steps) * .28;
+        const x = direction * amplitude * fade;
+        const rotation = direction * (.45 + amplitude * .10) * fade;
+
+        frames.push({
+            transform:`translate3d(${x.toFixed(2)}px,0,0) rotate(${rotation.toFixed(2)}deg)`
+        });
+    }
+
+    frames.push({transform:"translate3d(0,0,0) rotate(0deg)"});
+
+    crown._shakeAnimation = crown.animate(frames, {
+        duration:Math.round(duration),
+        easing:"linear"
+    });
 }
 
 function maybeShowRareCrownSparks(){
@@ -7348,8 +7385,6 @@ if(crown){
     crown.setAttribute("aria-label", "Tap to earn ASIQ Points");
 
     let suppressNextClick = false;
-    let pressStartedAt = 0;
-    let releaseTimer = 0;
 
     function crownHaptic(){
         try{
@@ -7362,31 +7397,16 @@ if(crown){
         }catch{}
     }
 
-    function releaseCrownPress(){
-        window.clearTimeout(releaseTimer);
-        const elapsed = performance.now() - pressStartedAt;
-        const wait = Math.max(0, 58 - elapsed);
-        releaseTimer = window.setTimeout(() => {
-            crown.classList.remove("crown-down");
-        }, wait);
-    }
-
     crown.addEventListener("pointerdown", event => {
         if(event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
 
-        pressStartedAt = performance.now();
         suppressNextClick = true;
-        crown.classList.remove("crown-click");
-        crown.classList.add("crown-down");
 
-        // Всё важное происходит сразу при касании, без ожидания click/pointerup.
+        // Дрожание, вибрация и начисление начинаются сразу при касании.
+        playCrownTapAnimation();
         crownHaptic();
         submitAsiqPointTap();
     }, {passive:true});
-
-    ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
-        crown.addEventListener(eventName, releaseCrownPress, {passive:true});
-    });
 
     crown.addEventListener("click", () => {
         // После pointerdown браузер создаёт click — не начисляем второй раз.
