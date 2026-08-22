@@ -2092,20 +2092,16 @@ body{
     touch-action:manipulation;
     transform-origin:center;
     -webkit-tap-highlight-color:transparent;
-}
-
-#crown{
-    cursor:pointer;
-    touch-action:manipulation;
-    transform-origin:center;
-    -webkit-tap-highlight-color:transparent;
-    will-change:transform, filter;
+    -webkit-user-select:none;
+    user-select:none;
+    will-change:transform;
+    backface-visibility:hidden;
+    transform:translateZ(0);
 }
 
 #crown.crown-down{
-   transform:scale(.90) translateY(3px) !important;
-    filter: brightness(1.12) drop-shadow(0 0 10px rgba(255,215,0,.45)) !important;
-    transition:transform .08s ease-out, filter .08s ease-out !important;
+    transform:translateZ(0) scale(.965) translateY(2px) !important;
+    transition:transform .055s ease-out !important;
 }
 
 /* ===== ASIQ POINTS ===== */
@@ -4638,7 +4634,17 @@ body{
 }
 #page-home .home-hero .logo{
     display:block;
+    width:min(72vw,290px)!important;
+    max-width:290px!important;
+    height:auto!important;
     margin:0 auto!important;
+    animation:none!important;
+    filter:none!important;
+    transition:transform .10s ease-out!important;
+    transform:translateZ(0);
+}
+#page-home .home-hero .logo:hover{
+    transform:translateZ(0) scale(1)!important;
 }
 #page-home .presale-pass-card{
     flex:0 0 auto;
@@ -4654,6 +4660,10 @@ body{
 @media (max-height:620px), (orientation:landscape){
     #page-home.active{min-height:auto;display:block;}
     #page-home .home-hero{min-height:230px;display:flex;}
+    #page-home .home-hero .logo{width:min(58vw,245px)!important;}
+}
+@media (max-width:390px){
+    #page-home .home-hero .logo{width:min(74vw,275px)!important;}
 }
 </style>
 </head>
@@ -7135,13 +7145,12 @@ function playCrownTapAnimation(){
     }
 
     crown._tapAnimation = crown.animate([
-        { transform:"scale(.90) translateY(3px)" },
-        { transform:"scale(1.06) translateY(-3px)", offset:.45 },
-        { transform:"scale(.94) translateY(1px)", offset:.72 },
-        { transform:"scale(1) translateY(0)" }
+        { transform:"translateZ(0) scale(.965) translateY(2px)" },
+        { transform:"translateZ(0) scale(1.035) translateY(-1px)", offset:.52 },
+        { transform:"translateZ(0) scale(1) translateY(0)" }
     ], {
-        duration:460,
-        easing:"cubic-bezier(.22,1.35,.36,1)"
+        duration:235,
+        easing:"cubic-bezier(.2,.8,.2,1)"
     });
 }
 
@@ -7182,10 +7191,6 @@ async function submitAsiqPointTap(){
         showAsiqPointFloat(reward);
         scheduleAsiqLeaderboardRefresh();
 
-        try{
-            const intensity = reward >= 8 ? "heavy" : reward >= 4 ? "medium" : "light";
-            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred(intensity);
-        }catch{}
     }catch(error){
         // 429 от защиты от накрутки не превращаем в поток уведомлений.
         if(!/слишком много тапов/i.test(error?.message || "")){
@@ -7224,7 +7229,16 @@ if(crown){
     crown.addEventListener("click", () => {
         crown.classList.remove("crown-down");
         playCrownTapAnimation();
-        submitAsiqPointTap();
+
+        // Мгновенный тактильный отклик: не ждём Railway/PostgreSQL.
+        try{
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
+        }catch{}
+
+        // Даём браузеру сначала отрисовать нажатие, затем запускаем сетевой запрос.
+        requestAnimationFrame(() => {
+            submitAsiqPointTap();
+        });
     });
 
     crown.addEventListener("keydown", event => {
