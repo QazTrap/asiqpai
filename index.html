@@ -4693,6 +4693,69 @@ body{
     #page-home .home-hero .logo{width:min(74vw,275px)!important;}
 }
 </style>
+
+<style>
+/* ===== FINAL WALLET CARD UNIFORMITY ===== */
+#page-wallet .asiq-wallet-card.asiq-bank-card,
+#page-wallet .asiq-points-panel.asiq-points-wallet,
+#page-wallet .asiq-leaderboard-card,
+#page-wallet #submissionCard{
+    width:min(100%,360px)!important;
+    max-width:360px!important;
+    margin:0 auto 18px!important;
+    box-sizing:border-box!important;
+    border:1px solid rgba(244,216,117,.42)!important;
+    border-radius:24px!important;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.07),
+        0 18px 42px rgba(0,0,0,.46),
+        0 0 20px rgba(212,175,55,.08)!important;
+}
+
+/* Preserve each card's own content/background, only normalize the frame. */
+#page-wallet .asiq-points-panel.asiq-points-wallet,
+#page-wallet .asiq-leaderboard-card,
+#page-wallet #submissionCard{
+    overflow:hidden;
+}
+
+@media (max-width:390px){
+    #page-wallet .asiq-wallet-card.asiq-bank-card,
+    #page-wallet .asiq-points-panel.asiq-points-wallet,
+    #page-wallet .asiq-leaderboard-card,
+    #page-wallet #submissionCard{
+        width:100%!important;
+        max-width:360px!important;
+        border-radius:22px!important;
+    }
+}
+
+/* ===== FINAL CROWN PRESS ===== */
+#page-home .home-hero #crown{
+    position:relative!important;
+    z-index:5!important;
+    pointer-events:auto!important;
+    cursor:pointer!important;
+    touch-action:manipulation!important;
+    transform-origin:center!important;
+    -webkit-tap-highlight-color:transparent!important;
+    -webkit-user-select:none!important;
+    user-select:none!important;
+    -webkit-user-drag:none!important;
+    will-change:transform;
+    backface-visibility:hidden;
+    transform:translateZ(0) scale(1)!important;
+    transition:transform .085s cubic-bezier(.2,.75,.25,1)!important;
+}
+
+#page-home .home-hero #crown.crown-down,
+#page-home .home-hero #crown.crown-click,
+#page-home .home-hero #crown:active{
+    transform:translateZ(0) scale(.91) translateY(5px)!important;
+    transition:transform .045s ease-out!important;
+}
+</style>
+
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
@@ -7184,18 +7247,12 @@ function showAsiqPointFloat(reward){
 function playCrownTapAnimation(){
     if(!crown) return;
 
-    if(crown._tapAnimation){
-        crown._tapAnimation.cancel();
-    }
+    window.clearTimeout(crown._tapReleaseTimer);
+    crown.classList.add("crown-click");
 
-    // Простой визуальный клик: продавили и отпустили, без bounce/glow.
-    crown._tapAnimation = crown.animate([
-        { transform:"translateZ(0) scale(.94) translateY(4px)" },
-        { transform:"translateZ(0) scale(1) translateY(0)" }
-    ], {
-        duration:145,
-        easing:"cubic-bezier(.2,.7,.25,1)"
-    });
+    crown._tapReleaseTimer = window.setTimeout(() => {
+        crown.classList.remove("crown-click");
+    }, 110);
 }
 
 function maybeShowRareCrownSparks(){
@@ -7303,7 +7360,17 @@ if(crown){
         crown.classList.remove("crown-down");
         playCrownTapAnimation();
 
-        // Сначала отрисовываем клик, затем запускаем серверное начисление.
+        // Лёгкая вибрация на каждый тап внутри Telegram.
+        try{
+            const haptic = window.Telegram?.WebApp?.HapticFeedback;
+            if(haptic?.impactOccurred){
+                haptic.impactOccurred("light");
+            }else if(haptic?.selectionChanged){
+                haptic.selectionChanged();
+            }
+        }catch{}
+
+        // Сначала показываем визуальный клик, затем запускаем серверное начисление.
         requestAnimationFrame(() => {
             submitAsiqPointTap();
         });
