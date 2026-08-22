@@ -2096,12 +2096,39 @@ body{
     user-select:none;
     will-change:transform;
     backface-visibility:hidden;
-    transform:translateZ(0);
+    transform:translateZ(0) scale(1);
+    transition:transform .10s ease-out!important;
 }
 
+/* Только визуальное продавливание — без свечения, колец и фильтров. */
 #crown.crown-down{
-    transform:translateZ(0) scale(.965) translateY(2px) !important;
-    transition:transform .055s ease-out !important;
+    transform:translateZ(0) scale(.94) translateY(4px)!important;
+    transition:transform .055s ease-out!important;
+}
+
+.crown-rare-spark{
+    position:fixed;
+    z-index:50010;
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    pointer-events:none;
+    background:#ffe987;
+    box-shadow:0 0 7px rgba(255,220,95,.72);
+    transform:translate(-50%,-50%) scale(.5);
+    animation:crownRareSpark .48s ease-out forwards;
+}
+
+@keyframes crownRareSpark{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.35);}
+    20%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    100%{
+        opacity:0;
+        transform:translate(
+            calc(-50% + var(--spark-x,0px)),
+            calc(-50% + var(--spark-y,-20px))
+        ) scale(.15);
+    }
 }
 
 /* ===== ASIQ POINTS ===== */
@@ -7161,14 +7188,37 @@ function playCrownTapAnimation(){
         crown._tapAnimation.cancel();
     }
 
+    // Простой визуальный клик: продавили и отпустили, без bounce/glow.
     crown._tapAnimation = crown.animate([
-        { transform:"translateZ(0) scale(.965) translateY(2px)" },
-        { transform:"translateZ(0) scale(1.035) translateY(-1px)", offset:.52 },
+        { transform:"translateZ(0) scale(.94) translateY(4px)" },
         { transform:"translateZ(0) scale(1) translateY(0)" }
     ], {
-        duration:235,
-        easing:"cubic-bezier(.2,.8,.2,1)"
+        duration:145,
+        easing:"cubic-bezier(.2,.7,.25,1)"
     });
+}
+
+function maybeShowRareCrownSparks(){
+    if(!crown || Math.random() >= .01) return; // примерно 1 раз на 100 успешных тапов
+
+    const rect = crown.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const radius = Math.max(rect.width, rect.height) * .43;
+    const sparkCount = 3 + Math.floor(Math.random() * 2);
+
+    for(let i = 0; i < sparkCount; i++){
+        const angle = Math.random() * Math.PI * 2;
+        const spark = document.createElement("span");
+        spark.className = "crown-rare-spark";
+        spark.style.left = `${centerX + Math.cos(angle) * radius}px`;
+        spark.style.top = `${centerY + Math.sin(angle) * radius}px`;
+        spark.style.setProperty("--spark-x", `${Math.cos(angle) * (18 + Math.random() * 18)}px`);
+        spark.style.setProperty("--spark-y", `${Math.sin(angle) * (18 + Math.random() * 18) - 8}px`);
+        spark.style.animationDelay = `${Math.random() * 70}ms`;
+        document.body.appendChild(spark);
+        window.setTimeout(() => spark.remove(), 650);
+    }
 }
 
 async function submitAsiqPointTap(){
@@ -7206,6 +7256,7 @@ async function submitAsiqPointTap(){
         asiqPointsReady = true;
         renderAsiqPoints();
         showAsiqPointFloat(reward);
+        maybeShowRareCrownSparks();
         scheduleAsiqLeaderboardRefresh();
 
     }catch(error){
@@ -7232,7 +7283,7 @@ window.setTimeout(() => loadAsiqLeaderboard(true), 1400);
 loadSubmission();
 loadPresalePass();
 
-// Корона: визуальная отдача сразу, начисление и вибрация — после подтверждения сервера.
+// Корона: только визуальное нажатие; серверное начисление ASIQ Points остаётся без изменений.
 if(crown){
     crown.setAttribute("role", "button");
     crown.setAttribute("tabindex", "0");
@@ -7252,12 +7303,7 @@ if(crown){
         crown.classList.remove("crown-down");
         playCrownTapAnimation();
 
-        // Мгновенный тактильный отклик: не ждём Railway/PostgreSQL.
-        try{
-            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
-        }catch{}
-
-        // Даём браузеру сначала отрисовать нажатие, затем запускаем сетевой запрос.
+        // Сначала отрисовываем клик, затем запускаем серверное начисление.
         requestAnimationFrame(() => {
             submitAsiqPointTap();
         });
