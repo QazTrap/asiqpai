@@ -4730,7 +4730,7 @@ body{
     }
 }
 
-/* ===== FINAL CROWN SHAKE ===== */
+/* ===== FINAL CROWN SHAKE — RELIABLE RESTART ===== */
 #page-home .home-hero #crown{
     position:relative!important;
     z-index:5!important;
@@ -4742,18 +4742,57 @@ body{
     -webkit-user-select:none!important;
     user-select:none!important;
     -webkit-user-drag:none!important;
-    will-change:transform;
-    backface-visibility:hidden;
+    will-change:transform!important;
+    backface-visibility:hidden!important;
     transform:translate3d(0,0,0) rotate(0deg);
-}
-
-/* На самой картинке нет тяжёлых hover/press эффектов. */
-#page-home .home-hero #crown:hover,
-#page-home .home-hero #crown:active,
-#page-home .home-hero #crown.crown-down,
-#page-home .home-hero #crown.crown-click{
     filter:none!important;
     box-shadow:none!important;
+}
+
+/* Эти селекторы специально сильнее старого .logo{animation:none!important}. */
+#page-home .home-hero #crown.crown-shake-slow{
+    animation:crownShakeSlow 230ms linear 1!important;
+    transition:none!important;
+}
+#page-home .home-hero #crown.crown-shake-medium{
+    animation:crownShakeMedium 155ms linear 1!important;
+    transition:none!important;
+}
+#page-home .home-hero #crown.crown-shake-fast{
+    animation:crownShakeFast 105ms linear 1!important;
+    transition:none!important;
+}
+
+@keyframes crownShakeSlow{
+    0%{transform:translate3d(0,0,0) rotate(0deg)}
+    20%{transform:translate3d(-3px,0,0) rotate(-.55deg)}
+    40%{transform:translate3d(3px,0,0) rotate(.55deg)}
+    60%{transform:translate3d(-2px,0,0) rotate(-.35deg)}
+    80%{transform:translate3d(2px,0,0) rotate(.35deg)}
+    100%{transform:translate3d(0,0,0) rotate(0deg)}
+}
+@keyframes crownShakeMedium{
+    0%{transform:translate3d(0,0,0) rotate(0deg)}
+    14%{transform:translate3d(-5px,0,0) rotate(-.8deg)}
+    28%{transform:translate3d(5px,0,0) rotate(.8deg)}
+    42%{transform:translate3d(-4px,0,0) rotate(-.65deg)}
+    56%{transform:translate3d(4px,0,0) rotate(.65deg)}
+    70%{transform:translate3d(-3px,0,0) rotate(-.4deg)}
+    84%{transform:translate3d(3px,0,0) rotate(.4deg)}
+    100%{transform:translate3d(0,0,0) rotate(0deg)}
+}
+@keyframes crownShakeFast{
+    0%{transform:translate3d(0,0,0) rotate(0deg)}
+    10%{transform:translate3d(-7px,0,0) rotate(-1.1deg)}
+    20%{transform:translate3d(7px,0,0) rotate(1.1deg)}
+    30%{transform:translate3d(-6px,0,0) rotate(-.95deg)}
+    40%{transform:translate3d(6px,0,0) rotate(.95deg)}
+    50%{transform:translate3d(-5px,0,0) rotate(-.75deg)}
+    60%{transform:translate3d(5px,0,0) rotate(.75deg)}
+    70%{transform:translate3d(-4px,0,0) rotate(-.55deg)}
+    80%{transform:translate3d(4px,0,0) rotate(.55deg)}
+    90%{transform:translate3d(-2px,0,0) rotate(-.3deg)}
+    100%{transform:translate3d(0,0,0) rotate(0deg)}
 }
 </style>
 
@@ -7248,49 +7287,27 @@ function showAsiqPointFloat(reward){
 function playCrownTapAnimation(){
     if(!crown) return;
 
-    if(crown._shakeAnimation){
-        try{ crown._shakeAnimation.cancel(); }catch{}
-    }
+    const classes = [
+        "crown-shake-slow",
+        "crown-shake-medium",
+        "crown-shake-fast"
+    ];
 
-    // Случайная частота: лёгкая / средняя / быстрая.
+    // Убираем прошлую анимацию.
+    crown.classList.remove(...classes);
+
+    // Критично для Telegram WebView:
+    // принудительно фиксируем изменение DOM, чтобы та же анимация
+    // гарантированно могла запуститься ещё раз.
+    void crown.offsetWidth;
+
     const roll = Math.random();
-    let amplitude;
-    let duration;
-    let steps;
+    const nextClass =
+        roll < .40 ? "crown-shake-slow" :
+        roll < .82 ? "crown-shake-medium" :
+                     "crown-shake-fast";
 
-    if(roll < .42){
-        amplitude = 2.8 + Math.random() * 1.4;
-        duration = 185 + Math.random() * 55;
-        steps = 4;
-    }else if(roll < .82){
-        amplitude = 4.2 + Math.random() * 1.8;
-        duration = 135 + Math.random() * 40;
-        steps = 6;
-    }else{
-        amplitude = 5.8 + Math.random() * 2.0;
-        duration = 92 + Math.random() * 34;
-        steps = 8;
-    }
-
-    const frames = [{transform:"translate3d(0,0,0) rotate(0deg)"}];
-
-    for(let i = 1; i < steps; i++){
-        const direction = i % 2 === 0 ? 1 : -1;
-        const fade = 1 - (i / steps) * .28;
-        const x = direction * amplitude * fade;
-        const rotation = direction * (.45 + amplitude * .10) * fade;
-
-        frames.push({
-            transform:`translate3d(${x.toFixed(2)}px,0,0) rotate(${rotation.toFixed(2)}deg)`
-        });
-    }
-
-    frames.push({transform:"translate3d(0,0,0) rotate(0deg)"});
-
-    crown._shakeAnimation = crown.animate(frames, {
-        duration:Math.round(duration),
-        easing:"linear"
-    });
+    crown.classList.add(nextClass);
 }
 
 function maybeShowRareCrownSparks(){
@@ -7384,8 +7401,6 @@ if(crown){
     crown.setAttribute("tabindex", "0");
     crown.setAttribute("aria-label", "Tap to earn ASIQ Points");
 
-    let suppressNextClick = false;
-
     function crownHaptic(){
         try{
             const haptic = window.Telegram?.WebApp?.HapticFeedback;
@@ -7397,34 +7412,52 @@ if(crown){
         }catch{}
     }
 
-    crown.addEventListener("pointerdown", event => {
-        if(event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
-
-        suppressNextClick = true;
-
-        // Дрожание, вибрация и начисление начинаются сразу при касании.
+    function handleCrownPress(){
         playCrownTapAnimation();
         crownHaptic();
         submitAsiqPointTap();
-    }, {passive:true});
+    }
 
-    crown.addEventListener("click", () => {
-        // После pointerdown браузер создаёт click — не начисляем второй раз.
-        if(suppressNextClick){
-            suppressNextClick = false;
-            return;
-        }
+    if(window.PointerEvent){
+        crown.addEventListener("pointerdown", event => {
+            if(event.isPrimary === false) return;
+            if(event.pointerType === "mouse" && event.button !== 0) return;
+            handleCrownPress();
+        }, {passive:true});
 
-        // Fallback для клавиатуры и сред без Pointer Events.
-        playCrownTapAnimation();
-        crownHaptic();
-        submitAsiqPointTap();
+        // Реальный touch/mouse click уже обработан pointerdown.
+        // click оставляем только для клавиатуры (detail === 0).
+        crown.addEventListener("click", event => {
+            if(event.detail === 0){
+                handleCrownPress();
+            }
+        });
+    }else{
+        // Fallback для старых WebView.
+        crown.addEventListener("touchstart", () => {
+            handleCrownPress();
+        }, {passive:true});
+
+        crown.addEventListener("click", event => {
+            if(event.detail === 0){
+                handleCrownPress();
+            }
+        });
+    }
+
+
+    crown.addEventListener("animationend", event => {
+        if(!String(event.animationName || "").startsWith("crownShake")) return;
+        crown.classList.remove(
+            "crown-shake-slow",
+            "crown-shake-medium",
+            "crown-shake-fast"
+        );
     });
-
     crown.addEventListener("keydown", event => {
         if(event.key !== "Enter" && event.key !== " ") return;
         event.preventDefault();
-        crown.click();
+        handleCrownPress();
     });
 }
 
