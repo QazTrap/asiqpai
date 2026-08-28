@@ -34,6 +34,38 @@ const TONAPI_API_KEY = process.env.TONAPI_API_KEY || "";
 const MERCHANT_WALLET = process.env.MERCHANT_WALLET;
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
 
+// ===== AI SECRETARY =====
+const OPENAI_API_KEY = String(process.env.OPENAI_API_KEY || "").trim();
+const OPENAI_MODEL = String(process.env.OPENAI_MODEL || "gpt-5.6-luna").trim();
+const AI_SECRETARY_ENABLED = !["0", "false", "off", "no"].includes(
+  String(process.env.AI_SECRETARY_ENABLED || "true").trim().toLowerCase()
+);
+const AI_SECRETARY_PROMPT = `
+Ты AI-секретарь ASIQPAI в Telegram.
+Отвечай кратко, естественно и на языке собеседника.
+
+Твоя задача — отвечать на сообщения, связанные с ASIQPAI, ASIQ, музыкой,
+отправкой треков/инструменталов, сотрудничеством и Telegram Mini App.
+
+Известные факты:
+- ASIQPAI — музыкальный проект и Telegram Mini App.
+- Токен проекта называется ASIQ.
+- Отправка трека: 5000 ASIQ.
+- Отправка инструментала: 2500 ASIQ.
+- Artist Membership: 50000 ASIQ.
+- Presale Pass: 5000 Telegram Stars.
+
+Правила:
+- Не выдумывай цены, ссылки, сроки, гарантии или факты, которых нет выше.
+- Не обещай доход, рост цены токена, листинг или инвестиционную прибыль.
+- Если вопрос личный, юридический, медицинский, финансовый, конфликтный,
+  требует решения владельца или тебе не хватает фактов — ответь только: NO_REPLY
+- Если сообщение явно не связано с проектом/музыкой/сотрудничеством — NO_REPLY.
+- Не упоминай, что ты языковая модель. Можно сказать, что ты AI-секретарь ASIQPAI,
+  только если об этом прямо спрашивают.
+- Ответ обычно 1–4 коротких предложения.
+`.trim();
+
 const ARTIST_FILES_CONTACT_USERNAME = String(
   process.env.ARTIST_FILES_CONTACT_USERNAME || "asiqpai"
 ).replace(/^@+/, "").trim();
@@ -213,6 +245,110 @@ async function telegramBotCall(method, payload) {
   }
 
   return result.result;
+}
+
+function extractOpenAIText(response) {
+  if (!response || !Array.isArray(response.output)) return "";
+
+  return response.output
+    .filter(item => item?.type === "message")
+    .flatMap(item => Array.isArray(item.content) ? item.content : [])
+    .filter(part => part?.type === "output_text" && typeof part.text === "string")
+    .map(part => part.text)
+    .join("\n")
+    .trim();
+}
+
+async function generateSecretaryReply(userText) {
+  if (!OPENAI_API_KEY || !AI_SECRETARY_ENABLED) return "";
+
+  const response = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: OPENAI_MODEL,
+      store: false,
+      reasoning: { effort: "none" },
+      text: { verbosity: "low" },
+      max_output_tokens: 300,
+      instructions: AI_SECRETARY_PROMPT,
+      input: String(userText || "").slice(0, 6000)
+    })
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const message =
+      data?.error?.message ||
+      `OpenAI API returned HTTP ${response.status}`;
+    throw new Error(message);
+  }
+
+  const answer = extractOpenAIText(data);
+  if (!answer || answer.trim().toUpperCase() === "NO_REPLY") return "";
+
+  return answer.slice(0, 4000);
+}
+
+function isIncomingPrivateBusinessMessage(message) {
+  if (!message?.business_connection_id) return false;
+  if (message?.chat?.type !== "private") return false;
+  if (!message?.from || message.from.is_bot) return false;
+
+  // In a private incoming message, chat.id equals the sender's user id.
+  // This prevents the AI from answering messages that the account owner
+  // or this business bot itself sent, avoiding reply loops.
+  return String(message.chat.id) === String(message.from.id);
+}
+
+async function handleAiSecretaryTelegramUpdate(update) {
+  if (update?.business_connection) {
+    const connection = update.business_connection;
+    console.log(
+      "🤝 Telegram business connection:",
+      connection.id,
+      connection.is_enabled ? "enabled" : "disabled"
+    );
+    return true;
+  }
+
+  const message = update?.business_message;
+  if (!isIncomingPrivateBusinessMessage(message)) return false;
+
+  const userText = String(message.text || message.caption || "").trim();
+  if (!userText) return false;
+
+  if (!OPENAI_API_KEY) {
+    console.warn("OPENAI_API_KEY is not configured; AI secretary skipped");
+    return false;
+  }
+
+  try {
+    await telegramBotCall("sendChatAction", {
+      business_connection_id: message.business_connection_id,
+      chat_id: message.chat.id,
+      action: "typing"
+    }).catch(() => {});
+
+    const answer = await generateSecretaryReply(userText);
+    if (!answer) return true;
+
+    await telegramBotCall("sendMessage", {
+      business_connection_id: message.business_connection_id,
+      chat_id: message.chat.id,
+      text: answer
+    });
+
+    console.log("🤖 AI secretary replied in chat", message.chat.id);
+    return true;
+  } catch (error) {
+    console.error("AI secretary error:", error);
+    return false;
+  }
 }
 
 function presaleDisplayName(user) {
@@ -1352,10 +1488,15 @@ app.post(TELEGRAM_WEBHOOK_PATH, async (req, res) => {
   }
 
   try {
-    await handlePresaleTelegramUpdate(req.body);
+    const handledByPresale = await handlePresaleTelegramUpdate(req.body);
+
+    if (!handledByPresale) {
+      await handleAiSecretaryTelegramUpdate(req.body);
+    }
+
     return res.sendStatus(200);
   } catch (error) {
-    console.error("Telegram Presale webhook error:", error);
+    console.error("Telegram webhook error:", error);
     return res.sendStatus(500);
   }
 });
@@ -1373,10 +1514,17 @@ async function registerPresaleWebhook() {
   await telegramBotCall("setWebhook", {
     url: webhookUrl,
     secret_token: getTelegramWebhookSecret(),
-    allowed_updates: ["message", "pre_checkout_query"]
+    allowed_updates: [
+      "message",
+      "pre_checkout_query",
+      "business_connection",
+      "business_message",
+      "edited_business_message",
+      "deleted_business_messages"
+    ]
   });
 
-  console.log("✅ Telegram Presale webhook configured");
+  console.log("✅ Telegram webhook configured (Presale + AI Secretary)");
   return true;
 }
 
