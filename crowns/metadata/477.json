@@ -1,0 +1,37 @@
+{
+  "name": "ASIQPAI Silver Crown #478",
+  "description": "ASIQPAI CROWNS Genesis Collection. Silver Crown #478 of a permanently limited 500-piece collection on TON.",
+  "image": "https://asiqpai.site/crowns/assets/silver-crown.png",
+  "attributes": [
+    {
+      "trait_type": "Tier",
+      "value": "Silver"
+    },
+    {
+      "trait_type": "Metal",
+      "value": "Ag 999.9"
+    },
+    {
+      "trait_type": "Serial",
+      "value": "#478"
+    },
+    {
+      "trait_type": "Tier Supply",
+      "value": "400"
+    },
+    {
+      "trait_type": "Collection Supply",
+      "value": "500"
+    },
+    {
+      "trait_type": "Edition",
+      "value": "Genesis"
+    }
+  ],
+  "buttons": [
+    {
+      "label": "ASIQPAI CROWNS",
+      "uri": "https://asiqpai.site/#crowns"
+    }
+  ]
+}
