@@ -31,6 +31,7 @@
 "use strict";
 
 const API_URL = "https://asiqpai-production.up.railway.app";
+const MONETIZATION_ENABLED = false;
 
 const SafeStorage = (() => {
     const allowedKeys = new Set([
@@ -4305,6 +4306,15 @@ body{
 }
 </style>
 
+<style id="monetization-disabled">
+/* Все платные действия временно скрыты без удаления их архивной логики. */
+body #page-home [data-paid-action],
+body #page-wallet [data-paid-action],
+body .track-item-buy{
+    display:none!important;
+}
+</style>
+
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
@@ -4316,7 +4326,7 @@ body{
         </div>
 
 
-        <div class="artist-card" id="submissionCard" aria-live="polite">
+        <div class="artist-card" id="submissionCard" aria-live="polite" data-paid-action hidden>
             <div class="artist-card-head">
                 <div class="artist-title">🎵 Submit Track</div>
                 <div class="artist-badge">ASIQPAI</div>
@@ -4330,7 +4340,7 @@ body{
             <div class="artist-status" id="submissionCardStatus">Проверяем подключение</div>
         </div>
 
-        <div class="submission-modal" id="submissionModal" hidden aria-hidden="true">
+        <div class="submission-modal" id="submissionModal" data-paid-action hidden aria-hidden="true">
             <div class="submission-modal-panel" role="dialog" aria-modal="true" aria-labelledby="submissionModalTitle">
                 <div class="submission-modal-head">
                     <div class="submission-modal-title" id="submissionModalTitle">🎵 Submit Track</div>
@@ -4455,6 +4465,8 @@ body{
 
         <a
             class="asiq-swap-button asiq-bank-swap"
+            data-paid-action
+            hidden
             href="https://app.ston.fi/swap?chartVisible=true&amp;chartInterval=1w&amp;ft=GRAM&amp;tt=EQDtaiYQRMlcGHXVkcK873McLzx-JQUZtyR8W1O6e2XISp52"
             target="_blank"
             rel="noopener noreferrer"
@@ -4474,7 +4486,7 @@ body{
             <i class="fa-solid fa-chevron-right asiq-swap-chevron" aria-hidden="true"></i>
         </a>
 
-        <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite">
+        <div class="presale-pass-card presale-pass-compact" id="presalePassCard" aria-live="polite" data-paid-action hidden>
             <button class="presale-pass-button" id="presalePassButton" type="button" disabled>PRESALE — 5 000 ⭐</button>
             <div class="presale-pass-status" id="presalePassStatus" hidden></div>
         </div>
@@ -4944,6 +4956,7 @@ submissionTypeButtons.forEach(button => {
 });
 
 submissionPayButton?.addEventListener("click", async () => {
+    if(!MONETIZATION_ENABLED) return;
     if(submissionBusy) return;
 
     const walletAddress = tonConnectUI.account?.address || "";
@@ -5141,6 +5154,7 @@ async function loadPresalePass(){
 }
 
 presalePassButton?.addEventListener("click", async () => {
+    if(!MONETIZATION_ENABLED) return;
     if(presalePassButton.disabled || presalePassBusy || presalePassState?.active) return;
 
     presalePassNotice = "";
@@ -5532,6 +5546,7 @@ async function waitForOrderPayment(orderId){
 let paymentInProgress = false;
 
 async function buyGP(){
+    if(!MONETIZATION_ENABLED) return;
     if(paymentInProgress) return;
 
     if(!getTelegramInitData()){
@@ -6285,6 +6300,7 @@ function formatAsiqPrice(value){
 }
 
 async function buyInstrumental(track, index, button){
+    if(!MONETIZATION_ENABLED) return;
     const price = Number(track?.priceAsiq);
     if(!Number.isFinite(price) || price <= 0 || paymentInProgress) return;
 
@@ -6407,7 +6423,7 @@ function createCatalogTrackButton(track, index){
 
     item.append(cover, copy, play);
 
-    if(isInstrumental){
+    if(MONETIZATION_ENABLED && isInstrumental){
         const buy = document.createElement("button");
         buy.type = "button";
         buy.className = "track-item-buy";
@@ -6550,9 +6566,11 @@ loadPlaylist();
     <script>
 const crown = document.getElementById("crown");
 
-// Daily Reward и Withdraw ASIQ отключены.
-loadSubmission();
-loadPresalePass();
+// Все платные действия, Daily Reward и Withdraw ASIQ отключены.
+if(MONETIZATION_ENABLED){
+    loadSubmission();
+    loadPresalePass();
+}
 
 // Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
 if(crown){
