@@ -39,6 +39,7 @@ const SafeStorage = (() => {
         "playMode",
         "likedTracks",
         "gp",
+        "crownBalance",
         "goldLicenseClaimed",
         "submissionOrderId",
         "presalePassOrderId"
@@ -4315,14 +4316,154 @@ body .track-item-buy{
 }
 </style>
 
+<style id="crown-tap-game-styles">
+/* ===== CROWN TAP GAME ===== */
+#page-home{
+    padding:0!important;
+}
+
+#page-home .home-hero.crown-tap-game{
+    width:100%;
+    min-height:min(620px,calc(100dvh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    padding:18px 0 28px!important;
+    box-sizing:border-box;
+    display:flex!important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+}
+
+.crown-balance-panel{
+    min-width:176px;
+    padding:10px 18px 11px;
+    box-sizing:border-box;
+    border:1px solid rgba(212,175,55,.32);
+    border-radius:16px;
+    background:linear-gradient(145deg,rgba(24,24,22,.94),rgba(8,8,8,.98));
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 14px 34px rgba(0,0,0,.36),0 0 24px rgba(212,175,55,.08);
+    text-align:center;
+}
+
+.crown-balance-label{
+    display:block;
+    margin-bottom:4px;
+    color:#a89149;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+#crownBalanceCounter{
+    display:block;
+    color:#f4d875;
+    font-size:30px;
+    line-height:1;
+    font-weight:950;
+    letter-spacing:-.5px;
+    text-shadow:0 0 15px rgba(255,215,0,.22);
+}
+
+#crown{
+    appearance:none;
+    -webkit-appearance:none;
+    display:grid;
+    place-items:center;
+    margin:0;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:transparent;
+    cursor:pointer;
+    touch-action:manipulation;
+    transform-origin:center;
+    -webkit-tap-highlight-color:transparent;
+    will-change:transform,filter;
+}
+
+#page-home #crown .logo{
+    width:clamp(214px,64vw,286px)!important;
+    max-width:78vw!important;
+    height:auto;
+    margin:0!important;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+    filter:brightness(1.02) drop-shadow(0 18px 36px rgba(214,180,76,.18));
+    animation:asiqLogoGlow 4.5s ease-in-out infinite!important;
+}
+
+#crown:focus-visible{
+    outline:2px solid #f4d875;
+    outline-offset:8px;
+}
+
+#crown.crown-down{
+    transform:scale(.91) translateY(3px)!important;
+    filter:brightness(1.12) drop-shadow(0 0 12px rgba(255,215,0,.48))!important;
+}
+
+.crown-tap-hint{
+    color:#9f8b4e;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:2.4px;
+    text-transform:uppercase;
+    user-select:none;
+}
+
+.crown-plus{
+    position:fixed;
+    z-index:20000;
+    pointer-events:none;
+    color:#ffd700;
+    font-size:24px;
+    line-height:1;
+    font-weight:950;
+    white-space:nowrap;
+    text-shadow:0 0 12px currentColor,0 3px 12px rgba(0,0,0,.7);
+    transform:translate(-50%,-50%);
+    animation:crownRewardFloat .9s ease-out forwards;
+}
+
+@keyframes crownRewardFloat{
+    0%{opacity:1;transform:translate(-50%,-50%) scale(.88)}
+    100%{opacity:0;transform:translate(-50%,calc(-50% - 82px)) scale(1.28)}
+}
+
+@media (max-height:620px){
+    #page-home .home-hero.crown-tap-game{
+        min-height:calc(100dvh - 104px);
+        gap:10px;
+        padding:8px 0 15px!important;
+    }
+    #page-home #crown .logo{
+        width:clamp(170px,46vh,226px)!important;
+    }
+    #crownBalanceCounter{font-size:25px}
+}
+
+@media (prefers-reduced-motion:reduce){
+    #page-home #crown .logo{animation:none!important}
+    .crown-plus{animation-duration:.25s}
+}
+</style>
+
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
-        <div class="home-hero">
-            <img src="images/crow.png" class="logo" id="crown" alt="ASIQPAI Logo" draggable="false">    
+        <div class="home-hero crown-tap-game">
+            <div class="crown-balance-panel" aria-live="polite" aria-atomic="true">
+                <span class="crown-balance-label">CROWN BALANCE</span>
+                <strong id="crownBalanceCounter">0</strong>
+            </div>
+            <button id="crown" type="button" aria-label="Тапните по короне, чтобы заработать CROWN">
+                <img src="images/crow.png" class="logo" alt="Корона ASIQPAI" draggable="false">
+            </button>
+            <div class="crown-tap-hint">Tap to earn CROWN</div>
         </div>
 
 
@@ -6565,6 +6706,93 @@ loadPlaylist();
 </script>
     <script>
 const crown = document.getElementById("crown");
+const crownBalanceCounter = document.getElementById("crownBalanceCounter");
+let crownBalance = Number(SafeStorage.get("crownBalance", "0"));
+
+if(!Number.isSafeInteger(crownBalance) || crownBalance < 0){
+    crownBalance = 0;
+}
+
+function updateCrownBalance(){
+    if(crownBalanceCounter){
+        crownBalanceCounter.textContent = crownBalance.toLocaleString("ru-RU");
+    }
+    if(crown){
+        crown.setAttribute(
+            "aria-label",
+            `Тапните по короне, чтобы заработать CROWN. Баланс: ${crownBalance.toLocaleString("ru-RU")}`
+        );
+    }
+}
+
+function calculateCrownTapReward(currentBalance){
+    const random = Math.random();
+
+    if(currentBalance < 25000){
+        if(random < .65) return 1;
+        if(random < .85) return 2;
+        if(random < .95) return 3;
+        if(random < .99) return 5;
+        return 10;
+    }
+
+    if(currentBalance < 50000){
+        if(random < .75) return 1;
+        if(random < .94) return 2;
+        if(random < .99) return 3;
+        return 5;
+    }
+
+    if(currentBalance < 75000){
+        if(random < .82) return 1;
+        if(random < .97) return 2;
+        return 3;
+    }
+
+    if(currentBalance < 90000){
+        if(random < .25) return 0;
+        if(random < .92) return 1;
+        return 2;
+    }
+
+    return random < .65 ? 0 : 1;
+}
+
+function showCrownTapReward(reward){
+    if(!crown) return;
+
+    const plus = document.createElement("div");
+    plus.className = "crown-plus";
+
+    if(reward === 0){
+        plus.textContent = "TRY AGAIN";
+        plus.style.color = "#777";
+    }else if(reward === 1){
+        plus.textContent = "+1 CROWN";
+    }else if(reward === 2){
+        plus.textContent = "+2 CROWN";
+    }else if(reward === 3){
+        plus.textContent = "+3 CROWN";
+        plus.style.color = "#ffa500";
+    }else if(reward === 5){
+        plus.textContent = "⭐ +5 CROWN";
+        plus.style.color = "#ff8c00";
+    }else{
+        plus.textContent = "💎 +10 CROWN";
+        plus.style.color = "#00e5ff";
+    }
+
+    const rect = crown.getBoundingClientRect();
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 28 + Math.random() * 72;
+    const rawX = rect.left + rect.width / 2 + Math.cos(angle) * distance;
+    const rawY = rect.top + rect.height / 2 + Math.sin(angle) * distance;
+
+    plus.style.left = `${Math.min(Math.max(rawX, 54), window.innerWidth - 54)}px`;
+    plus.style.top = `${Math.min(Math.max(rawY, 50), window.innerHeight - 50)}px`;
+    document.body.appendChild(plus);
+    window.setTimeout(() => plus.remove(), 900);
+}
 
 // Все платные действия, Daily Reward и Withdraw ASIQ отключены.
 if(MONETIZATION_ENABLED){
@@ -6572,14 +6800,12 @@ if(MONETIZATION_ENABLED){
     loadPresalePass();
 }
 
-// Корона работает как интерактивная кнопка: нажатие, вибрация и отдача.
+updateCrownBalance();
+
+// Корона работает как интерактивная кнопка и начисляет внутренние CROWN.
 if(crown){
     crown.addEventListener("pointerdown", () => {
         crown.classList.add("crown-down");
-
-        try{
-            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("medium");
-        }catch{}
     });
 
     ["pointerup", "pointercancel", "pointerleave"].forEach(eventName => {
@@ -6590,6 +6816,12 @@ if(crown){
 
     crown.addEventListener("click", () => {
         crown.classList.remove("crown-down");
+
+        const reward = calculateCrownTapReward(crownBalance);
+        crownBalance = Math.min(Number.MAX_SAFE_INTEGER, crownBalance + reward);
+        SafeStorage.set("crownBalance", String(crownBalance));
+        updateCrownBalance();
+        showCrownTapReward(reward);
 
         if(crown._tapAnimation){
             crown._tapAnimation.cancel();
@@ -6608,6 +6840,13 @@ if(crown){
         try{
             window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light");
         }catch{}
+
+        if(reward >= 5){
+            showToast(
+                reward === 10 ? "💎 +10 CROWN" : `⭐ +${reward} CROWN`,
+                reward === 10 ? "success" : ""
+            );
+        }
     });
 }
 
