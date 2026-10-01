@@ -60,6 +60,7 @@ export function mountStudio({ apiUrl }) {
     status(stats.rms < 0.001 ? 'Запись очень тихая. Проверьте микрофон.' : 'Голос добавлен. Выберите звучание и соберите демо.');
   }
   el('beat').addEventListener('change', () => action(async () => {
+    await context();
     invalidate(); beat = null; el('beat-preview').pause(); el('beat-preview').removeAttribute('src');
     const option = el('beat').selectedOptions[0]; if (!option?.value) return;
     status('Загружаем бит…');
