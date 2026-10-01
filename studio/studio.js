@@ -90,6 +90,15 @@ export function mountStudio({ apiUrl }) {
     for (const a of document.querySelectorAll('audio')) a.pause();
     status('Запрашиваем микрофон…');
     stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+    const inputTrack = stream.getAudioTracks()[0];
+    const inputName = inputTrack?.label?.trim() || 'Микрофон устройства';
+    const inputSource = el('input-source');
+    if (inputSource) {
+      inputSource.textContent = `🎙 Источник записи: ${inputName}`;
+      if (/airpods|bluetooth/i.test(inputName)) {
+        inputSource.textContent += ' ⚠ Для лучшего качества используйте USB-микрофон.';
+      }
+    }
     if (disposed || !document.getElementById('page-studio')?.classList.contains('active')) { stream.getTracks().forEach(t => t.stop()); stream = null; return; }
     const type = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find(t => MediaRecorder.isTypeSupported(t));
     try { recorder = type ? new MediaRecorder(stream, { mimeType: type }) : new MediaRecorder(stream); }
