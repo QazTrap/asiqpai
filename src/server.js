@@ -24,6 +24,7 @@ import {
 } from "./ton.js";
 import { Address, beginCell } from "@ton/core";
 import { TonClient, TupleBuilder } from "@ton/ton";
+import { mountStudioRoutes } from "./studio.js";
 const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
@@ -1046,6 +1047,8 @@ async function requireTelegramUser(req, res, next) {
     });
   }
 }
+
+mountStudioRoutes(app, { pool, requireTelegramUser });
 
 app.get(
   "/api/presale/pass",
@@ -3533,3 +3536,4 @@ verifyPayoutWallet()
     console.error(error.message);
     process.exit(1);
   });
+

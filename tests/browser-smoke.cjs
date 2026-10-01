@@ -1,0 +1,40 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+(async()=>{
+ const server=require('http').createServer((req,res)=>{const path=require('path').join(require('path').resolve(__dirname, '..'),decodeURIComponent(req.url.split('?')[0]));try{const data=fs.readFileSync(path);res.setHeader('Content-Type',path.endsWith('.js')?'application/javascript':path.endsWith('.css')?'text/css':path.endsWith('.json')?'application/json':'text/html');res.end(data);}catch{res.statusCode=404;res.end();}}).listen(8765,'127.0.0.1');
+ const browser=await chromium.launch({headless:true,executablePath:process.env.STUDIO_BROWSER_PATH || undefined,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage','--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream']});
+ const page=await browser.newPage({viewport:{width:390,height:844}});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ function wav(seconds=2){const n=44100*seconds,b=Buffer.alloc(44+n*2);b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(44100,24);b.writeUInt32LE(88200,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(n*2,40);for(let i=0;i<n;i++)b.writeInt16LE(Math.round(Math.sin(i*440*2*Math.PI/44100)*4000),44+i*2);return b;}
+ await page.route('https://**/*',route=>{
+  const u=route.request().url();
+  if(u.includes('tonconnect-ui')) return route.fulfill({contentType:'application/javascript',body:'window.TON_CONNECT_UI={TonConnectUI:class {constructor(){this.account=null} onStatusChange(){} }}'});
+  if(u.includes('telegram-web-app')) return route.fulfill({contentType:'application/javascript',body:'window.Telegram={WebApp:{initData:"test",ready(){},expand(){},HapticFeedback:{selectionChanged(){}}}}'});
+  if(u.includes('/api/studio/status')) return route.fulfill({json:{aiAvailable:false}});
+  if(u.includes('railway')) return route.fulfill({json:{}});
+  return route.fulfill({status:200,body:''});
+ });
+ await page.route('**/music/**', r=>r.fulfill({contentType:'audio/wav',body:wav()}));
+ await page.goto('http://127.0.0.1:8765/index.html');
+ await page.getByRole('button',{name:'🎙 ASIQPAI Studio — записать демо'}).click();
+ await page.waitForFunction(()=>document.querySelector('#studio-beat').options.length>1);
+ await page.selectOption('#studio-beat',{index:1});
+ await page.waitForFunction(()=>!document.querySelector('#studio-record').disabled);
+ await page.setInputFiles('#studio-upload',{name:'voice.wav',mimeType:'audio/wav',buffer:wav(1)});
+ await page.waitForFunction(()=>!document.querySelector('#studio-process').disabled);
+ await page.click('#studio-process');
+ await page.waitForFunction(()=>!document.querySelector('#studio-result').hidden);
+ const promise=page.waitForEvent('download');await page.click('#studio-download');const download=await promise;const bytes=fs.readFileSync(await download.path());
+ const output={size:bytes.length,channels:bytes.readUInt16LE(22),rate:bytes.readUInt32LE(24),result:await page.locator('#studio-result-info').textContent(),overflow:await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)};
+ if(output.channels!==2||output.rate!==44100||output.size<=44||output.overflow) throw Error(JSON.stringify(output));
+ await page.fill('#studio-offset','0.5');
+ if(!await page.locator('#studio-result').evaluate(e=>e.hidden)) throw Error('Stale export not hidden');
+ await page.selectOption('#studio-preset','space');await page.click('#studio-process');await page.waitForFunction(()=>!document.querySelector('#studio-result').hidden);
+ await page.locator('#studio-result').scrollIntoViewIfNeeded();
+ await page.click('#studio-record');await page.waitForFunction(()=>!document.querySelector('#studio-stop').disabled);
+ await page.waitForTimeout(700);await page.click('#studio-stop');
+ await page.waitForFunction(()=>!document.querySelector('#studio-process').disabled);
+ if(!await page.locator('#studio-vocal-info').textContent().then(t=>t.includes('Вокал:')))throw Error('Recording failed');
+ console.log(JSON.stringify({output,recording:await page.locator('#studio-vocal-info').textContent(),errors},null,2));
+ await browser.close(); server.close();
+})().catch(e=>{console.error(e);process.exit(1)});

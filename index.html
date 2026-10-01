@@ -4449,6 +4449,7 @@ body .track-item-buy{
 }
 </style>
 
+<link rel="stylesheet" href="studio/studio.css">
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
@@ -4507,6 +4508,7 @@ body .track-item-buy{
     </section>
 
     <section class="app-page active" id="page-music" data-page="music">
+<button type="button" class="studio-launch" data-open-page="studio">🎙 ASIQPAI Studio — записать демо</button>
         <audio id="player" preload="auto"></audio>
 
         <div class="player" id="musicPlayer">
@@ -4664,6 +4666,47 @@ body .track-item-buy{
             <p class="web3-domain">
         </div>
     </section>
+<section class="app-page" id="page-studio" data-page="studio"><div class="studio">
+  <span class="badge">ASIQPAI / STUDIO · BETA</span>
+  <h1>Ваш голос. Ваш трек.</h1>
+  <p class="muted">Запишите куплет под бит, выберите звучание и скачайте демо. До 3 минут. Для записи наденьте наушники.</p>
+  <div id="studio-status" class="status" role="status" aria-live="polite">Загружаем каталог битов…</div>
+  <div class="studio-card">
+    <h2>01 / Выберите бит</h2>
+    <label for="studio-beat">Инструментал</label><select id="studio-beat"><option value="">Выберите бит</option></select>
+    <audio id="studio-beat-preview" controls preload="none"></audio>
+    <p class="muted">Экспорт демо не означает покупку лицензии. Условия публикации песни уточните у автора бита.</p>
+  </div>
+  <div class="studio-card">
+    <h2>02 / Добавьте голос</h2>
+    <div class="row"><button id="studio-record" type="button" disabled>● Записать под бит</button><button id="studio-stop" type="button" disabled>■ Остановить запись</button></div>
+    <label for="studio-upload">Или загрузите вокал без бита (до 25 МБ)</label><input id="studio-upload" type="file" accept="audio/*">
+    <p class="muted" id="studio-vocal-info">Голос ещё не добавлен. Запись заменяет предыдущий дубль.</p>
+    <canvas id="studio-wave" class="wave" width="600" height="68" aria-label="Волновая форма вокала"></canvas>
+    <audio id="studio-voice-preview" controls preload="none"></audio>
+  </div>
+  <div class="studio-card">
+    <h2>03 / Выберите звучание</h2>
+    <label for="studio-preset">Обработка голоса</label><select id="studio-preset"><option value="dry">Сухой рэп</option><option value="soft">Мягкий вокал</option><option value="space">Атмосферный</option></select>
+    <label class="check"><input id="studio-ai" type="checkbox" disabled><span>ИИ-очистка шума <small id="studio-ai-state">— проверяем доступность</small></span></label>
+    <p class="muted">При включённой ИИ-очистке вокал отправляется на сервер обработки. Без неё эффекты работают на Вашем устройстве. Сильная очистка может изменить тембр — сравните результат.</p>
+    <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label><input id="studio-beat-level" type="range" min="0" max="100" value="60">
+    <label for="studio-voice-level">Громкость голоса <output id="studio-voice-value">100%</output></label><input id="studio-voice-level" type="range" min="0" max="150" value="100">
+    <label for="studio-offset">Начало вокала относительно бита, секунды</label><input id="studio-offset" type="number" min="-10" max="180" step="0.01" value="0">
+    <p class="muted">Положительное значение сдвигает голос позже, отрицательное — раньше. При задержке Bluetooth поправьте синхронизацию вручную.</p>
+    <button id="studio-process" type="button" class="primary" disabled>Обработать и собрать демо</button>
+  </div>
+  <div class="studio-card" id="studio-result" hidden>
+    <h2>04 / Ваш результат</h2>
+    <p id="studio-result-info" class="muted"></p>
+    <label for="studio-before">До обработки — бит + исходный голос</label><audio id="studio-before" controls preload="metadata"></audio>
+    <label for="studio-after">После обработки</label><audio id="studio-after" controls preload="metadata"></audio>
+    <div class="row"><a id="studio-download" class="studio-link primary" download="ASIQPAI-demo.wav">↓ Скачать WAV</a><button id="studio-share" type="button" hidden>Поделиться файлом</button></div>
+    <details><summary>Хочу отправить трек на конкурс</summary><p class="muted">Скачайте WAV и отправьте файл организатору. Приём работ и награды ASIQ подтверждает организатор; автоматической заявки пока нет.</p><a class="studio-link" href="https://t.me/asiqpai" target="_blank" rel="noopener noreferrer">Написать организатору</a></details>
+  </div>
+  <p class="muted">Сохраните результат перед закрытием: проект и записи в этой версии не сохраняются между запусками.</p>
+</div>
+</section>
 </main>
 
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
@@ -6905,7 +6948,11 @@ if(crown){
         }
     }
 
+    document.querySelectorAll("[data-open-page]").forEach(button => button.addEventListener("click", () => openPage(button.dataset.openPage)));
+
     function openPage(name){
+        window.dispatchEvent(new CustomEvent("asiqpai:page", { detail: name }));
+        if(name === "studio") document.getElementById("player")?.pause();
         const target = pages.find(page => page.dataset.page === name) || pages[0];
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
@@ -6956,5 +7003,10 @@ if(crown){
 })();
 </script>
 
+<script type="module">
+import { mountStudio } from "./studio/studio.js";
+mountStudio({ apiUrl: API_URL });
+</script>
 </body>
 </html>
+
