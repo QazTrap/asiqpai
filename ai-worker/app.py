@@ -36,6 +36,10 @@ def authorize(request):
     if not hmac.compare_digest(request.headers.get('authorization', ''), f'Bearer {TOKEN}'):
         raise HTTPException(401, 'Unauthorized')
 
+@app.get('/healthz')
+async def healthz():
+    return {'ready': model is not None}
+
 @app.get('/health')
 async def health(request: Request):
     authorize(request)
