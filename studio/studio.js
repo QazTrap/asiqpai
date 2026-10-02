@@ -52,12 +52,52 @@ export function mountStudio({ apiUrl }) {
       const h = Math.max(1, peak * 62); c.fillRect(x, (68 - h) / 2, 1, h);
     }
   }
+  function centerVoice(buffer) {
+    if (buffer.numberOfChannels === 1) return buffer;
+
+    const channels = Array.from(
+      { length: buffer.numberOfChannels },
+      (_, c) => buffer.getChannelData(c)
+    );
+
+    const energies = channels.map(data => {
+      let sum = 0;
+      for (const sample of data) sum += sample * sample;
+      return Math.sqrt(sum / Math.max(data.length, 1));
+    });
+
+    const loudest = energies.reduce(
+      (best, value, index) => value > best.value ? { value, index } : best,
+      { value: -1, index: 0 }
+    );
+    const others = energies.filter((_, index) => index !== loudest.index);
+    const next = Math.max(0, ...others);
+
+    const mono = ctx.createBuffer(1, buffer.length, buffer.sampleRate);
+    const out = mono.getChannelData(0);
+
+    // Some mobile/wired headset inputs arrive as "stereo" with the mic only
+    // in one channel. Preserve that channel at full level instead of halving it.
+    if (next === 0 || loudest.value > next * 4) {
+      out.set(channels[loudest.index]);
+      return mono;
+    }
+
+    for (let i = 0; i < buffer.length; i++) {
+      let sample = 0;
+      for (const channel of channels) sample += channel[i];
+      out[i] = sample / channels.length;
+    }
+    return mono;
+  }
+
   function acceptVoice(buffer) {
-    vocal = buffer; cleanVocal = null; invalidate(); wave(buffer);
-    el('voice-preview').src = setURL('voice-preview', encodeWav(buffer));
-    const stats = analyse(buffer);
-    el('vocal-info').textContent = `Вокал: ${buffer.duration.toFixed(1)} с${stats.peak >= 0.999 ? ' · Запись перегружена: попробуйте отойти от микрофона.' : ''}`;
-    status(stats.rms < 0.001 ? 'Запись очень тихая. Проверьте микрофон.' : 'Голос добавлен. Выберите звучание и соберите демо.');
+    const centered = centerVoice(buffer);
+    vocal = centered; cleanVocal = null; invalidate(); wave(centered);
+    el('voice-preview').src = setURL('voice-preview', encodeWav(centered));
+    const stats = analyse(centered);
+    el('vocal-info').textContent = `Вокал: ${centered.duration.toFixed(1)} с · MONO / CENTER${stats.peak >= 0.999 ? ' · Запись перегружена: попробуйте отойти от микрофона.' : ''}`;
+    status(stats.rms < 0.001 ? 'Запись очень тихая. Проверьте микрофон.' : 'Голос добавлен по центру. Выберите звучание и соберите демо.');
   }
   el('beat').addEventListener('change', () => action(async () => {
     await context();
@@ -89,7 +129,7 @@ export function mountStudio({ apiUrl }) {
     await context();
     for (const a of document.querySelectorAll('audio')) a.pause();
     status('Запрашиваем микрофон…');
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
     const inputTrack = stream.getAudioTracks()[0];
     const inputName = inputTrack?.label?.trim() || 'Микрофон устройства';
     const inputSource = el('input-source');
