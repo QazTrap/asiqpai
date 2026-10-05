@@ -51,6 +51,13 @@ function settingsFrom(value){
 function durationFor(s){
   return Math.max(6,Math.min(60,Number((((s.bars+2)*4*60)/s.bpm).toFixed(3))));
 }
+function cleanProviderDescription(value){
+  return String(value||"")
+    .replace(/young\s+dolph/gi,"Memphis trap, dark melodic piano, Southern trap atmosphere")
+    .replace(/lil\s+baby/gi,"modern melodic trap, emotional minor-key phrasing")
+    .replace(/future/gi,"dark atmospheric melodic trap")
+    .slice(0,600);
+}
 function promptFor(s){
   const density=s.dense
     ?"Full layered melodic arrangement with complementary instruments and a clear memorable motif."
@@ -62,8 +69,8 @@ function promptFor(s){
     "Repeating "+s.bars+"-bar melodic phrase, steady tempo from the first beat, loopable arrangement.",
     density,
     "Instrumental melody only: no drums, no percussion, no 808, no bassline, no vocals, no singing, no speech, no intro, no fade out.",
-    "Original composition.",
-    "Additional sound direction: "+(s.description||"none")+"."
+    "Original composition. Do not copy or imitate any existing song or artist.",
+    "Additional sound direction: "+(cleanProviderDescription(s.description)||"none")+"."
   ].join(" ");
 }
 function transformSettings(source,action){
@@ -92,23 +99,52 @@ async function submitAudio(settings,seed){
     error.status=503;
     throw error;
   }
+
+  const model=String(process.env.SAMPLES_STABILITY_MODEL||"stable-audio-2.5").trim();
+  const useV3=model==="stable-audio-3";
   const form=new FormData();
+  form.append("none",new Blob([],{type:"application/octet-stream"}),"none");
   form.append("prompt",promptFor(settings));
   form.append("duration",String(durationFor(settings)));
-  form.append("model","stable-audio-3");
+  form.append("model",useV3?"stable-audio-3":"stable-audio-2.5");
   form.append("output_format","wav");
   form.append("seed",String(seed));
   form.append("steps","8");
-  const response=await fetch("https://api.stability.ai/v2beta/audio/stable-audio/text-to-audio",{
-    method:"POST",headers:stabilityHeaders(),body:form,signal:AbortSignal.timeout(65000)
+
+  const endpoint=useV3
+    ?"https://api.stability.ai/v2beta/audio/stable-audio/text-to-audio"
+    :"https://api.stability.ai/v2beta/audio/stable-audio-2/text-to-audio";
+
+  const response=await fetch(endpoint,{
+    method:"POST",headers:stabilityHeaders(),body:form,signal:AbortSignal.timeout(useV3?65000:180000)
   });
-  const data=await response.json().catch(()=>({}));
-  if(response.status!==202||!/^[a-f0-9]{64}$/i.test(String(data.id||""))){
-    const error=new Error("Stable Audio request failed.");
-    error.status=response.status>=400&&response.status<500?400:502;
+
+  if(useV3){
+    const data=await response.json().catch(()=>({}));
+    if(response.status!==202||!/^[a-f0-9]{64}$/i.test(String(data.id||""))){
+      const detail=String(data?.errors?.join?.("; ")||data?.message||data?.name||"").slice(0,240);
+      const error=new Error("Stable Audio "+response.status+(detail?": "+detail:""));
+      error.status=response.status;
+      throw error;
+    }
+    return {generationId:data.id};
+  }
+
+  if(response.status!==200){
+    const data=await response.json().catch(()=>({}));
+    const detail=String(data?.errors?.join?.("; ")||data?.message||data?.name||"").slice(0,240);
+    const error=new Error("Stable Audio "+response.status+(detail?": "+detail:""));
+    error.status=response.status;
     throw error;
   }
-  return data.id;
+
+  const audio=Buffer.from(await response.arrayBuffer());
+  if(audio.length<44||audio.length>32*1024*1024||audio.toString("ascii",0,4)!=="RIFF"||audio.toString("ascii",8,12)!=="WAVE"){
+    const error=new Error("Stable Audio вернул некорректный WAV.");
+    error.status=502;
+    throw error;
+  }
+  return {audio};
 }
 async function fetchAudio(id){
   const response=await fetch("https://api.stability.ai/v2beta/audio/results/"+encodeURIComponent(id),{
@@ -202,8 +238,12 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       const variantId=crypto.randomUUID();
       const seed=crypto.randomInt(1,4294967295);
       try{
-        const generationId=await submitAudio(settings,seed);
-        await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,generation_id,seed,status) VALUES ($1,$2,$3,$4,$5,'waiting')",[variantId,jobId,userId,generationId,seed]);
+        const result=await submitAudio(settings,seed);
+        if(result.audio){
+          await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,seed,status,audio) VALUES ($1,$2,$3,$4,'ready',$5)",[variantId,jobId,userId,seed,result.audio]);
+        }else{
+          await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,generation_id,seed,status) VALUES ($1,$2,$3,$4,$5,'waiting')",[variantId,jobId,userId,result.generationId,seed]);
+        }
         submitted++;
       }catch(error){
         console.error("AI Samples submit:",error.message);
