@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#070708">
+<title>ASIQPAI AI Samples</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:#070708;--panel:#111113;--panel2:#181719;--gold:#d6ae57;--gold2:#8d6d32;--text:#f2ede3;--muted:#918d84;--line:#2d2b27;--ok:#79cf97;--danger:#df776d;color-scheme:dark;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text)}body{overflow-x:hidden;background:radial-gradient(circle at 80% -10%,rgba(214,174,87,.12),transparent 30%),#070708}
+button,input,select,textarea{font:inherit}.shell{width:min(760px,100%);margin:auto;padding:calc(16px + env(safe-area-inset-top)) 14px calc(28px + env(safe-area-inset-bottom))}
+.back{display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #3b3222;border-radius:11px;background:#0d0c0a;color:#c2a34f;font-size:10px;font-weight:900;letter-spacing:.12em;cursor:pointer}
+.hero{display:grid;grid-template-columns:54px 1fr auto;gap:13px;align-items:center;padding:18px 2px 22px}.mark{display:grid;place-items:center;width:54px;height:54px;border:1px solid #4b3c22;border-radius:17px;background:linear-gradient(145deg,#201a10,#0d0c09);color:var(--gold);font-size:29px;box-shadow:inset 0 0 25px #6e4f1f22,0 10px 28px #0008}
+.eyebrow{font-size:9px;letter-spacing:.21em;color:var(--gold);font-weight:900}.hero h1{font-size:28px;line-height:1;margin:5px 0 7px}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}.quota{min-width:74px;text-align:center;border:1px solid #3a3224;background:#12100c;border-radius:14px;padding:8px}.quota strong{display:block;color:var(--gold);font-size:21px}.quota small{color:#777267;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.notice{margin:0 0 13px;border:1px solid #604331;background:#1b110e;color:#e6a88e;padding:11px 13px;border-radius:12px;font-size:11px;line-height:1.45}.hidden{display:none!important}
+.panel{position:relative;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#141416f6,#0d0d0ff6);box-shadow:0 20px 55px #0007,inset 0 1px #ffffff08;padding:18px;margin-bottom:14px}.panel:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(110deg,#d6ae5708,transparent 25%,transparent 72%,#d6ae5706);pointer-events:none}
+.head{position:relative;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:17px}.head-left{display:flex;align-items:center;gap:10px}.step{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:#211a0e;color:var(--gold);font-size:10px;font-weight:950;border:1px solid #4a3920}.head h2{margin:0;font-size:18px}.badge{font-size:8px;letter-spacing:.12em;color:#a39c91}.badge i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);margin-right:5px}
+.field{position:relative;margin:14px 0}.field label{display:flex;justify-content:space-between;margin-bottom:8px;color:#bbb4a7;font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.field label strong{color:var(--gold);font-size:13px}
+.chips{display:flex;gap:7px;flex-wrap:wrap}.chips button,.seg button,.count button,.tabs button,.small-btn{border:1px solid #35322d;background:#171719;color:#b6b0a6;border-radius:10px;cursor:pointer}.chips button{padding:10px 12px;font-size:11px;font-weight:800}.chips button.active,.seg button.active,.count button.active{border-color:#6d5528;background:linear-gradient(180deg,#2d2414,#1b160e);color:#efd58f;box-shadow:inset 0 0 14px #ad7d2722}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.seg,.count,.tabs{display:flex;background:#0b0b0c;border:1px solid #292827;padding:3px;border-radius:12px}.seg button,.count button{flex:1;padding:9px 7px;border-color:transparent;background:transparent;font-size:10px;font-weight:850}
+select,textarea{width:100%;border:1px solid #35332f;background:#0d0d0f;color:var(--text);border-radius:11px;outline:none}select{height:43px;padding:0 11px}textarea{resize:vertical;min-height:82px;padding:11px;line-height:1.45;font-size:12px}select:focus,textarea:focus{border-color:#6c542c;box-shadow:0 0 0 3px #d6ae570b}
+input[type=range]{width:100%;accent-color:var(--gold)}.scale{display:flex;justify-content:space-between;color:#5f5c56;font-size:8px}.hint{font-size:9px;color:#68655f;margin-top:6px;line-height:1.4}
+.generate-row{display:grid;grid-template-columns:160px 1fr;gap:10px;margin-top:17px}.generate{min-height:47px;border:1px solid #80632f;background:linear-gradient(180deg,#e0b75e,#a77c31);color:#171109;border-radius:12px;font-weight:950;letter-spacing:.04em;cursor:pointer}.generate:disabled{opacity:.42;cursor:not-allowed}.generate:active{transform:translateY(1px)}
+.progress{display:flex;align-items:center;gap:11px;margin-top:12px;padding:11px;border:1px solid #3b3324;background:#12100d;border-radius:12px}.spin{width:22px;height:22px;border:2px solid #3c3322;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.progress strong,.progress small{display:block}.progress strong{font-size:11px;color:#e8d7ac}.progress small{font-size:9px;color:#7f796d;margin-top:3px}
+.tabs button{border:0;background:transparent;padding:7px 9px;font-size:9px}.tabs button.active{color:#e8c86e}.library{display:grid;gap:9px}.empty{text-align:center;padding:27px 10px;color:#69655d}.empty b{display:block;margin:6px;color:#a7a096;font-size:12px}.empty span{font-size:9px}
+.card{position:relative;border:1px solid #2b2a27;border-radius:15px;background:#0d0d0f;padding:12px}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card-title{font-size:13px;font-weight:900}.meta{margin-top:4px;color:#756f65;font-size:9px}.state{padding:4px 7px;border-radius:999px;background:#171719;color:#8d877d;font-size:7px;font-weight:900;letter-spacing:.08em}.state.ready{border:1px solid #31543c;color:#8dda9e;background:#102016}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.small-btn{padding:7px 9px;font-size:8px;font-weight:850}.small-btn.primary{border-color:#655026;color:#e7c76e}.fav.on{color:#f2cd68;border-color:#675329}.audio{width:100%;height:36px;margin-top:9px}
+footer{text-align:center;color:#514d45;font-size:8px;letter-spacing:.18em;padding:8px 0}
+@media(max-width:520px){.hero{grid-template-columns:46px 1fr auto}.mark{width:46px;height:46px;font-size:24px}.hero h1{font-size:24px}.hero p{font-size:10px}.grid{grid-template-columns:1fr}.generate-row{grid-template-columns:1fr}.panel{padding:15px}.quota{min-width:64px}.quota strong{font-size:18px}}
+</style>
+</head>
+<body>
+<main class="shell">
+<button class="back" id="backBtn" type="button">‹ AI STUDIO</button>
+<header class="hero">
+<div class="mark">♛</div>
+<div><div class="eyebrow">ASIQPAI AI STUDIO</div><h1>AI Samples</h1><p>Создавайте оригинальные мелодические лупы для FL Studio прямо внутри Telegram.</p></div>
+<div class="quota" id="quota"><strong>—</strong><small>осталось</small></div>
+</header>
+<div class="notice hidden" id="notice"></div>
+
+<section class="panel">
+<div class="head"><div class="head-left"><span class="step">01</span><h2>Настройте сэмпл</h2></div><span class="badge"><i></i> AI SAMPLE</span></div>
+<div class="field"><label>Стиль</label><div class="chips" id="presets"></div></div>
+<div class="grid">
+<div class="field"><label>BPM <strong id="bpmValue">122</strong></label><input id="bpm" type="range" min="70" max="180" value="122"><div class="scale"><span>70</span><span>180</span></div></div>
+<div class="field"><label>Тональность</label><select id="key"></select></div>
+</div>
+<div class="grid">
+<div class="field"><label>Длина</label><div class="seg" id="bars"><button data-v="4" type="button">4 такта</button><button data-v="8" class="active" type="button">8 тактов</button></div></div>
+<div class="field"><label>Плотность</label><div class="seg" id="density"><button data-v="false" type="button">Minimal</button><button data-v="true" class="active" type="button">Dense</button></div></div>
+</div>
+<div class="field"><label>Что хотите услышать?</label><textarea id="description" maxlength="600" placeholder="Например: мрачные колокола, винтажные клавиши, напряжённая мелодия…"></textarea><div class="hint">Без ударных, 808 и вокала — луп рассчитан под дальнейшую работу в DAW.</div></div>
+<div class="generate-row">
+<div class="count" id="count"><button data-v="1" class="active" type="button">1 вариант</button><button data-v="3" type="button">3 варианта</button></div>
+<button class="generate" id="generate" type="button">♛ GENERATE SAMPLE</button>
+</div>
+<div class="progress hidden" id="progress"><div class="spin"></div><div><strong id="progressTitle">Создаём сэмпл…</strong><small id="progressText">Это может занять несколько минут.</small></div></div>
+</section>
+
+<section class="panel">
+<div class="head"><div class="head-left"><span class="step">02</span><h2>Library</h2></div><div class="tabs"><button class="active" data-filter="all" type="button">Все</button><button data-filter="favorites" type="button">★</button></div></div>
+<div class="empty" id="empty"><div>♬</div><b>Здесь появятся Ваши сэмплы</b><span>Создайте первый вариант выше.</span></div>
+<div class="library" id="library"></div>
+</section>
+<footer>ASIQPAI · AI TOOLS FOR ARTISTS</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+var API="https://asiqpai-production.up.railway.app";
+var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
+try{if(tg){tg.ready();tg.expand();tg.setHeaderColor("#070708");tg.setBackgroundColor("#070708");}}catch(e){}
+var initData=tg&&tg.initData?tg.initData:"";
+var state={filter:"all",job:null,audio:null};
+function $(id){return document.getElementById(id);}
+var el={notice:$("notice"),quota:$("quota"),presets:$("presets"),bpm:$("bpm"),bpmValue:$("bpmValue"),key:$("key"),bars:$("bars"),density:$("density"),description:$("description"),count:$("count"),generate:$("generate"),progress:$("progress"),progressTitle:$("progressTitle"),progressText:$("progressText"),empty:$("empty"),library:$("library")};
+function haptic(type){try{if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred(type||"light");}catch(e){}}
+function headers(json){var h={"X-Telegram-Init-Data":initData};if(json)h["Content-Type"]="application/json";return h;}
+async function api(path,options){options=options||{};var response=await fetch(API+path,Object.assign({},options,{headers:Object.assign({},headers(options.body!==undefined),options.headers||{})}));var type=response.headers.get("content-type")||"";if(!response.ok){var message="Ошибка "+response.status;if(type.indexOf("application/json")>=0){try{var d=await response.json();message=d.error||message;}catch(e){}}throw new Error(message);}return type.indexOf("application/json")>=0?response.json():response.blob();}
+function notice(text){el.notice.textContent=text;el.notice.classList.remove("hidden");}
+function clearNotice(){el.notice.classList.add("hidden");}
+function choose(container,value){Array.from(container.querySelectorAll("button")).forEach(function(b){b.classList.toggle("active",b.dataset.v===String(value));});}
+function selected(container){var b=container.querySelector("button.active");return b?b.dataset.v:null;}
+function escapeHtml(value){return String(value||"").replace(/[&<>'"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c];});}
+function rid(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():(Date.now()+"_"+Math.random().toString(36).slice(2));}
+function settings(){return {preset:selected(el.presets)||"memphis",bpm:Number(el.bpm.value),key:el.key.value,bars:Number(selected(el.bars)||8),dense:selected(el.density)==="true",description:el.description.value.trim()};}
+async function bootstrap(){
+  clearNotice();
+  try{
+    var data=await api("/api/samples/bootstrap");
+    el.presets.innerHTML=data.presets.map(function(p){return '<button type="button" data-v="'+p.id+'">'+escapeHtml(p.name)+"</button>";}).join("");
+    el.key.innerHTML=data.keys.map(function(k){return '<option value="'+k+'">'+k+"</option>";}).join("");
+    var s=data.settings;choose(el.presets,s.preset);el.bpm.value=s.bpm;el.bpmValue.textContent=s.bpm;el.key.value=s.key;choose(el.bars,s.bars);choose(el.density,String(s.dense));el.description.value=s.description||"";
+    el.quota.innerHTML="<strong>"+data.limits.remaining+"</strong><small>из "+data.limits.daily+"</small>";
+    if(!data.provider_ready){notice("Интерфейс готов. Чтобы включить генерацию, нужно добавить STABILITY_API_KEY на Railway.");el.generate.disabled=true;}
+    await loadHistory();
+  }catch(error){notice(error.message);el.generate.disabled=true;el.empty.classList.remove("hidden");}
+}
+async function loadHistory(){
+  var fav=state.filter==="favorites"?"&favorites=1":"";
+  var data=await api("/api/samples/history?limit=20"+fav);
+  render(data.items||[]);
+}
+function render(items){
+  el.empty.classList.toggle("hidden",items.length>0);
+  el.library.innerHTML=items.map(function(x){
+    var status=x.ready?"READY":(x.status==="failed"?"FAILED":"WAITING");
+    var cls=x.ready?"state ready":"state";
+    var actions=x.ready?
+      '<button class="small-btn primary" data-act="play" data-id="'+x.id+'">▶ Слушать</button><button class="small-btn" data-act="download" data-id="'+x.id+'">WAV</button><button class="small-btn" data-act="similar" data-id="'+x.id+'">Похожий</button><button class="small-btn" data-act="darker" data-id="'+x.id+'">Темнее</button><button class="small-btn" data-act="harder" data-id="'+x.id+'">Жёстче</button><button class="small-btn" data-act="softer" data-id="'+x.id+'">Мягче</button>':"";
+    return '<article class="card"><div class="card-top"><div><div class="card-title">'+escapeHtml(x.preset_name)+'</div><div class="meta">'+x.bpm+" BPM · "+escapeHtml(x.key)+" · "+x.bars+' bars</div></div><div><span class="'+cls+'">'+status+'</span> <button class="small-btn fav '+(x.favorite?"on":"")+'" data-act="favorite" data-id="'+x.id+'" data-value="'+(x.favorite?"0":"1")+'">★</button></div></div><div class="actions">'+actions+"</div></article>";
+  }).join("");
+}
+function showProgress(title,text){el.progressTitle.textContent=title;el.progressText.textContent=text;el.progress.classList.remove("hidden");}
+function hideProgress(){el.progress.classList.add("hidden");}
+async function generate(){
+  clearNotice();haptic("medium");el.generate.disabled=true;
+  var count=Number(selected(el.count)||1);
+  try{
+    var payload=Object.assign(settings(),{count:count,request_id:rid()});
+    var data=await api("/api/samples/generate",{method:"POST",body:JSON.stringify(payload)});
+    state.job=data.job_id;showProgress("Создаём "+(count===3?"3 варианта":"сэмпл")+"…","Результат автоматически появится в Library.");pollJob(data.job_id);
+  }catch(error){notice(error.message);el.generate.disabled=false;hideProgress();}
+}
+async function pollJob(job){
+  for(var i=0;i<180;i++){
+    await new Promise(function(resolve){setTimeout(resolve,4000);});
+    try{
+      var data=await api("/api/samples/job/"+encodeURIComponent(job));
+      var j=data.job;var ready=(j.variants||[]).filter(function(v){return v.ready;}).length;
+      el.progressText.textContent="Готово "+ready+" из "+j.count+".";
+      if(j.status==="ready"||j.status==="interrupted"){
+        state.job=null;hideProgress();el.generate.disabled=false;await bootstrap();if(j.status==="ready"){haptic("heavy");try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred("success");}catch(e){}}else notice("Часть генерации не завершилась. Готовые варианты сохранены.");return;
+      }
+    }catch(error){notice(error.message);}
+  }
+  hideProgress();el.generate.disabled=false;notice("Генерация ещё идёт. Откройте Library позже.");
+}
+async function action(button){
+  var id=button.dataset.id,act=button.dataset.act;
+  try{
+    if(act==="favorite"){await api("/api/samples/favorite",{method:"POST",body:JSON.stringify({variant_id:id,favorite:button.dataset.value==="1"})});await loadHistory();return;}
+    if(act==="download"){var blob=await api("/api/samples/file/"+encodeURIComponent(id)+"?download=1");var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="ASIQPAI_"+id+".wav";a.click();setTimeout(function(){URL.revokeObjectURL(url);},30000);return;}
+    if(act==="play"){
+      if(state.audio){state.audio.pause();state.audio=null;document.querySelectorAll('[data-act="play"]').forEach(function(b){b.textContent="▶ Слушать";});}
+      var audioBlob=await api("/api/samples/file/"+encodeURIComponent(id));var audioUrl=URL.createObjectURL(audioBlob);var audio=new Audio(audioUrl);state.audio=audio;button.textContent="Ⅱ Пауза";audio.onended=function(){button.textContent="▶ Слушать";URL.revokeObjectURL(audioUrl);state.audio=null;};await audio.play();return;
+    }
+    if(["similar","darker","harder","softer"].indexOf(act)>=0){
+      el.generate.disabled=true;showProgress("Создаём новый вариант…","Используем настройки выбранного сэмпла.");
+      var data=await api("/api/samples/action",{method:"POST",body:JSON.stringify({variant_id:id,action:act,request_id:rid()})});pollJob(data.job_id);
+    }
+  }catch(error){notice(error.message);hideProgress();el.generate.disabled=false;}
+}
+el.bpm.addEventListener("input",function(){el.bpmValue.textContent=el.bpm.value;});
+[el.presets,el.bars,el.density,el.count].forEach(function(container){container.addEventListener("click",function(event){var b=event.target.closest("button[data-v]");if(!b)return;choose(container,b.dataset.v);haptic("light");});});
+el.generate.addEventListener("click",generate);
+el.library.addEventListener("click",function(event){var b=event.target.closest("[data-act]");if(b)action(b);});
+document.querySelectorAll(".tabs button").forEach(function(b){b.addEventListener("click",async function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("active");});b.classList.add("active");state.filter=b.dataset.filter;await loadHistory();});});
+function goBack(){window.location.assign("../");}
+$("backBtn").addEventListener("click",goBack);
+try{if(tg&&tg.BackButton){tg.BackButton.show();tg.BackButton.onClick(goBack);}}catch(e){}
+bootstrap();
+})();
+</script>
+</body>
+</html>
