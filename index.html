@@ -7168,13 +7168,21 @@ if(crown){
 <script id="ai-studio-v01-js">
 (() => {
     const openButton = document.getElementById("aiSamplesOpenButton");
+    const card = document.getElementById("aiSamplesCard");
     if(!openButton) return;
 
-    openButton.addEventListener("click", () => {
+    const openSamples = () => {
         try{ window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light"); }catch{}
-        if(typeof showToast === "function"){
-            showToast("AI Samples v0.2 готов. Следующий шаг — подключить Railway API.", "success");
-        }
+        window.location.assign("./samples/");
+    };
+
+    openButton.addEventListener("click", event => {
+        event.stopPropagation();
+        openSamples();
+    });
+    card?.addEventListener("click", event => {
+        if(event.target.closest("button")) return;
+        openSamples();
     });
 })();
 </script>
