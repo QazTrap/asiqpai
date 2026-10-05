@@ -24,7 +24,7 @@ input[type=range]{width:100%;accent-color:var(--gold)}.scale{display:flex;justif
 .generate-row{display:grid;grid-template-columns:160px 1fr;gap:10px;margin-top:17px}.generate{min-height:47px;border:1px solid #80632f;background:linear-gradient(180deg,#e0b75e,#a77c31);color:#171109;border-radius:12px;font-weight:950;letter-spacing:.04em;cursor:pointer}.generate:disabled{opacity:.42;cursor:not-allowed}.generate:active{transform:translateY(1px)}
 .progress{display:flex;align-items:center;gap:11px;margin-top:12px;padding:11px;border:1px solid #3b3324;background:#12100d;border-radius:12px}.spin{width:22px;height:22px;border:2px solid #3c3322;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.progress strong,.progress small{display:block}.progress strong{font-size:11px;color:#e8d7ac}.progress small{font-size:9px;color:#7f796d;margin-top:3px}
 .tabs button{border:0;background:transparent;padding:7px 9px;font-size:9px}.tabs button.active{color:#e8c86e}.library{display:grid;gap:9px}.empty{text-align:center;padding:27px 10px;color:#69655d}.empty b{display:block;margin:6px;color:#a7a096;font-size:12px}.empty span{font-size:9px}
-.card{position:relative;border:1px solid #2b2a27;border-radius:15px;background:#0d0d0f;padding:12px}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card-title{font-size:13px;font-weight:900}.meta{margin-top:4px;color:#756f65;font-size:9px}.state{padding:4px 7px;border-radius:999px;background:#171719;color:#8d877d;font-size:7px;font-weight:900;letter-spacing:.08em}.state.ready{border:1px solid #31543c;color:#8dda9e;background:#102016}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.small-btn{padding:7px 9px;font-size:8px;font-weight:850}.small-btn.primary{border-color:#655026;color:#e7c76e}.fav.on{color:#f2cd68;border-color:#675329}.audio{width:100%;height:36px;margin-top:9px}
+.card{position:relative;border:1px solid #2b2a27;border-radius:15px;background:#0d0d0f;padding:12px}.card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.card-title{font-size:13px;font-weight:900}.meta{margin-top:4px;color:#756f65;font-size:9px}.state{padding:4px 7px;border-radius:999px;background:#171719;color:#8d877d;font-size:7px;font-weight:900;letter-spacing:.08em}.state.ready{border:1px solid #31543c;color:#8dda9e;background:#102016}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.small-btn{padding:7px 9px;font-size:8px;font-weight:850}.small-btn.primary{border-color:#655026;color:#e7c76e}.small-btn.danger{border-color:#61352f;color:#dc8c82;background:#17100f}.fav.on{color:#f2cd68;border-color:#675329}.audio{width:100%;height:36px;margin-top:9px}
 footer{text-align:center;color:#514d45;font-size:8px;letter-spacing:.18em;padding:8px 0}
 @media(max-width:520px){.hero{grid-template-columns:46px 1fr auto}.mark{width:46px;height:46px;font-size:24px}.hero h1{font-size:24px}.hero p{font-size:10px}.grid{grid-template-columns:1fr}.generate-row{grid-template-columns:1fr}.panel{padding:15px}.quota{min-width:64px}.quota strong{font-size:18px}}
 </style>
@@ -110,6 +110,7 @@ function render(items){
     var cls=x.ready?"state ready":"state";
     var actions=x.ready?
       '<button class="small-btn primary" data-act="play" data-id="'+x.id+'">▶ Слушать</button><button class="small-btn" data-act="download" data-id="'+x.id+'">WAV</button><button class="small-btn" data-act="similar" data-id="'+x.id+'">Похожий</button><button class="small-btn" data-act="darker" data-id="'+x.id+'">Темнее</button><button class="small-btn" data-act="harder" data-id="'+x.id+'">Жёстче</button><button class="small-btn" data-act="softer" data-id="'+x.id+'">Мягче</button>':"";
+    actions+='<button class="small-btn danger" data-act="delete" data-id="'+x.id+'">Удалить</button>';
     return '<article class="card"><div class="card-top"><div><div class="card-title">'+escapeHtml(x.preset_name)+'</div><div class="meta">'+x.bpm+" BPM · "+escapeHtml(x.key)+" · "+x.bars+' bars</div></div><div><span class="'+cls+'">'+status+'</span> <button class="small-btn fav '+(x.favorite?"on":"")+'" data-act="favorite" data-id="'+x.id+'" data-value="'+(x.favorite?"0":"1")+'">★</button></div></div><div class="actions">'+actions+"</div></article>";
   }).join("");
 }
@@ -138,9 +139,28 @@ async function pollJob(job){
   }
   hideProgress();el.generate.disabled=false;notice("Генерация ещё идёт. Откройте Library позже.");
 }
+async function confirmDelete(){
+  return new Promise(function(resolve){
+    try{
+      if(tg&&typeof tg.showConfirm==="function"){
+        tg.showConfirm("Удалить этот сэмпл из Library?",function(ok){resolve(Boolean(ok));});
+        return;
+      }
+    }catch(e){}
+    resolve(window.confirm("Удалить этот сэмпл из Library?"));
+  });
+}
 async function action(button){
   var id=button.dataset.id,act=button.dataset.act;
   try{
+    if(act==="delete"){
+      if(!await confirmDelete()) return;
+      if(state.audio){state.audio.pause();state.audio=null;}
+      await api("/api/samples/delete",{method:"POST",body:JSON.stringify({variant_id:id})});
+      haptic("medium");
+      await loadHistory();
+      return;
+    }
     if(act==="favorite"){await api("/api/samples/favorite",{method:"POST",body:JSON.stringify({variant_id:id,favorite:button.dataset.value==="1"})});await loadHistory();return;}
     if(act==="download"){var blob=await api("/api/samples/file/"+encodeURIComponent(id)+"?download=1");var url=URL.createObjectURL(blob);var a=document.createElement("a");a.href=url;a.download="ASIQPAI_"+id+".wav";a.click();setTimeout(function(){URL.revokeObjectURL(url);},30000);return;}
     if(act==="play"){
