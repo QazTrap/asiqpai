@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 
 const PRESETS = Object.freeze({
-  memphis: ["Memphis", "Memphis trap melodic sample, repeating bell motif, cinematic string accents, vintage keyboard chords, spacious stereo production"],
-  dark: ["Dark Trap", "dark cinematic trap melody, eerie piano, warm analogue pads, haunting counter melody, rich harmonies and atmospheric stereo textures"],
-  atmospheric: ["Atmospheric", "dreamy melodic trap sample, floating synthesizer chords, expressive electric guitar details, lush reverb and memorable lead motif"]
+  memphis: ["Memphis", "dark Southern trap sample with warm Rhodes, low-register acoustic piano, detuned electric guitar textures, restrained vintage soul strings, subtle tape saturation, dusty vinyl character, realistic instruments, thick low-mid body and an expensive moody feel"],
+  dark: ["Dark Trap", "dark cinematic trap sample with deep acoustic piano, warm analogue synth layers, bowed string textures, subtle electric guitar ambience, minor-key tension, rich harmonics, wide stereo depth and a polished expensive sound"],
+  atmospheric: ["Atmospheric", "spacious melodic trap sample with warm analog pads, expressive electric guitar, soft Rhodes, evolving cinematic textures, emotional minor-key harmony, natural ambience, wide stereo depth and a refined premium sound"]
 });
 const KEYS = Object.freeze(["Fm","F#m","Gm","G#m","Am","A#m","Bm","Cm","C#m","Dm","D#m","Em"]);
 const KEY_NAMES = Object.freeze({
@@ -60,14 +60,16 @@ function cleanProviderDescription(value){
 }
 function promptFor(s){
   const density=s.dense
-    ?"Full layered melodic arrangement with complementary instruments and a clear memorable motif."
-    :"Minimal arrangement with a single clear melody and space between phrases.";
+    ?"Full but tasteful layered arrangement with 2 to 4 complementary instruments, clear hierarchy, strong musical motif, controlled dynamics and no clutter."
+    :"Sparse premium arrangement with one main instrument and at most one subtle supporting texture, human phrasing, natural dynamics and deliberate space between phrases.";
   return [
     "TrackType: Instrument.",
     PRESETS[s.preset][1]+".",
     s.bpm+" BPM, 4/4, "+KEY_NAMES[s.key]+".",
     "Repeating "+s.bars+"-bar melodic phrase, steady tempo from the first beat, loopable arrangement.",
     density,
+    "Production quality: mature, dark, musical and record-ready; realistic timbre; warm low-mids; smooth transients; subtle saturation; believable room or tape character; avoid synthetic demo-like sound.",
+    "Avoid toy-like timbres: no music box, no glockenspiel, no toy piano, no chiptune, no cartoon plucks, no bright cheap bells, no childish melody, no stock ringtone sound.",
     "Instrumental melody only: no drums, no percussion, no 808, no bassline, no vocals, no singing, no speech, no intro, no fade out.",
     "Original composition. Do not copy or imitate any existing song or artist.",
     "Additional sound direction: "+(cleanProviderDescription(s.description)||"none")+"."
