@@ -316,4 +316,25 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       res.json({ok:true});
     }catch(error){fail(res,error);}
   });
+  app.post("/api/samples/delete",requireTelegramUser,async(req,res)=>{
+    let client;
+    try{
+      await initSchema();assertAccess(req.telegramUser.id);
+      const variantId=String(req.body?.variant_id||"").trim();
+      if(!/^[0-9a-f-]{36}$/i.test(variantId)) throw new Error("Некорректный идентификатор сэмпла.");
+      client=await pool.connect();
+      await client.query("BEGIN");
+      const deleted=await client.query("DELETE FROM sample_ai_variants WHERE id=$1 AND telegram_id=$2 RETURNING job_id",[variantId,req.telegramUser.id]);
+      if(!deleted.rowCount){const e=new Error("Сэмпл не найден.");e.status=404;throw e;}
+      const jobId=deleted.rows[0].job_id;
+      await client.query("DELETE FROM sample_ai_jobs j WHERE j.id=$1 AND j.telegram_id=$2 AND NOT EXISTS (SELECT 1 FROM sample_ai_variants v WHERE v.job_id=j.id)",[jobId,req.telegramUser.id]);
+      await client.query("COMMIT");
+      res.json({ok:true});
+    }catch(error){
+      if(client){try{await client.query("ROLLBACK");}catch{}}
+      fail(res,error);
+    }finally{
+      client?.release();
+    }
+  });
 }
