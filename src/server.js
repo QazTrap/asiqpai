@@ -25,6 +25,7 @@ import {
 import { Address, beginCell } from "@ton/core";
 import { TonClient, TupleBuilder } from "@ton/ton";
 import { mountStudioRoutes } from "./studio.js";
+import { mountSampleRoutes } from "./samples.js";
 const app = express();
 
 const PORT = Number(process.env.PORT || 3000);
@@ -1049,6 +1050,7 @@ async function requireTelegramUser(req, res, next) {
 }
 
 mountStudioRoutes(app, { pool, requireTelegramUser });
+mountSampleRoutes(app, { pool, requireTelegramUser });
 
 app.get(
   "/api/presale/pass",
