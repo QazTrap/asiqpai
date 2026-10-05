@@ -4449,21 +4449,229 @@ body .track-item-buy{
 }
 </style>
 
+
+<style id="ai-studio-v01">
+/* ===== ASIQPAI AI STUDIO ===== */
+#page-home{
+    padding:0!important;
+}
+.ai-studio-home{
+    width:min(100%,390px);
+    min-height:min(620px,calc(100dvh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    margin:0 auto;
+    padding:24px 10px 26px;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    text-align:left;
+}
+.ai-studio-kicker{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin:0 0 8px 2px;
+    color:#b99d4b;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:2.2px;
+    text-transform:uppercase;
+}
+.ai-studio-kicker i{
+    color:#f0cf68;
+    text-shadow:0 0 14px rgba(240,207,104,.25);
+}
+.ai-studio-title{
+    margin:0;
+    color:#f4d875;
+    font-size:clamp(34px,11vw,48px);
+    line-height:.98;
+    font-weight:950;
+    letter-spacing:-1.5px;
+    text-shadow:0 0 24px rgba(212,175,55,.16);
+}
+.ai-studio-copy{
+    max-width:330px;
+    margin:12px 0 24px;
+    color:#817d73;
+    font-size:12px;
+    line-height:1.55;
+}
+.ai-tool-card{
+    position:relative;
+    overflow:hidden;
+    display:grid;
+    grid-template-columns:52px minmax(0,1fr);
+    gap:13px;
+    padding:18px;
+    border:1px solid rgba(212,175,55,.28);
+    border-radius:24px;
+    background:
+        radial-gradient(circle at 92% 8%,rgba(244,216,117,.12),transparent 33%),
+        linear-gradient(145deg,rgba(23,22,18,.98),rgba(8,8,8,.99));
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.045),
+        0 20px 48px rgba(0,0,0,.42),
+        0 0 28px rgba(212,175,55,.07);
+}
+.ai-tool-card::after{
+    content:"";
+    position:absolute;
+    inset:auto -20% -65% 20%;
+    height:160px;
+    background:radial-gradient(circle,rgba(212,175,55,.14),transparent 67%);
+    pointer-events:none;
+}
+.ai-tool-icon{
+    width:52px;
+    height:52px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(244,216,117,.25);
+    border-radius:16px;
+    background:rgba(212,175,55,.075);
+    color:#f4d875;
+    font-size:21px;
+    box-shadow:inset 0 0 18px rgba(212,175,55,.04);
+}
+.ai-tool-body{
+    min-width:0;
+}
+.ai-tool-topline{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+}
+.ai-tool-topline strong{
+    color:#f3efe4;
+    font-size:19px;
+    font-weight:900;
+    letter-spacing:.1px;
+}
+.ai-tool-badge{
+    padding:5px 7px;
+    border:1px solid rgba(244,216,117,.26);
+    border-radius:999px;
+    background:rgba(212,175,55,.07);
+    color:#c7aa55;
+    font-size:8px;
+    font-weight:950;
+    letter-spacing:1.1px;
+}
+.ai-tool-body p{
+    margin:8px 0 12px;
+    color:#7f7b72;
+    font-size:10.5px;
+    line-height:1.5;
+}
+.ai-tool-features{
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+}
+.ai-tool-features span{
+    padding:5px 7px;
+    border:1px solid rgba(255,255,255,.055);
+    border-radius:8px;
+    background:rgba(255,255,255,.025);
+    color:#8e897d;
+    font-size:7.5px;
+    font-weight:900;
+    letter-spacing:.7px;
+}
+.ai-tool-open{
+    grid-column:1 / -1;
+    position:relative;
+    z-index:1;
+    width:100%;
+    min-height:48px;
+    margin-top:3px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    border:1px solid rgba(244,216,117,.42);
+    border-radius:14px;
+    background:linear-gradient(135deg,rgba(214,180,76,.18),rgba(214,180,76,.07));
+    color:#f4d875;
+    font-size:11px;
+    font-weight:950;
+    letter-spacing:1.5px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+}
+.ai-tool-open:active{
+    transform:scale(.985);
+}
+.ai-studio-next{
+    margin-top:16px;
+    padding:13px 15px;
+    border:1px dashed rgba(212,175,55,.13);
+    border-radius:16px;
+    background:rgba(255,255,255,.012);
+}
+.ai-studio-next span{
+    display:block;
+    color:#756b4d;
+    font-size:8px;
+    font-weight:900;
+    letter-spacing:1.8px;
+}
+.ai-studio-next small{
+    display:block;
+    margin-top:5px;
+    color:#5f5c55;
+    font-size:9px;
+    line-height:1.45;
+}
+@media(max-height:650px){
+    .ai-studio-home{
+        min-height:auto;
+        padding-top:10px;
+        padding-bottom:12px;
+    }
+    .ai-studio-copy{margin-bottom:14px}
+    .ai-tool-card{padding:14px}
+}
+</style>
+
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
-        <div class="home-hero crown-tap-game">
-            <div class="crown-balance-panel" aria-live="polite" aria-atomic="true">
-                <span class="crown-balance-label">CROWN BALANCE</span>
-                <strong id="crownBalanceCounter">0</strong>
+        <div class="ai-studio-home">
+            <div class="ai-studio-kicker"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> ASIQPAI AI</div>
+            <h1 class="ai-studio-title">AI STUDIO</h1>
+            <p class="ai-studio-copy">Инструменты искусственного интеллекта для музыкантов и артистов.</p>
+
+            <div class="ai-tool-card ai-tool-card-active" id="aiSamplesCard">
+                <div class="ai-tool-icon" aria-hidden="true"><i class="fa-solid fa-wave-square"></i></div>
+                <div class="ai-tool-body">
+                    <div class="ai-tool-topline">
+                        <strong>AI Samples</strong>
+                        <span class="ai-tool-badge">BETA</span>
+                    </div>
+                    <p>Создавайте оригинальные мелодии и лупы: BPM, тональность, длина, стиль и настроение.</p>
+                    <div class="ai-tool-features">
+                        <span>BPM</span>
+                        <span>KEY</span>
+                        <span>4 / 8 BARS</span>
+                        <span>WAV</span>
+                    </div>
+                </div>
+                <button class="ai-tool-open" id="aiSamplesOpenButton" type="button">
+                    OPEN
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
             </div>
-            <button id="crown" type="button" aria-label="Тапните по короне, чтобы заработать CROWN">
-                <img src="images/crow.png" class="logo" alt="Корона ASIQPAI" draggable="false">
-            </button>
-            <div class="crown-tap-hint">Tap to earn CROWN</div>
+
+            <div class="ai-studio-next">
+                <span>MORE AI TOOLS</span>
+                <small>Добавим следующие инструменты после теста AI Samples.</small>
+            </div>
         </div>
 
 
@@ -4669,7 +4877,7 @@ body .track-item-buy{
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
 <button class="nav-tab active" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
 <button class="nav-tab" type="button" data-target="library"><i class="fa-solid fa-book-open"></i><span>Library</span></button>
-<button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
+<button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI Studio</span></button>
 <button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
 <button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
 </nav>
@@ -6953,6 +7161,21 @@ if(crown){
     }, {passive:true}); 
 
     tabs.forEach(tab => tab.addEventListener('click', () => openPage(tab.dataset.target)));
+})();
+</script>
+
+
+<script id="ai-studio-v01-js">
+(() => {
+    const openButton = document.getElementById("aiSamplesOpenButton");
+    if(!openButton) return;
+
+    openButton.addEventListener("click", () => {
+        try{ window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light"); }catch{}
+        if(typeof showToast === "function"){
+            showToast("AI Samples v0.2 готов. Следующий шаг — подключить Railway API.", "success");
+        }
+    });
 })();
 </script>
 
