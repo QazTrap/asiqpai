@@ -50,7 +50,7 @@ footer{text-align:center;color:#514d45;font-size:8px;letter-spacing:.18em;paddin
 <div class="field"><label>Длина</label><div class="seg" id="bars"><button data-v="4" type="button">4 такта</button><button data-v="8" class="active" type="button">8 тактов</button></div></div>
 <div class="field"><label>Плотность</label><div class="seg" id="density"><button data-v="false" type="button">Minimal</button><button data-v="true" class="active" type="button">Dense</button></div></div>
 </div>
-<div class="field"><label>Что хотите услышать?</label><textarea id="description" maxlength="600" placeholder="Например: мрачные колокола, винтажные клавиши, напряжённая мелодия…"></textarea><div class="hint">Без ударных, 808 и вокала — луп рассчитан под дальнейшую работу в DAW.</div></div>
+<div class="field"><label>Что хотите услышать?</label><textarea id="description" maxlength="600" placeholder="Например: только тёмное акустическое пианино, мягкая винтажная подача, редкая мелодия…"></textarea><div class="hint">Генерируется чистый мелодический stem для дальнейшей работы в DAW. Если нужен один инструмент, напишите «только пианино» или «solo piano».</div></div>
 <div class="generate-row">
 <div class="count" id="count"><button data-v="1" class="active" type="button">1 вариант</button><button data-v="3" type="button">3 варианта</button></div>
 <button class="generate" id="generate" type="button">♛ GENERATE SAMPLE</button>
@@ -93,7 +93,9 @@ async function bootstrap(){
     el.presets.innerHTML=data.presets.map(function(p){return '<button type="button" data-v="'+p.id+'">'+escapeHtml(p.name)+"</button>";}).join("");
     el.key.innerHTML=data.keys.map(function(k){return '<option value="'+k+'">'+k+"</option>";}).join("");
     var s=data.settings;choose(el.presets,s.preset);el.bpm.value=s.bpm;el.bpmValue.textContent=s.bpm;el.key.value=s.key;choose(el.bars,s.bars);choose(el.density,String(s.dense));el.description.value=s.description||"";
-    el.quota.innerHTML="<strong>"+data.limits.remaining+"</strong><small>из "+data.limits.daily+"</small>";
+    el.quota.innerHTML=data.limits.unlimited
+      ?"<strong>∞</strong><small>TEST</small>"
+      :"<strong>"+data.limits.remaining+"</strong><small>из "+data.limits.daily+"</small>";
     if(!data.provider_ready){notice("Интерфейс готов. Чтобы включить генерацию, нужно добавить STABILITY_API_KEY на Railway.");el.generate.disabled=true;}
     await loadHistory();
   }catch(error){notice(error.message);el.generate.disabled=true;el.empty.classList.remove("hidden");}
