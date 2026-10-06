@@ -4916,6 +4916,22 @@ body .track-item-buy{
 
             <div class="studio-card">
                 <h2>02 / Добавьте голос</h2>
+                <div class="studio-lyrics">
+                    <label for="studio-lyrics-input">Текст / телесуфлер</label>
+                    <textarea id="studio-lyrics-input" rows="7" placeholder="Вставьте сюда текст куплета. Он сохранится на этом устройстве и останется перед глазами во время записи."></textarea>
+                    <div class="row">
+                        <button id="studio-teleprompter-toggle" type="button">▣ Открыть текст крупно</button>
+                        <button id="studio-lyrics-clear" type="button">Очистить текст</button>
+                    </div>
+                    <div id="studio-teleprompter" class="studio-teleprompter" hidden>
+                        <div class="studio-teleprompter-head">
+                            <strong>ТЕЛЕСУФЛЕР</strong>
+                            <button id="studio-teleprompter-close" type="button" aria-label="Закрыть телесуфлер">×</button>
+                        </div>
+                        <div id="studio-teleprompter-text" class="studio-teleprompter-text"></div>
+                    </div>
+                    <p class="muted">На iPhone не сворачивайте Telegram во время записи: iOS останавливает микрофон у мини-приложения. Читайте текст здесь и прокручивайте его прямо во время дубля.</p>
+                </div>
                 <div class="row">
                     <button id="studio-record" type="button" disabled>● Записать под бит</button>
                     <button id="studio-stop" type="button" disabled>■ Остановить запись</button>

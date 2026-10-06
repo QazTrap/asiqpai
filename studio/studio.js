@@ -5,11 +5,23 @@ export function mountStudio({ apiUrl }) {
   if (!el('beat')) return;
   let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing, recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
-  let aiAvailable = false, tuneAvailable = false, initialized = false;
+  let aiAvailable = false, tuneAvailable = false, initialized = false, backgroundInterrupted = false;
   let effectState = { ...PRESETS.dry.defaults };
   let bypassAll = false;
   const urls = new Map();
   const status = (message, error = false) => { el('status').textContent = message; el('status').classList.toggle('error', error); };
+  const lyricsStorageKey = 'asiqpai-vocal-ai-lyrics-v1';
+  function syncTeleprompterText() {
+    const input = el('lyrics-input'), view = el('teleprompter-text');
+    if (view) view.textContent = input?.value || '';
+  }
+  function setTeleprompter(open) {
+    const panel = el('teleprompter');
+    if (!panel) return;
+    syncTeleprompterText();
+    panel.hidden = !open;
+    if (open) requestAnimationFrame(() => panel.scrollTop = 0);
+  }
   const setURL = (id, blob) => {
     if (urls.has(id)) URL.revokeObjectURL(urls.get(id));
     const url = URL.createObjectURL(blob); urls.set(id, url); return url;
@@ -52,6 +64,8 @@ export function mountStudio({ apiUrl }) {
       button.disabled = busy || recording || (button.dataset.studioFx === 'tune' && !tuneAvailable);
     });
     if (el('bypass')) el('bypass').disabled = busy || recording;
+    if (el('lyrics-input')) el('lyrics-input').readOnly = busy || recording;
+    if (el('lyrics-clear')) el('lyrics-clear').disabled = busy || recording;
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
   }
@@ -67,7 +81,10 @@ export function mountStudio({ apiUrl }) {
   }
   async function decode(blob, max = MAX_SECONDS) {
     if (blob.size > 25 * 1024 * 1024) throw new Error('Файл больше 25 МБ. Сократите запись.');
-    const audio = await (await context()).decodeAudioData(await blob.arrayBuffer());
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC || !window.OfflineAudioContext) throw new Error('Этот браузер не поддерживает студию. Попробуйте Safari или Chrome.');
+    ctx ||= new AC();
+    const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
     if (!audio.length || audio.duration > max + 0.25) throw new Error(`Максимальная длительность — ${max} секунд.`);
     return audio;
   }
@@ -152,14 +169,34 @@ export function mountStudio({ apiUrl }) {
     const buffer = await decode(file); acceptVoice(buffer); el('offset').value = '0';
     el('upload').value = '';
   }));
+  const lyricsInput = el('lyrics-input');
+  if (lyricsInput) {
+    try { lyricsInput.value = localStorage.getItem(lyricsStorageKey) || ''; } catch {}
+    syncTeleprompterText();
+    lyricsInput.addEventListener('input', () => {
+      syncTeleprompterText();
+      try { localStorage.setItem(lyricsStorageKey, lyricsInput.value); } catch {}
+    });
+  }
+  el('teleprompter-toggle')?.addEventListener('click', () => setTeleprompter(el('teleprompter')?.hidden !== false));
+  el('teleprompter-close')?.addEventListener('click', () => setTeleprompter(false));
+  el('lyrics-clear')?.addEventListener('click', () => {
+    if (!lyricsInput) return;
+    lyricsInput.value = '';
+    syncTeleprompterText();
+    try { localStorage.removeItem(lyricsStorageKey); } catch {}
+  });
   function stopRecording() {
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     clearInterval(recordingTimer);
     try { backing?.stop(); } catch {}
     backing = null; stream?.getTracks().forEach(track => track.stop()); stream = null;
     recording = false;
+    el('teleprompter')?.classList.remove('recording');
   }
   el('record').addEventListener('click', () => action(async () => {
+    backgroundInterrupted = false;
+    if (el('lyrics-input')?.value.trim()) setTeleprompter(true);
     await context();
     for (const a of document.querySelectorAll('audio')) a.pause();
     status('Запрашиваем микрофон…');
@@ -181,6 +218,8 @@ export function mountStudio({ apiUrl }) {
     recorder.ondataavailable = event => { if (event.data.size) { chunks.push(event.data); recordedBytes += event.data.size; if (recordedBytes > 24 * 1024 * 1024) stopRecording(); } };
     recorder.onerror = () => { status('Ошибка записи. Попробуйте загрузить аудиофайл.', true); stopRecording(); };
     recorder.onstop = async () => {
+      const wasBackgroundInterrupted = backgroundInterrupted;
+      backgroundInterrupted = false;
       busy = true; stopRecording(); controls(); status('Сохраняем дубль…');
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType });
@@ -190,10 +229,12 @@ export function mountStudio({ apiUrl }) {
         const trimmed = ctx.createBuffer(buffer.numberOfChannels, count, buffer.sampleRate);
         for (let c = 0; c < buffer.numberOfChannels; c++) trimmed.copyToChannel(buffer.getChannelData(c).subarray(0, count), c);
         acceptVoice(trimmed); el('offset').value = '0';
+        if (wasBackgroundInterrupted) status('Запись сохранена до момента сворачивания. На iPhone микрофон останавливается при переходе в другое приложение — используйте встроенный телесуфлер.', true);
       } catch (e) { status(`Не удалось сохранить запись: ${e.message}`, true); }
       finally { busy = false; controls(); }
     };
     recorder.onstart = () => {
+      el('teleprompter')?.classList.add('recording');
       backing = ctx.createBufferSource(); backing.buffer = beat;
       const gain = ctx.createGain(); gain.gain.value = Number(el('beat-level').value) / 100;
       backing.connect(gain).connect(ctx.destination); backing.start();
@@ -364,7 +405,12 @@ export function mountStudio({ apiUrl }) {
     if (event.detail === 'studio') initialize();
     else { if (recording) stopRecording(); for (const id of ['before', 'after', 'beat-preview', 'voice-preview']) el(id).pause(); }
   });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && recording) stopRecording(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && recording) {
+      backgroundInterrupted = true;
+      stopRecording();
+    }
+  });
   window.addEventListener('pagehide', () => {
     disposed = true; if (recording) stopRecording(); stream?.getTracks().forEach(t => t.stop());
     for (const url of urls.values()) URL.revokeObjectURL(url); urls.clear();
