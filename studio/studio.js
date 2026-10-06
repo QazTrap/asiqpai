@@ -6,18 +6,45 @@ export function mountStudio({ apiUrl }) {
   let ctx, beat, vocal, cleanVocal, recorder, stream, backing, recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
   let aiAvailable = false, initialized = false;
+  let effectState = { ...PRESETS.dry.defaults };
+  let bypassAll = false;
   const urls = new Map();
   const status = (message, error = false) => { el('status').textContent = message; el('status').classList.toggle('error', error); };
   const setURL = (id, blob) => {
     if (urls.has(id)) URL.revokeObjectURL(urls.get(id));
     const url = URL.createObjectURL(blob); urls.set(id, url); return url;
   };
+  function syncFxButtons() {
+    document.querySelectorAll('[data-studio-fx]').forEach(button => {
+      const key = button.dataset.studioFx;
+      const active = Boolean(effectState[key]);
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+      const state = button.querySelector('small');
+      if (state) state.textContent = active ? 'ON' : 'OFF';
+    });
+    const bypass = el('bypass');
+    if (bypass) {
+      bypass.classList.toggle('active', bypassAll);
+      bypass.setAttribute('aria-pressed', bypassAll ? 'true' : 'false');
+      bypass.textContent = bypassAll ? 'BYPASS ALL · ON' : 'BYPASS ALL';
+    }
+  }
+  function applyPresetDefaults() {
+    const preset = PRESETS[el('preset').value] || PRESETS.dry;
+    effectState = { ...preset.defaults };
+    bypassAll = false;
+    syncFxButtons();
+    invalidate();
+  }
   function controls() {
     for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'offset']) el(id).disabled = busy || recording;
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
     el('process').disabled = busy || recording || !beat || !vocal;
     el('ai').disabled = busy || recording || !aiAvailable;
+    document.querySelectorAll('[data-studio-fx]').forEach(button => { button.disabled = busy || recording; });
+    if (el('bypass')) el('bypass').disabled = busy || recording;
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
   }
@@ -173,8 +200,26 @@ export function mountStudio({ apiUrl }) {
     invalidate(); recorder.start(250); recording = true; controls(); status('● Запись началась…');
   }));
   el('stop').addEventListener('click', stopRecording);
-  for (const id of ['preset', 'ai', 'offset', 'beat-level', 'voice-level']) el(id).addEventListener('input', () => {
+  el('preset').addEventListener('change', applyPresetDefaults);
+  for (const id of ['ai', 'offset', 'beat-level', 'voice-level']) el(id).addEventListener('input', () => {
     invalidate(); el('beat-value').textContent = `${el('beat-level').value}%`; el('voice-value').textContent = `${el('voice-level').value}%`;
+  });
+  document.querySelectorAll('[data-studio-fx]').forEach(button => {
+    button.addEventListener('click', () => {
+      const key = button.dataset.studioFx;
+      if (!Object.hasOwn(effectState, key)) return;
+      effectState[key] = !effectState[key];
+      bypassAll = false;
+      syncFxButtons();
+      invalidate();
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+  el('bypass')?.addEventListener('click', () => {
+    bypassAll = !bypassAll;
+    syncFxButtons();
+    invalidate();
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch {}
   });
   el('process').addEventListener('click', () => action(async () => {
     for (const a of document.querySelectorAll('audio')) a.pause();
@@ -183,7 +228,8 @@ export function mountStudio({ apiUrl }) {
     if (!el('offset').checkValidity() || !Number.isFinite(offset) || offset >= MAX_SECONDS || offset <= -vocal.duration) throw new Error('Укажите сдвиг, при котором голос остаётся в пределах демо.');
     if (offset + vocal.duration > MAX_SECONDS + 0.1) throw new Error('Голос со сдвигом выходит за 3 минуты. Уменьшите сдвиг или загрузите более короткую запись.');
     let chosen = vocal;
-    if (el('ai').checked) {
+    const useAiClean = el('ai').checked && !bypassAll;
+    if (useAiClean) {
       if (!cleanVocal) {
         status('ИИ очищает вокал. Это может занять до 2–3 минут…');
         const initData = window.Telegram?.WebApp?.initData || '';
@@ -201,15 +247,24 @@ export function mountStudio({ apiUrl }) {
     status('Собираем вариант до обработки…');
     const before = await renderMix({ ...settings, vocal, processed: false });
     el('before').src = setURL('before', encodeWav(before));
-    status('Применяем эффекты и собираем WAV…');
-    const after = await renderMix({ ...settings, vocal: chosen });
+    status(bypassAll ? 'Собираем WAV без эффектов…' : 'Применяем выбранные эффекты и собираем WAV…');
+    const after = await renderMix({ ...settings, vocal: chosen, processed: !bypassAll, effects: effectState });
     mixBlob = encodeWav(after); el('after').src = setURL('after', mixBlob);
     el('download').href = setURL('download', mixBlob);
     const name = beatName.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 60) || 'demo';
     el('download').download = `ASIQPAI-${name}-demo.wav`;
     const file = new File([mixBlob], el('download').download, { type: 'audio/wav' });
     el('share').hidden = !navigator.canShare?.({ files: [file] });
-    el('result-info').textContent = `${PRESETS[el('preset').value].label} · ${el('ai').checked ? 'С ИИ-очисткой' : 'Эффекты без ИИ'} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
+    const activeFx = bypassAll
+      ? ['BYPASS ALL']
+      : [
+          useAiClean ? 'AI CLEAN' : null,
+          effectState.eq ? 'EQ' : null,
+          effectState.comp ? 'COMP' : null,
+          effectState.reverb ? 'REVERB' : null,
+          effectState.delay ? 'DELAY' : null
+        ].filter(Boolean);
+    el('result-info').textContent = `${PRESETS[el('preset').value].label} · ${activeFx.join(' + ') || 'DRY'} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
     el('result').hidden = false; status('Демо готово. Сравните звучание и скачайте результат.');
     el('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
@@ -250,5 +305,6 @@ export function mountStudio({ apiUrl }) {
     disposed = true; if (recording) stopRecording(); stream?.getTracks().forEach(t => t.stop());
     for (const url of urls.values()) URL.revokeObjectURL(url); urls.clear();
   });
+  syncFxButtons();
   controls();
 }
