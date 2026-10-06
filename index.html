@@ -4604,6 +4604,9 @@ body .track-item-buy{
 .ai-tool-open:active{
     transform:scale(.985);
 }
+.ai-tool-card + .ai-tool-card{
+    margin-top:14px;
+}
 .ai-studio-next{
     margin-top:16px;
     padding:13px 15px;
@@ -4636,6 +4639,7 @@ body .track-item-buy{
 }
 </style>
 
+<link rel="stylesheet" href="studio/studio.css">
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
@@ -4668,9 +4672,30 @@ body .track-item-buy{
                 </button>
             </div>
 
+            <div class="ai-tool-card ai-tool-card-active" id="aiVocalCard">
+                <div class="ai-tool-icon" aria-hidden="true"><i class="fa-solid fa-microphone-lines"></i></div>
+                <div class="ai-tool-body">
+                    <div class="ai-tool-topline">
+                        <strong>Vocal AI</strong>
+                        <span class="ai-tool-badge">BETA</span>
+                    </div>
+                    <p>Запись под бит, загрузка вокала, AI-шумодав, обработка голоса и экспорт готового WAV.</p>
+                    <div class="ai-tool-features">
+                        <span>RECORD</span>
+                        <span>AI DENOISE</span>
+                        <span>VOCAL FX</span>
+                        <span>WAV</span>
+                    </div>
+                </div>
+                <button class="ai-tool-open" id="aiVocalOpenButton" type="button" data-open-page="studio">
+                    OPEN
+                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+                </button>
+            </div>
+
             <div class="ai-studio-next">
-                <span>MORE AI TOOLS</span>
-                <small>Добавим следующие инструменты после теста AI Samples.</small>
+                <span>NEXT AI TOOLS</span>
+                <small>Дальше можно добавить Stem AI, mastering и другие музыкальные инструменты.</small>
             </div>
         </div>
 
@@ -4872,6 +4897,76 @@ body .track-item-buy{
             <p class="web3-domain">
         </div>
     </section>
+    <section class="app-page" id="page-studio" data-page="studio">
+        <div class="studio">
+            <button type="button" class="studio-link" data-open-page="home">← AI Studio</button>
+            <span class="badge">ASIQPAI / VOCAL AI · BETA</span>
+            <h1>Ваш голос. Ваш трек.</h1>
+            <p class="muted">Запишите куплет под бит, включите AI-очистку шума, выберите обработку и скачайте готовое демо. До 3 минут. Для записи лучше использовать наушники.</p>
+            <div id="studio-status" class="status" role="status" aria-live="polite">Загружаем каталог битов…</div>
+
+            <div class="studio-card">
+                <h2>01 / Выберите бит</h2>
+                <label for="studio-beat">Инструментал</label>
+                <select id="studio-beat"><option value="">Выберите бит</option></select>
+                <audio id="studio-beat-preview" controls preload="none"></audio>
+                <p class="muted">Экспорт демо не означает покупку лицензии на бит.</p>
+            </div>
+
+            <div class="studio-card">
+                <h2>02 / Добавьте голос</h2>
+                <div class="row">
+                    <button id="studio-record" type="button" disabled>● Записать под бит</button>
+                    <button id="studio-stop" type="button" disabled>■ Остановить запись</button>
+                </div>
+                <p class="muted" id="studio-input-source">🎙 Источник записи: будет определён при запуске микрофона</p>
+                <label for="studio-upload">Или загрузите вокал без бита (до 25 МБ)</label>
+                <input id="studio-upload" type="file" accept="audio/*">
+                <p class="muted" id="studio-vocal-info">Голос ещё не добавлен. Запись заменяет предыдущий дубль.</p>
+                <canvas id="studio-wave" class="wave" width="600" height="68" aria-label="Волновая форма вокала"></canvas>
+                <audio id="studio-voice-preview" controls preload="none"></audio>
+            </div>
+
+            <div class="studio-card">
+                <h2>03 / AI и обработка</h2>
+                <label for="studio-preset">Обработка голоса</label>
+                <select id="studio-preset">
+                    <option value="dry">Сухой рэп</option>
+                    <option value="soft">Мягкий вокал</option>
+                    <option value="space">Атмосферный</option>
+                </select>
+                <label class="check">
+                    <input id="studio-ai" type="checkbox" disabled>
+                    <span>AI-очистка шума <small id="studio-ai-state">— проверяем доступность</small></span>
+                </label>
+                <p class="muted">AI-шумодав обрабатывает вокал на отдельном сервере. Вы сможете сравнить исходник и результат.</p>
+                <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label>
+                <input id="studio-beat-level" type="range" min="0" max="100" value="60">
+                <label for="studio-voice-level">Громкость голоса <output id="studio-voice-value">100%</output></label>
+                <input id="studio-voice-level" type="range" min="0" max="150" value="100">
+                <label for="studio-offset">Начало вокала относительно бита, секунды</label>
+                <input id="studio-offset" type="number" min="-10" max="180" step="0.01" value="0">
+                <p class="muted">Положительное значение сдвигает голос позже, отрицательное — раньше.</p>
+                <button id="studio-process" type="button" class="primary" disabled>Обработать и собрать демо</button>
+            </div>
+
+            <div class="studio-card" id="studio-result" hidden>
+                <h2>04 / Результат</h2>
+                <p id="studio-result-info" class="muted"></p>
+                <label for="studio-before">До обработки — бит + исходный голос</label>
+                <audio id="studio-before" controls preload="metadata"></audio>
+                <label for="studio-after">После обработки</label>
+                <audio id="studio-after" controls preload="metadata"></audio>
+                <div class="row">
+                    <a id="studio-download" class="studio-link primary" download="ASIQPAI-demo.wav">↓ Скачать WAV</a>
+                    <button id="studio-share" type="button" hidden>Поделиться файлом</button>
+                </div>
+            </div>
+
+            <p class="muted">Сохраните WAV перед закрытием: проект и запись пока не сохраняются между запусками.</p>
+        </div>
+    </section>
+
 </main>
 
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
@@ -7064,7 +7159,7 @@ if(crown){
 (function(){
     const pages = Array.from(document.querySelectorAll('.app-page'));
     const tabs = Array.from(document.querySelectorAll('.nav-tab'));
-    const alwaysLockedPages = new Set(['music', 'home', 'community']);
+    const alwaysLockedPages = new Set(['music', 'community']);
     let scrollModeFrame = 0;
 
     const communityVideo = document.getElementById('communityBackgroundVideo');
@@ -7113,7 +7208,13 @@ if(crown){
         }
     }
 
+    document.querySelectorAll("[data-open-page]").forEach(button => {
+        button.addEventListener("click", () => openPage(button.dataset.openPage));
+    });
+
     function openPage(name){
+        window.dispatchEvent(new CustomEvent("asiqpai:page", { detail: name }));
+        if(name === "studio") document.getElementById("player")?.pause();
         const target = pages.find(page => page.dataset.page === name) || pages[0];
         pages.forEach(page => page.classList.toggle('active', page === target));
         tabs.forEach(tab => tab.classList.toggle('active', tab.dataset.target === target.dataset.page));
@@ -7185,6 +7286,11 @@ if(crown){
         openSamples();
     });
 })();
+</script>
+
+<script type="module">
+import { mountStudio } from "./studio/studio.js";
+mountStudio({ apiUrl: API_URL });
 </script>
 
 </body>
