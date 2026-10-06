@@ -41,3 +41,27 @@
 .studio .studio-teleprompter-head button{min-height:34px;width:34px;padding:0;border-radius:10px;font-size:20px;line-height:1}
 .studio .studio-teleprompter-text{white-space:pre-wrap;overflow-wrap:anywhere;color:#fff8e6;font-size:clamp(21px,5.7vw,31px);font-weight:700;line-height:1.58;letter-spacing:.2px}
 .studio .studio-teleprompter-text:empty:before{content:"Вставьте текст куплета выше.";color:#777987;font-size:15px;font-weight:500}
+
+.studio .studio-editor{margin-top:18px;padding:14px;border:1px solid rgba(231,197,107,.28);border-radius:18px;background:#101116}
+.studio .studio-editor-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.studio .studio-editor-head strong{display:block;color:#efd47f;font-size:13px;letter-spacing:1.2px}
+.studio .studio-editor-head small{display:block;margin-top:4px;color:#858794;font-size:10px;line-height:1.35}
+.studio .studio-editor-head button{min-height:36px;padding:8px 10px;font-size:11px}
+.studio .studio-editor-settings{display:grid;grid-template-columns:90px 100px minmax(120px,1fr);gap:9px;align-items:end;margin:10px 0 12px}
+.studio .studio-editor-settings label{margin:0;color:#b9b7c0;font-size:10px;letter-spacing:.6px}
+.studio .studio-editor-settings input[type=number],.studio .studio-editor-settings select{margin-top:6px;height:40px;padding:7px 9px}
+.studio .studio-editor-settings input[type=range]{margin-top:12px}
+.studio .studio-editor-scroll{overflow-x:auto;overflow-y:hidden;border:1px solid #2e3038;border-radius:14px;background:#090a0d;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.studio .studio-editor-scroll canvas{display:block;height:150px;max-width:none;touch-action:none}
+.studio .studio-editor-help{margin:10px 2px 8px;font-size:10px!important}
+.studio .studio-editor-toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.studio .studio-editor-toolbar button{min-height:40px;padding:8px 6px;font-size:10px}
+.studio .studio-editor-toolbar #studio-editor-delete{grid-column:span 2;border-color:#5c3a40;color:#e4a5ad;background:#211519}
+.studio .studio-editor-toolbar #studio-editor-auto{grid-column:span 2}
+.studio .studio-editor-readout{display:flex;justify-content:space-between;gap:10px;margin-top:9px;color:#8f919d;font-size:9px}
+@media(max-width:430px){
+  .studio .studio-editor-settings{grid-template-columns:1fr 1fr}
+  .studio .studio-editor-settings label:last-child{grid-column:1/-1}
+  .studio .studio-editor-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .studio .studio-editor-toolbar #studio-editor-delete,.studio .studio-editor-toolbar #studio-editor-auto{grid-column:auto}
+}
