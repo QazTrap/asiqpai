@@ -4679,10 +4679,11 @@ body .track-item-buy{
                         <strong>Vocal AI</strong>
                         <span class="ai-tool-badge">BETA</span>
                     </div>
-                    <p>Запись под бит, загрузка вокала, AI-шумодав, обработка голоса и экспорт готового WAV.</p>
+                    <p>Запись под бит, AI-шумодав, TUNE по тональности, обработка голоса и экспорт готового WAV.</p>
                     <div class="ai-tool-features">
                         <span>RECORD</span>
                         <span>AI DENOISE</span>
+                        <span>TUNE</span>
                         <span>VOCAL FX</span>
                         <span>WAV</span>
                     </div>
@@ -4941,11 +4942,34 @@ body .track-item-buy{
                 </label>
                 <p class="muted">Каждый эффект можно включить или отключить отдельно. BYPASS ALL временно отключает всю обработку, не сбрасывая выбранные эффекты.</p>
                 <div class="studio-fx-rack" id="studio-fx-rack" aria-label="Эффекты вокала">
+                    <button type="button" class="studio-fx-toggle" data-studio-fx="tune" aria-pressed="false">TUNE <small>OFF</small></button>
                     <button type="button" class="studio-fx-toggle active" data-studio-fx="eq" aria-pressed="true">EQ <small>ON</small></button>
                     <button type="button" class="studio-fx-toggle active" data-studio-fx="comp" aria-pressed="true">COMP <small>ON</small></button>
                     <button type="button" class="studio-fx-toggle" data-studio-fx="reverb" aria-pressed="false">REVERB <small>OFF</small></button>
                     <button type="button" class="studio-fx-toggle" data-studio-fx="delay" aria-pressed="false">DELAY <small>OFF</small></button>
                     <button type="button" class="studio-fx-bypass" id="studio-bypass" aria-pressed="false">BYPASS ALL</button>
+                </div>
+                <div class="studio-tune-settings" id="studio-tune-settings" hidden>
+                    <div class="studio-tune-grid">
+                        <label for="studio-tune-key">KEY
+                            <select id="studio-tune-key">
+                                <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option>
+                                <option selected>F</option><option>F#</option><option>G</option><option>G#</option>
+                                <option>A</option><option>A#</option><option>B</option>
+                            </select>
+                        </label>
+                        <label for="studio-tune-scale">SCALE
+                            <select id="studio-tune-scale">
+                                <option value="minor" selected>Minor</option>
+                                <option value="major">Major</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label for="studio-tune-amount">Amount <output id="studio-tune-amount-value">70%</output></label>
+                    <input id="studio-tune-amount" type="range" min="0" max="100" value="70">
+                    <label for="studio-tune-speed">Speed <output id="studio-tune-speed-value">35%</output></label>
+                    <input id="studio-tune-speed" type="range" min="0" max="100" value="35">
+                    <p class="muted">Ниже Speed — мягкая коррекция. Выше — более заметный Hard Tune.</p>
                 </div>
                 <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label>
                 <input id="studio-beat-level" type="range" min="0" max="100" value="60">

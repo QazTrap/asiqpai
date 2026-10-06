@@ -3,9 +3,9 @@ import { MAX_SECONDS, analyse, encodeWav, renderMix, PRESETS } from './audio.js'
 export function mountStudio({ apiUrl }) {
   const el = id => document.getElementById(`studio-${id}`);
   if (!el('beat')) return;
-  let ctx, beat, vocal, cleanVocal, recorder, stream, backing, recordingTimer;
+  let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing, recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
-  let aiAvailable = false, initialized = false;
+  let aiAvailable = false, tuneAvailable = false, initialized = false;
   let effectState = { ...PRESETS.dry.defaults };
   let bypassAll = false;
   const urls = new Map();
@@ -23,6 +23,8 @@ export function mountStudio({ apiUrl }) {
       const state = button.querySelector('small');
       if (state) state.textContent = active ? 'ON' : 'OFF';
     });
+    const tuneSettings = el('tune-settings');
+    if (tuneSettings) tuneSettings.hidden = !effectState.tune;
     const bypass = el('bypass');
     if (bypass) {
       bypass.classList.toggle('active', bypassAll);
@@ -39,11 +41,16 @@ export function mountStudio({ apiUrl }) {
   }
   function controls() {
     for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'offset']) el(id).disabled = busy || recording;
+    for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
+      if (el(id)) el(id).disabled = busy || recording || !effectState.tune || !tuneAvailable;
+    }
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
     el('process').disabled = busy || recording || !beat || !vocal;
     el('ai').disabled = busy || recording || !aiAvailable;
-    document.querySelectorAll('[data-studio-fx]').forEach(button => { button.disabled = busy || recording; });
+    document.querySelectorAll('[data-studio-fx]').forEach(button => {
+      button.disabled = busy || recording || (button.dataset.studioFx === 'tune' && !tuneAvailable);
+    });
     if (el('bypass')) el('bypass').disabled = busy || recording;
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
@@ -120,7 +127,7 @@ export function mountStudio({ apiUrl }) {
 
   function acceptVoice(buffer) {
     const centered = centerVoice(buffer);
-    vocal = centered; cleanVocal = null; invalidate(); wave(centered);
+    vocal = centered; serverVocal = null; serverVocalSignature = ''; invalidate(); wave(centered);
     el('voice-preview').src = setURL('voice-preview', encodeWav(centered));
     const stats = analyse(centered);
     el('vocal-info').textContent = `Вокал: ${centered.duration.toFixed(1)} с · MONO / CENTER${stats.peak >= 0.999 ? ' · Запись перегружена: попробуйте отойти от микрофона.' : ''}`;
@@ -202,12 +209,22 @@ export function mountStudio({ apiUrl }) {
   el('stop').addEventListener('click', stopRecording);
   el('preset').addEventListener('change', applyPresetDefaults);
   for (const id of ['ai', 'offset', 'beat-level', 'voice-level']) el(id).addEventListener('input', () => {
-    invalidate(); el('beat-value').textContent = `${el('beat-level').value}%`; el('voice-value').textContent = `${el('voice-level').value}%`;
+    invalidate();
+    el('beat-value').textContent = `${el('beat-level').value}%`;
+    el('voice-value').textContent = `${el('voice-level').value}%`;
   });
+  for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
+    el(id)?.addEventListener('input', () => {
+      invalidate();
+      if (el('tune-amount-value')) el('tune-amount-value').textContent = `${el('tune-amount').value}%`;
+      if (el('tune-speed-value')) el('tune-speed-value').textContent = `${el('tune-speed').value}%`;
+    });
+  }
   document.querySelectorAll('[data-studio-fx]').forEach(button => {
     button.addEventListener('click', () => {
       const key = button.dataset.studioFx;
       if (!Object.hasOwn(effectState, key)) return;
+      if (key === 'tune' && !tuneAvailable) return;
       effectState[key] = !effectState[key];
       bypassAll = false;
       syncFxButtons();
@@ -229,19 +246,55 @@ export function mountStudio({ apiUrl }) {
     if (offset + vocal.duration > MAX_SECONDS + 0.1) throw new Error('Голос со сдвигом выходит за 3 минуты. Уменьшите сдвиг или загрузите более короткую запись.');
     let chosen = vocal;
     const useAiClean = el('ai').checked && !bypassAll;
-    if (useAiClean) {
-      if (!cleanVocal) {
-        status('ИИ очищает вокал. Это может занять до 2–3 минут…');
-        const initData = window.Telegram?.WebApp?.initData || '';
-        if (!initData) throw new Error('Для ИИ-обработки откройте приложение через Telegram.');
+    const useTune = effectState.tune && !bypassAll;
+    if (useTune && !tuneAvailable) throw new Error('TUNE пока недоступен на сервере.');
+
+    if (useAiClean || useTune) {
+      const initData = window.Telegram?.WebApp?.initData || '';
+      if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+
+      const tuneKey = el('tune-key')?.value || 'F';
+      const tuneScale = el('tune-scale')?.value || 'minor';
+      const tuneAmount = Number(el('tune-amount')?.value || 70);
+      const tuneSpeed = Number(el('tune-speed')?.value || 35);
+      const signature = JSON.stringify({
+        clean: useAiClean,
+        tune: useTune,
+        key: tuneKey,
+        scale: tuneScale,
+        amount: tuneAmount,
+        speed: tuneSpeed
+      });
+
+      if (!serverVocal || serverVocalSignature !== signature) {
+        status(useTune
+          ? (useAiClean ? 'AI очищает вокал и корректирует ноты…' : 'TUNE корректирует вокал по тональности…')
+          : 'AI очищает вокал. Это может занять до 2–3 минут…'
+        );
+
         const response = await fetch(`${apiUrl}/api/studio/enhance`, {
-          method: 'POST', headers: { 'Content-Type': 'application/octet-stream', 'X-Telegram-Init-Data': initData },
-          body: encodeWav(vocal, true), signal: AbortSignal.timeout(180000)
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/octet-stream',
+            'X-Telegram-Init-Data': initData,
+            'X-Studio-Clean': useAiClean ? '1' : '0',
+            'X-Studio-Tune': useTune ? '1' : '0',
+            'X-Studio-Key': tuneKey,
+            'X-Studio-Scale': tuneScale,
+            'X-Studio-Amount': String(tuneAmount),
+            'X-Studio-Speed': String(tuneSpeed)
+          },
+          body: encodeWav(vocal, true),
+          signal: AbortSignal.timeout(255000)
         });
-        if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.error || 'Сервис ИИ недоступен. Повторите позже или выключите ИИ-очистку.'); }
-        cleanVocal = await decode(await response.blob(), MAX_SECONDS + 1);
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || 'Vocal AI недоступен. Повторите позже или выключите AI CLEAN / TUNE.');
+        }
+        serverVocal = await decode(await response.blob(), MAX_SECONDS + 1);
+        serverVocalSignature = signature;
       }
-      chosen = cleanVocal;
+      chosen = serverVocal;
     }
     const settings = { beat, offset, preset: el('preset').value, beatLevel: Number(el('beat-level').value) / 100, vocalLevel: Number(el('voice-level').value) / 100 };
     status('Собираем вариант до обработки…');
@@ -259,6 +312,7 @@ export function mountStudio({ apiUrl }) {
       ? ['BYPASS ALL']
       : [
           useAiClean ? 'AI CLEAN' : null,
+          useTune ? `TUNE ${el('tune-key')?.value || 'F'} ${(el('tune-scale')?.value || 'minor').toUpperCase()}` : null,
           effectState.eq ? 'EQ' : null,
           effectState.comp ? 'COMP' : null,
           effectState.reverb ? 'REVERB' : null,
@@ -293,8 +347,18 @@ export function mountStudio({ apiUrl }) {
       const response = await fetch(`${apiUrl}/api/studio/status`, { signal: AbortSignal.timeout(8000) });
       const result = response.ok ? await response.json() : {};
       aiAvailable = result.aiAvailable === true;
-    } catch { aiAvailable = false; }
-    el('ai-state').textContent = aiAvailable ? '— доступна' : '— сервер не подключён'; controls();
+      tuneAvailable = result.tuneAvailable === true;
+    } catch {
+      aiAvailable = false;
+      tuneAvailable = false;
+    }
+    el('ai-state').textContent = aiAvailable ? '— доступна' : '— сервер не подключён';
+    const tuneButton = document.querySelector('[data-studio-fx="tune"]');
+    if (tuneButton && !tuneAvailable) {
+      tuneButton.title = 'TUNE пока недоступен на сервере';
+    }
+    syncFxButtons();
+    controls();
   }
   window.addEventListener('asiqpai:page', event => {
     if (event.detail === 'studio') initialize();
