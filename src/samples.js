@@ -1,9 +1,9 @@
 import crypto from "node:crypto";
 
 const PRESETS = Object.freeze({
-  memphis: ["Memphis", "dark Southern trap sample with warm Rhodes, low-register acoustic piano, detuned electric guitar textures, restrained vintage soul strings, subtle tape saturation, dusty vinyl character, realistic instruments, thick low-mid body and an expensive moody feel"],
-  dark: ["Dark Trap", "dark cinematic trap sample with deep acoustic piano, warm analogue synth layers, bowed string textures, subtle electric guitar ambience, minor-key tension, rich harmonics, wide stereo depth and a polished expensive sound"],
-  atmospheric: ["Atmospheric", "spacious melodic trap sample with warm analog pads, expressive electric guitar, soft Rhodes, evolving cinematic textures, emotional minor-key harmony, natural ambience, wide stereo depth and a refined premium sound"]
+  memphis: ["Memphis", "dark Southern melodic stem with warm Rhodes, low-register acoustic piano, restrained vintage soul strings, subtle tape saturation, dusty vinyl character, realistic instruments, thick low-mid body and an expensive moody feel"],
+  dark: ["Dark Trap", "dark cinematic melodic stem with deep acoustic piano, warm analogue synth layers, bowed string textures, subtle electric guitar ambience, minor-key tension, rich harmonics, wide stereo depth and a polished expensive sound"],
+  atmospheric: ["Atmospheric", "spacious melodic stem with warm analog pads, expressive electric guitar, soft Rhodes, evolving cinematic textures, emotional minor-key harmony, natural ambience, wide stereo depth and a refined premium sound"]
 });
 const KEYS = Object.freeze(["Fm","F#m","Gm","G#m","Am","A#m","Bm","Cm","C#m","Dm","D#m","Em"]);
 const KEY_NAMES = Object.freeze({
@@ -49,30 +49,44 @@ function settingsFrom(value){
   return settings;
 }
 function durationFor(s){
-  return Math.max(6,Math.min(60,Number((((s.bars+2)*4*60)/s.bpm).toFixed(3))));
+  return Math.max(1,Math.min(60,Number(((s.bars*4*60)/s.bpm).toFixed(3))));
 }
 function cleanProviderDescription(value){
   return String(value||"")
-    .replace(/young\s+dolph/gi,"Memphis trap, dark melodic piano, Southern trap atmosphere")
-    .replace(/lil\s+baby/gi,"modern melodic trap, emotional minor-key phrasing")
-    .replace(/future/gi,"dark atmospheric melodic trap")
+    .replace(/(как\s+у|в\s+стиле|like|style\s+of)?\s*young\s+dolph/gi," Memphis dark Southern melodic piano character ")
+    .replace(/(как\s+у|в\s+стиле|like|style\s+of)?\s*lil\s+baby/gi," modern emotional minor-key melodic character ")
+    .replace(/(как\s+у|в\s+стиле|like|style\s+of)?\s*future/gi," dark atmospheric melodic character ")
+    .replace(/без\s+(ударных|барабанов|перкуссии|808|вокала)/gi," ")
+    .replace(/\b(ударные|барабаны|перкуссия|вокал|808)\b/gi," ")
+    .replace(/\b(without|no)\s+(drums?|percussion|808s?|vocals?|singing|speech)\b/gi," ")
+    .replace(/\b(drums?|percussion|808s?|kick|snare|hi[- ]?hats?|vocals?|singing|speech)\b/gi," ")
+    .replace(/\s{2,}/g," ")
+    .trim()
     .slice(0,600);
 }
+function focusedArrangement(value,dense){
+  const raw=String(value||"");
+  const pianoOnly=/(только|лишь|only|solo).{0,50}(пиан|клавиш|piano|keys?)/i.test(raw)
+    || /(пиан|клавиш|piano|keys?).{0,50}(только|лишь|only|solo)/i.test(raw);
+  if(pianoOnly){
+    return "Solo acoustic piano only, unaccompanied, one coherent instrument, expressive human timing, rich natural harmonics and premium studio tone.";
+  }
+  return dense
+    ?"Layered melodic stem with 2 to 4 complementary tonal instruments, clear hierarchy, one memorable motif, controlled dynamics and plenty of space for later production."
+    :"Sparse premium melodic stem with one main tonal instrument and at most one subtle supporting texture, human phrasing, natural dynamics and deliberate space between phrases.";
+}
 function promptFor(s){
-  const density=s.dense
-    ?"Full but tasteful layered arrangement with 2 to 4 complementary instruments, clear hierarchy, strong musical motif, controlled dynamics and no clutter."
-    :"Sparse premium arrangement with one main instrument and at most one subtle supporting texture, human phrasing, natural dynamics and deliberate space between phrases.";
+  const direction=cleanProviderDescription(s.description);
   return [
-    "TrackType: Instrument.",
+    "Isolated producer sample. Melodic stem only. Unaccompanied tonal instruments, with the rhythm section intentionally left for the producer to add later.",
     PRESETS[s.preset][1]+".",
     s.bpm+" BPM, 4/4, "+KEY_NAMES[s.key]+".",
-    "Repeating "+s.bars+"-bar melodic phrase, steady tempo from the first beat, loopable arrangement.",
-    density,
-    "Production quality: mature, dark, musical and record-ready; realistic timbre; warm low-mids; smooth transients; subtle saturation; believable room or tape character; avoid synthetic demo-like sound.",
-    "Avoid toy-like timbres: no music box, no glockenspiel, no toy piano, no chiptune, no cartoon plucks, no bright cheap bells, no childish melody, no stock ringtone sound.",
-    "Instrumental melody only: no drums, no percussion, no 808, no bassline, no vocals, no singing, no speech, no intro, no fade out.",
-    "Original composition. Do not copy or imitate any existing song or artist.",
-    "Additional sound direction: "+(cleanProviderDescription(s.description)||"none")+"."
+    "Exactly "+s.bars+" bars. Start immediately on beat one, keep a stable tempo, finish exactly on the bar boundary, seamless loop with no intro or outro.",
+    focusedArrangement(s.description,s.dense),
+    "Professional record-ready production: realistic instrument tone, expressive dynamics, warm low-mids, smooth transients, subtle analogue saturation, natural room depth, clear stereo image and a polished premium mix.",
+    "Mature musical phrasing, strong motif, tasteful harmonic movement, clean frequency balance and believable performance detail.",
+    "Original composition with its own melody and harmony.",
+    "Additional sound direction: "+(direction||"dark premium melodic loop for modern rap production")+"."
   ].join(" ");
 }
 function transformSettings(source,action){
@@ -112,6 +126,7 @@ async function submitAudio(settings,seed){
   form.append("output_format","wav");
   form.append("seed",String(seed));
   form.append("steps","8");
+  form.append("cfg_scale",String(Math.max(1,Math.min(25,Number(process.env.SAMPLES_CFG_SCALE||4)))));
 
   const endpoint=useV3
     ?"https://api.stability.ai/v2beta/audio/stable-audio/text-to-audio"
@@ -163,6 +178,7 @@ async function fetchAudio(id){
 export function mountSampleRoutes(app,{pool,requireTelegramUser}){
   let schemaPromise;
   const dailyLimit=Math.max(1,Math.min(50,Number(process.env.SAMPLES_DAILY_LIMIT||3)));
+  const unlimitedFor=userId=>allowedUsers().has(String(userId));
 
   function initSchema(){
     if(!schemaPromise){
@@ -176,10 +192,12 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
     return schemaPromise;
   }
   async function usage(userId){
+    if(unlimitedFor(userId)) return 0;
     const r=await pool.query("SELECT requests FROM sample_ai_usage WHERE telegram_id=$1 AND usage_day=CURRENT_DATE",[userId]);
     return Number(r.rows[0]?.requests||0);
   }
   async function reserve(userId,count){
+    if(unlimitedFor(userId)) return;
     const r=await pool.query(
       "INSERT INTO sample_ai_usage (telegram_id,usage_day,requests) VALUES ($1,CURRENT_DATE,$2) ON CONFLICT (telegram_id,usage_day) DO UPDATE SET requests=sample_ai_usage.requests+EXCLUDED.requests WHERE sample_ai_usage.requests+EXCLUDED.requests<=$3 RETURNING requests",
       [userId,count,dailyLimit]
@@ -187,6 +205,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
     if(!r.rowCount){const e=new Error("Дневной лимит AI Samples исчерпан.");e.status=429;throw e;}
   }
   async function release(userId,count){
+    if(unlimitedFor(userId)) return;
     if(count>0) await pool.query("UPDATE sample_ai_usage SET requests=GREATEST(0,requests-$2) WHERE telegram_id=$1 AND usage_day=CURRENT_DATE",[userId,count]);
   }
   async function refresh(row){
@@ -265,9 +284,10 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
     try{
       await initSchema();assertAccess(req.telegramUser.id);
       const last=await pool.query("SELECT settings FROM sample_ai_jobs WHERE telegram_id=$1 ORDER BY created_at DESC LIMIT 1",[req.telegramUser.id]);
+      const unlimited=unlimitedFor(req.telegramUser.id);
       const used=await usage(req.telegramUser.id);
       res.set("Cache-Control","no-store");
-      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v[0]})),keys:[...KEYS],limits:{daily:dailyLimit,used,remaining:Math.max(0,dailyLimit-used)},provider_ready:providerReady()});
+      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v[0]})),keys:[...KEYS],limits:{daily:unlimited?null:dailyLimit,used,remaining:unlimited?null:Math.max(0,dailyLimit-used),unlimited},provider_ready:providerReady()});
     }catch(error){fail(res,error);}
   });
   app.get("/api/samples/history",requireTelegramUser,async(req,res)=>{
