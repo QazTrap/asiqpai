@@ -65,3 +65,12 @@
   .studio .studio-editor-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
   .studio .studio-editor-toolbar #studio-editor-delete,.studio .studio-editor-toolbar #studio-editor-auto{grid-column:auto}
 }
+
+.studio .studio-ai-fit{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:12px 0;padding:12px;border:1px solid rgba(231,197,107,.34);border-radius:14px;background:linear-gradient(145deg,rgba(231,197,107,.08),rgba(231,197,107,.025))}
+.studio .studio-ai-fit-copy{min-width:0}
+.studio .studio-ai-fit-copy strong{display:block;color:#f0d27b;font-size:11px;letter-spacing:1.1px}
+.studio .studio-ai-fit-copy span{display:block;margin-top:4px;color:#9698a2;font-size:9px;line-height:1.35}
+.studio .studio-ai-fit-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+.studio .studio-ai-fit-actions button{min-height:40px;padding:9px 11px;font-size:9px;font-weight:850;border-color:rgba(231,197,107,.42);color:#e8cf86;background:#1d1a12}
+.studio .studio-ai-fit-actions button:last-child{background:linear-gradient(180deg,#d7b65f,#9d7a31);color:#16130d;border-color:#d7b65f}
+@media(max-width:520px){.studio .studio-ai-fit{grid-template-columns:1fr}.studio .studio-ai-fit-actions{justify-content:stretch}.studio .studio-ai-fit-actions button{flex:1}}

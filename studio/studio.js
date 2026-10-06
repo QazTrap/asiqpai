@@ -67,8 +67,8 @@ export function mountStudio({ apiUrl }) {
     if (el('bypass')) el('bypass').disabled = busy || recording;
     if (el('lyrics-input')) el('lyrics-input').readOnly = busy || recording;
     if (el('lyrics-clear')) el('lyrics-clear').disabled = busy || recording;
-    for (const id of ['editor-reset','editor-split','editor-auto','editor-left50','editor-left10','editor-right10','editor-right50','editor-delete','editor-bpm','editor-snap','editor-zoom']) {
-      if (el(id)) el(id).disabled = busy || recording || !sourceVocal;
+    for (const id of ['editor-reset','editor-split','editor-auto','editor-left50','editor-left10','editor-right10','editor-right50','editor-delete','editor-bpm','editor-snap','editor-zoom','editor-fit-natural','editor-fit-tight']) {
+      if (el(id)) el(id).disabled = busy || recording || !sourceVocal || (id.startsWith('editor-fit-') && !beat);
     }
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
@@ -273,8 +273,8 @@ export function mountStudio({ apiUrl }) {
     seg.at = Math.max(minAt, Math.min(maxAt, seg.at + delta));
     commitEditor(`Фрагмент сдвинут ${delta > 0 ? '+' : ''}${Math.round(delta * 1000)} мс.`);
   }
-  function autoSplitSilence() {
-    if (!sourceVocal) return;
+  function detectVocalRegions() {
+    if (!sourceVocal) return [];
     const data = sourceVocal.getChannelData(0), sr = sourceVocal.sampleRate;
     const frame = Math.max(64, Math.floor(sr * 0.02));
     const gapFrames = Math.max(4, Math.floor(0.18 / (frame / sr)));
@@ -298,15 +298,103 @@ export function mountStudio({ apiUrl }) {
       last = i;
     }
     if (start !== null) regions.push([start, last + 1]);
-    if (regions.length < 2) { status('Длинных пауз для авто-нарезки не найдено.', true); return; }
-    vocalSegments = regions.map(([a,b]) => {
+    return regions.map(([a,b]) => {
       const srcStart = Math.max(0, a * frame / sr - 0.015);
       const srcEnd = Math.min(sourceVocal.duration, b * frame / sr + 0.015);
       return { id: segmentId(), srcStart, srcEnd, at: srcStart };
-    });
+    }).filter(segment => segment.srcEnd - segment.srcStart >= 0.06);
+  }
+  function autoSplitSilence() {
+    if (!sourceVocal) return;
+    const detected = detectVocalRegions();
+    if (detected.length < 2) { status('Длинных пауз для авто-нарезки не найдено.', true); return; }
+    vocalSegments = detected;
     selectedSegmentId = vocalSegments[0]?.id || null;
     editorCursor = editorOffset() + (vocalSegments[0]?.at || 0);
     commitEditor(`Авто-нарезка: найдено ${vocalSegments.length} фраз.`);
+  }
+  function estimateBeatPhase() {
+    if (!beat) return 0;
+    const bpm = editorBpm();
+    const beatSeconds = 60 / bpm;
+    const data = beat.getChannelData(0);
+    const sr = beat.sampleRate;
+    const frameSeconds = 0.01;
+    const frame = Math.max(64, Math.floor(sr * frameSeconds));
+    const frameCount = Math.min(Math.ceil(Math.min(beat.duration, 30) / frameSeconds), Math.ceil(data.length / frame));
+    const energy = new Float32Array(frameCount);
+    for (let n = 0; n < frameCount; n++) {
+      const from = n * frame, to = Math.min(data.length, from + frame);
+      let sum = 0;
+      for (let i = from; i < to; i++) sum += data[i] * data[i];
+      energy[n] = Math.sqrt(sum / Math.max(1, to - from));
+    }
+    const onset = new Float32Array(frameCount);
+    for (let n = 1; n < frameCount; n++) onset[n] = Math.max(0, energy[n] - energy[n - 1] * 0.86);
+    let bestPhase = 0, bestScore = -Infinity;
+    const candidates = 64;
+    const maxTime = frameCount * frameSeconds;
+    for (let c = 0; c < candidates; c++) {
+      const phase = c * beatSeconds / candidates;
+      let score = 0, count = 0;
+      for (let t = phase; t < maxTime; t += beatSeconds) {
+        const n = Math.round(t / frameSeconds);
+        if (n < 1 || n >= onset.length - 1) continue;
+        score += onset[n] + onset[n - 1] * 0.45 + onset[n + 1] * 0.45;
+        count++;
+      }
+      if (count && score / count > bestScore) {
+        bestScore = score / count;
+        bestPhase = phase;
+      }
+    }
+    return bestPhase;
+  }
+  function aiFitToBeat(mode) {
+    if (!sourceVocal) return;
+    if (!beat) { status('Сначала выберите бит.', true); return; }
+    const detected = detectVocalRegions();
+    if (detected.length >= 2 && vocalSegments.length <= 1) vocalSegments = detected;
+    if (!vocalSegments.length) { status('Не удалось найти вокальные фразы.', true); return; }
+
+    const oldOffset = editorOffset();
+    if (oldOffset) {
+      for (const segment of vocalSegments) segment.at += oldOffset;
+      const minAt = Math.min(...vocalSegments.map(segment => segment.at));
+      if (minAt < 0) for (const segment of vocalSegments) segment.at -= minAt;
+      el('offset').value = '0';
+    }
+
+    const bpm = editorBpm();
+    const beatSeconds = 60 / bpm;
+    const phase = estimateBeatPhase();
+    const tight = mode === 'tight';
+    const grid = beatSeconds / (tight ? 4 : 2);
+    const strength = tight ? 1 : 0.68;
+    const maxMove = tight ? 0.14 : 0.09;
+    const sorted = [...vocalSegments].sort((a,b) => a.at - b.at);
+    let previousEnd = 0;
+    let moved = 0;
+
+    for (const segment of sorted) {
+      const duration = segment.srcEnd - segment.srcStart;
+      const current = Math.max(0, segment.at);
+      const gridIndex = Math.round((current - phase) / grid);
+      const target = Math.max(0, phase + gridIndex * grid);
+      let delta = (target - current) * strength;
+      delta = Math.max(-maxMove, Math.min(maxMove, delta));
+      let fitted = Math.max(0, current + delta);
+      fitted = Math.max(fitted, previousEnd + (previousEnd ? 0.012 : 0));
+      fitted = Math.min(fitted, Math.max(0, MAX_SECONDS - duration));
+      if (Math.abs(fitted - current) >= 0.004) moved++;
+      segment.at = fitted;
+      previousEnd = fitted + duration;
+    }
+
+    vocalSegments = sorted;
+    selectedSegmentId = vocalSegments[0]?.id || null;
+    editorCursor = vocalSegments[0]?.at || 0;
+    commitEditor(`AI FIT · ${tight ? 'TIGHT' : 'NATURAL'}: подогнано ${moved} из ${vocalSegments.length} фраз под ${bpm} BPM.`);
   }
   function editorTimeFromEvent(event) {
     const canvas = el('editor-canvas'), rect = canvas.getBoundingClientRect();
@@ -438,6 +526,8 @@ export function mountStudio({ apiUrl }) {
   editorCanvas?.addEventListener('pointercancel', endEditorDrag);
   el('editor-split')?.addEventListener('click', splitAtCursor);
   el('editor-auto')?.addEventListener('click', autoSplitSilence);
+  el('editor-fit-natural')?.addEventListener('click', () => aiFitToBeat('natural'));
+  el('editor-fit-tight')?.addEventListener('click', () => aiFitToBeat('tight'));
   el('editor-left50')?.addEventListener('click', () => nudgeSelected(-0.05));
   el('editor-left10')?.addEventListener('click', () => nudgeSelected(-0.01));
   el('editor-right10')?.addEventListener('click', () => nudgeSelected(0.01));
