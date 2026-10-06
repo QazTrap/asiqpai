@@ -6,6 +6,7 @@ export function mountStudio({ apiUrl }) {
   let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing, recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
   let aiAvailable = false, tuneAvailable = false, initialized = false, backgroundInterrupted = false;
+  let sourceVocal = null, vocalSegments = [], editorCursor = 0, selectedSegmentId = null, editorDrag = null, segmentSeq = 0;
   let effectState = { ...PRESETS.dry.defaults };
   let bypassAll = false;
   const urls = new Map();
@@ -66,6 +67,9 @@ export function mountStudio({ apiUrl }) {
     if (el('bypass')) el('bypass').disabled = busy || recording;
     if (el('lyrics-input')) el('lyrics-input').readOnly = busy || recording;
     if (el('lyrics-clear')) el('lyrics-clear').disabled = busy || recording;
+    for (const id of ['editor-reset','editor-split','editor-auto','editor-left50','editor-left10','editor-right10','editor-right50','editor-delete','editor-bpm','editor-snap','editor-zoom']) {
+      if (el(id)) el(id).disabled = busy || recording || !sourceVocal;
+    }
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
   }
@@ -103,6 +107,211 @@ export function mountStudio({ apiUrl }) {
       const h = Math.max(1, peak * 62); c.fillRect(x, (68 - h) / 2, 1, h);
     }
   }
+
+  const segmentId = () => `seg-${++segmentSeq}`;
+  const editorOffset = () => Number(el('offset')?.value || 0);
+  const editorBpm = () => Math.max(70, Math.min(200, Number(el('editor-bpm')?.value || 120)));
+  function editorSnap(time) {
+    const division = Number(el('editor-snap')?.value || 0);
+    if (!division) return Math.max(0, time);
+    const beatSeconds = 60 / editorBpm();
+    const step = beatSeconds * (4 / division);
+    return Math.max(0, Math.round(time / step) * step);
+  }
+  function timelineDuration() {
+    const offset = editorOffset();
+    const segmentEnd = vocalSegments.reduce((max, s) => Math.max(max, offset + s.at + (s.srcEnd - s.srcStart)), 0);
+    const beatEnd = beat ? Math.min(MAX_SECONDS, beat.duration) : 0;
+    return Math.max(8, Math.min(MAX_SECONDS, Math.max(beatEnd, segmentEnd + 2, sourceVocal?.duration || 0)));
+  }
+  function drawBufferRange(g, buffer, x0, x1, y, height, sourceStart = 0, sourceEnd = buffer?.duration || 0, fill = '#777b87') {
+    if (!buffer || x1 <= x0 || sourceEnd <= sourceStart) return;
+    const data = buffer.getChannelData(0);
+    const sr = buffer.sampleRate;
+    const px = Math.max(1, Math.floor(x1 - x0));
+    g.fillStyle = fill;
+    for (let i = 0; i < px; i++) {
+      const a = sourceStart + (i / px) * (sourceEnd - sourceStart);
+      const b = sourceStart + ((i + 1) / px) * (sourceEnd - sourceStart);
+      const from = Math.max(0, Math.floor(a * sr));
+      const to = Math.min(data.length, Math.max(from + 1, Math.floor(b * sr)));
+      let peak = 0;
+      const stride = Math.max(1, Math.floor((to - from) / 12));
+      for (let n = from; n < to; n += stride) peak = Math.max(peak, Math.abs(data[n]));
+      const h = Math.max(1, peak * height);
+      g.fillRect(x0 + i, y - h / 2, 1, h);
+    }
+  }
+  function renderEditor() {
+    const canvas = el('editor-canvas');
+    if (!canvas || !sourceVocal) return;
+    const duration = timelineDuration();
+    const zoom = Number(el('editor-zoom')?.value || 3);
+    const width = Math.min(7200, Math.max(900, Math.ceil(duration * 4 * zoom)));
+    if (canvas.width !== width) canvas.width = width;
+    const g = canvas.getContext('2d');
+    const h = canvas.height;
+    const pps = width / duration;
+    g.clearRect(0, 0, width, h);
+    g.fillStyle = '#090a0d'; g.fillRect(0, 0, width, h);
+    g.fillStyle = '#15171d'; g.fillRect(0, 4, width, 63);
+    g.fillStyle = '#11141a'; g.fillRect(0, 78, width, 66);
+
+    const bpm = editorBpm();
+    const beatStep = 60 / bpm;
+    g.lineWidth = 1;
+    for (let t = 0, i = 0; t < duration; t += beatStep, i++) {
+      const x = t * pps;
+      g.strokeStyle = i % 4 === 0 ? '#4b4330' : '#262a31';
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke();
+      if (i % 4 === 0) {
+        g.fillStyle = '#797364'; g.font = '9px sans-serif';
+        g.fillText(String(i / 4 + 1), x + 3, 12);
+      }
+    }
+
+    if (beat) drawBufferRange(g, beat, 0, Math.min(width, Math.min(beat.duration, duration) * pps), 37, 42, 0, Math.min(beat.duration, duration), '#5d6270');
+    g.fillStyle = '#8b8e98'; g.font = '10px sans-serif'; g.fillText('BEAT', 8, 62);
+    g.fillStyle = '#c7aa5d'; g.fillText('VOCAL', 8, 139);
+
+    const offset = editorOffset();
+    for (const seg of vocalSegments) {
+      const start = offset + seg.at;
+      const len = seg.srcEnd - seg.srcStart;
+      const end = start + len;
+      if (end <= 0 || start >= duration) continue;
+      const x0 = Math.max(0, start * pps), x1 = Math.min(width, end * pps);
+      const selected = seg.id === selectedSegmentId;
+      g.fillStyle = selected ? 'rgba(231,197,107,.18)' : 'rgba(113,118,132,.14)';
+      g.fillRect(x0, 82, Math.max(2, x1 - x0), 57);
+      g.strokeStyle = selected ? '#e7c56b' : '#5d6270';
+      g.lineWidth = selected ? 2 : 1;
+      g.strokeRect(x0 + .5, 82.5, Math.max(1, x1 - x0 - 1), 56);
+      drawBufferRange(g, sourceVocal, x0, x1, 110, 43, seg.srcStart, seg.srcEnd, selected ? '#efd47f' : '#b1b5c0');
+    }
+
+    const cx = Math.max(0, Math.min(width, editorCursor * pps));
+    g.strokeStyle = '#ff7f88'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(cx, 0); g.lineTo(cx, h); g.stroke();
+    const cursorLabel = el('editor-cursor');
+    if (cursorLabel) cursorLabel.textContent = `Курсор ${editorCursor.toFixed(2)} с`;
+    const selected = vocalSegments.find(s => s.id === selectedSegmentId);
+    const selectedLabel = el('editor-selected');
+    if (selectedLabel) selectedLabel.textContent = selected
+      ? `Фрагмент ${(vocalSegments.indexOf(selected) + 1)} · ${(selected.srcEnd - selected.srcStart).toFixed(2)} с · позиция ${(offset + selected.at).toFixed(2)} с`
+      : 'Фрагмент не выбран';
+  }
+  function renderEditedVocal() {
+    if (!sourceVocal || !vocalSegments.length) return null;
+    const sr = sourceVocal.sampleRate;
+    const maxEnd = vocalSegments.reduce((m, s) => Math.max(m, s.at + (s.srcEnd - s.srcStart)), 0);
+    const frames = Math.max(1, Math.min(Math.floor(MAX_SECONDS * sr), Math.ceil(maxEnd * sr)));
+    const outBuffer = ctx.createBuffer(1, frames, sr);
+    const out = outBuffer.getChannelData(0);
+    const input = sourceVocal.getChannelData(0);
+    const fade = Math.max(1, Math.floor(sr * 0.006));
+    for (const seg of vocalSegments) {
+      const from = Math.max(0, Math.floor(seg.srcStart * sr));
+      const to = Math.min(input.length, Math.floor(seg.srcEnd * sr));
+      const dest = Math.max(0, Math.floor(seg.at * sr));
+      const count = Math.min(to - from, out.length - dest);
+      for (let i = 0; i < count; i++) {
+        let gain = 1;
+        if (i < fade) gain = i / fade;
+        if (count - i < fade) gain = Math.min(gain, (count - i) / fade);
+        out[dest + i] += input[from + i] * gain;
+      }
+    }
+    for (let i = 0; i < out.length; i++) out[i] = Math.max(-1, Math.min(1, out[i]));
+    return outBuffer;
+  }
+  function commitEditor(message = 'Монтаж вокала обновлён.') {
+    const edited = renderEditedVocal();
+    vocal = edited; serverVocal = null; serverVocalSignature = ''; invalidate();
+    if (edited) {
+      wave(edited);
+      el('voice-preview').src = setURL('voice-preview', encodeWav(edited));
+      const stats = analyse(edited);
+      el('vocal-info').textContent = `Вокал: ${edited.duration.toFixed(1)} с · ${vocalSegments.length} фрагм. · MONO / CENTER${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
+    } else {
+      el('voice-preview').removeAttribute('src'); el('voice-preview').load();
+      el('vocal-info').textContent = 'Все фрагменты удалены. Сбросьте монтаж или добавьте новый голос.';
+    }
+    renderEditor(); controls(); status(message);
+  }
+  function resetEditor(buffer) {
+    sourceVocal = buffer;
+    vocalSegments = [{ id: segmentId(), srcStart: 0, srcEnd: buffer.duration, at: 0 }];
+    selectedSegmentId = vocalSegments[0].id;
+    editorCursor = 0;
+    if (el('editor')) el('editor').hidden = false;
+    commitEditor('Голос добавлен. Можно подогнать фразы в Vocal Slicer.');
+  }
+  function splitAtCursor() {
+    if (!sourceVocal) return;
+    const offset = editorOffset();
+    const seg = vocalSegments.find(s => {
+      const start = offset + s.at, end = start + (s.srcEnd - s.srcStart);
+      return editorCursor > start + 0.025 && editorCursor < end - 0.025;
+    });
+    if (!seg) { status('Поставьте курсор внутри фрагмента, который хотите разрезать.', true); return; }
+    const local = editorCursor - offset - seg.at;
+    const sourceCut = seg.srcStart + local;
+    const right = { id: segmentId(), srcStart: sourceCut, srcEnd: seg.srcEnd, at: seg.at + local };
+    seg.srcEnd = sourceCut;
+    const index = vocalSegments.indexOf(seg);
+    vocalSegments.splice(index + 1, 0, right);
+    selectedSegmentId = right.id;
+    commitEditor('Фраза разрезана. Перетащите нужный кусок по биту.');
+  }
+  function nudgeSelected(delta) {
+    const seg = vocalSegments.find(s => s.id === selectedSegmentId);
+    if (!seg) { status('Сначала выберите фрагмент на дорожке VOCAL.', true); return; }
+    const minAt = Math.max(0, -editorOffset());
+    seg.at = Math.max(minAt, Math.min(MAX_SECONDS - (seg.srcEnd - seg.srcStart), seg.at + delta));
+    commitEditor(`Фрагмент сдвинут ${delta > 0 ? '+' : ''}${Math.round(delta * 1000)} мс.`);
+  }
+  function autoSplitSilence() {
+    if (!sourceVocal) return;
+    const data = sourceVocal.getChannelData(0), sr = sourceVocal.sampleRate;
+    const frame = Math.max(64, Math.floor(sr * 0.02));
+    const gapFrames = Math.max(4, Math.floor(0.18 / (frame / sr)));
+    const stats = analyse(sourceVocal);
+    const threshold = Math.max(0.004, stats.rms * 0.22);
+    const voiced = [];
+    for (let from = 0; from < data.length; from += frame) {
+      const to = Math.min(data.length, from + frame);
+      let sum = 0;
+      for (let i = from; i < to; i++) sum += data[i] * data[i];
+      voiced.push(Math.sqrt(sum / Math.max(1, to - from)) >= threshold);
+    }
+    const regions = [];
+    let start = null, last = -1;
+    for (let i = 0; i < voiced.length; i++) {
+      if (!voiced[i]) continue;
+      if (start === null || i - last > gapFrames) {
+        if (start !== null) regions.push([start, last + 1]);
+        start = i;
+      }
+      last = i;
+    }
+    if (start !== null) regions.push([start, last + 1]);
+    if (regions.length < 2) { status('Длинных пауз для авто-нарезки не найдено.', true); return; }
+    vocalSegments = regions.map(([a,b]) => {
+      const srcStart = Math.max(0, a * frame / sr - 0.015);
+      const srcEnd = Math.min(sourceVocal.duration, b * frame / sr + 0.015);
+      return { id: segmentId(), srcStart, srcEnd, at: srcStart };
+    });
+    selectedSegmentId = vocalSegments[0]?.id || null;
+    editorCursor = editorOffset() + (vocalSegments[0]?.at || 0);
+    commitEditor(`Авто-нарезка: найдено ${vocalSegments.length} фраз.`);
+  }
+  function editorTimeFromEvent(event) {
+    const canvas = el('editor-canvas'), rect = canvas.getBoundingClientRect();
+    const x = (event.clientX - rect.left) * (canvas.width / Math.max(1, rect.width));
+    return Math.max(0, Math.min(timelineDuration(), x / (canvas.width / timelineDuration())));
+  }
+
   function centerVoice(buffer) {
     if (buffer.numberOfChannels === 1) return buffer;
 
@@ -144,11 +353,10 @@ export function mountStudio({ apiUrl }) {
 
   function acceptVoice(buffer) {
     const centered = centerVoice(buffer);
-    vocal = centered; serverVocal = null; serverVocalSignature = ''; invalidate(); wave(centered);
-    el('voice-preview').src = setURL('voice-preview', encodeWav(centered));
+    el('offset').value = '0';
+    resetEditor(centered);
     const stats = analyse(centered);
-    el('vocal-info').textContent = `Вокал: ${centered.duration.toFixed(1)} с · MONO / CENTER${stats.peak >= 0.999 ? ' · Запись перегружена: попробуйте отойти от микрофона.' : ''}`;
-    status(stats.rms < 0.001 ? 'Запись очень тихая. Проверьте микрофон.' : 'Голос добавлен по центру. Выберите звучание и соберите демо.');
+    if (stats.rms < 0.001) status('Запись очень тихая. Проверьте микрофон.', true);
   }
   el('beat').addEventListener('change', () => action(async () => {
     await context();
@@ -161,6 +369,7 @@ export function mountStudio({ apiUrl }) {
     // Existing catalogue beats may exceed three minutes; render only the first three.
     beat = await decode(blob, 600); beatName = option.textContent;
     el('beat-preview').src = setURL('beat-preview', blob);
+    renderEditor();
     status('Бит готов. Запишите голос в наушниках или загрузите отдельную вокальную дорожку.');
   }));
   el('upload').addEventListener('change', () => action(async () => {
@@ -186,6 +395,62 @@ export function mountStudio({ apiUrl }) {
     syncTeleprompterText();
     try { localStorage.removeItem(lyricsStorageKey); } catch {}
   });
+
+  const editorCanvas = el('editor-canvas');
+  editorCanvas?.addEventListener('pointerdown', event => {
+    if (!sourceVocal || busy || recording) return;
+    const time = editorTimeFromEvent(event);
+    editorCursor = time;
+    const rect = editorCanvas.getBoundingClientRect();
+    const y = (event.clientY - rect.top) * (editorCanvas.height / Math.max(1, rect.height));
+    if (y >= 76) {
+      const offset = editorOffset();
+      const hit = [...vocalSegments].reverse().find(s => time >= offset + s.at && time <= offset + s.at + (s.srcEnd - s.srcStart));
+      if (hit) {
+        selectedSegmentId = hit.id;
+        editorDrag = { pointerId: event.pointerId, id: hit.id, delta: time - (offset + hit.at) };
+        try { editorCanvas.setPointerCapture(event.pointerId); } catch {}
+      }
+    }
+    renderEditor();
+  });
+  editorCanvas?.addEventListener('pointermove', event => {
+    if (!editorDrag || editorDrag.pointerId !== event.pointerId || busy || recording) return;
+    const seg = vocalSegments.find(s => s.id === editorDrag.id);
+    if (!seg) return;
+    const absolute = editorSnap(editorTimeFromEvent(event) - editorDrag.delta);
+    const offset = editorOffset();
+    const duration = seg.srcEnd - seg.srcStart;
+    seg.at = Math.max(0 - offset, Math.min(MAX_SECONDS - duration - offset, absolute - offset));
+    editorCursor = Math.max(0, offset + seg.at);
+    renderEditor();
+  });
+  const endEditorDrag = event => {
+    if (!editorDrag || (event && editorDrag.pointerId !== event.pointerId)) return;
+    editorDrag = null;
+    commitEditor('Фрагмент перемещён по биту.');
+  };
+  editorCanvas?.addEventListener('pointerup', endEditorDrag);
+  editorCanvas?.addEventListener('pointercancel', endEditorDrag);
+  el('editor-split')?.addEventListener('click', splitAtCursor);
+  el('editor-auto')?.addEventListener('click', autoSplitSilence);
+  el('editor-left50')?.addEventListener('click', () => nudgeSelected(-0.05));
+  el('editor-left10')?.addEventListener('click', () => nudgeSelected(-0.01));
+  el('editor-right10')?.addEventListener('click', () => nudgeSelected(0.01));
+  el('editor-right50')?.addEventListener('click', () => nudgeSelected(0.05));
+  el('editor-delete')?.addEventListener('click', () => {
+    if (!selectedSegmentId) { status('Сначала выберите фрагмент.', true); return; }
+    vocalSegments = vocalSegments.filter(s => s.id !== selectedSegmentId);
+    selectedSegmentId = vocalSegments[0]?.id || null;
+    commitEditor('Фрагмент удалён.');
+  });
+  el('editor-reset')?.addEventListener('click', () => {
+    if (!sourceVocal) return;
+    vocalSegments = [{ id: segmentId(), srcStart: 0, srcEnd: sourceVocal.duration, at: 0 }];
+    selectedSegmentId = vocalSegments[0].id; editorCursor = 0; el('offset').value = '0';
+    commitEditor('Монтаж сброшен к исходной записи.');
+  });
+  for (const id of ['editor-bpm','editor-snap','editor-zoom']) el(id)?.addEventListener('input', renderEditor);
   function stopRecording() {
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     clearInterval(recordingTimer);
@@ -253,6 +518,7 @@ export function mountStudio({ apiUrl }) {
     invalidate();
     el('beat-value').textContent = `${el('beat-level').value}%`;
     el('voice-value').textContent = `${el('voice-level').value}%`;
+    if (id === 'offset') renderEditor();
   });
   for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
     el(id)?.addEventListener('input', () => {
