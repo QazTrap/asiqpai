@@ -267,8 +267,10 @@ export function mountStudio({ apiUrl }) {
   function nudgeSelected(delta) {
     const seg = vocalSegments.find(s => s.id === selectedSegmentId);
     if (!seg) { status('Сначала выберите фрагмент на дорожке VOCAL.', true); return; }
-    const minAt = Math.max(0, -editorOffset());
-    seg.at = Math.max(minAt, Math.min(MAX_SECONDS - (seg.srcEnd - seg.srcStart), seg.at + delta));
+    const offset = editorOffset();
+    const minAt = Math.max(0, -offset);
+    const maxAt = Math.max(minAt, MAX_SECONDS - (seg.srcEnd - seg.srcStart) - Math.max(0, offset));
+    seg.at = Math.max(minAt, Math.min(maxAt, seg.at + delta));
     commitEditor(`Фрагмент сдвинут ${delta > 0 ? '+' : ''}${Math.round(delta * 1000)} мс.`);
   }
   function autoSplitSilence() {
@@ -421,7 +423,9 @@ export function mountStudio({ apiUrl }) {
     const absolute = editorSnap(editorTimeFromEvent(event) - editorDrag.delta);
     const offset = editorOffset();
     const duration = seg.srcEnd - seg.srcStart;
-    seg.at = Math.max(0 - offset, Math.min(MAX_SECONDS - duration - offset, absolute - offset));
+    const minAt = Math.max(0, -offset);
+    const maxAt = Math.max(minAt, MAX_SECONDS - duration - Math.max(0, offset));
+    seg.at = Math.max(minAt, Math.min(maxAt, absolute - offset));
     editorCursor = Math.max(0, offset + seg.at);
     renderEditor();
   });
