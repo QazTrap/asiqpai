@@ -7,7 +7,7 @@ export const PRESETS = {
     ratio: 3,
     reverbMix: 0.08,
     delayMix: 0.07,
-    defaults: { eq: true, comp: true, reverb: false, delay: false }
+    defaults: { tune: false, eq: true, comp: true, reverb: false, delay: false }
   },
   soft: {
     label: 'Мягкий вокал',
@@ -16,7 +16,7 @@ export const PRESETS = {
     ratio: 2.5,
     reverbMix: 0.12,
     delayMix: 0.08,
-    defaults: { eq: true, comp: true, reverb: true, delay: false }
+    defaults: { tune: false, eq: true, comp: true, reverb: true, delay: false }
   },
   space: {
     label: 'Атмосферный',
@@ -25,7 +25,7 @@ export const PRESETS = {
     ratio: 3,
     reverbMix: 0.23,
     delayMix: 0.14,
-    defaults: { eq: true, comp: true, reverb: true, delay: true }
+    defaults: { tune: false, eq: true, comp: true, reverb: true, delay: true }
   }
 };
 export function analyse(buffer) {
