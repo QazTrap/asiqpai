@@ -4942,6 +4942,49 @@ body .track-item-buy{
                 <p class="muted" id="studio-vocal-info">Голос ещё не добавлен. Запись заменяет предыдущий дубль.</p>
                 <canvas id="studio-wave" class="wave" width="600" height="68" aria-label="Волновая форма вокала"></canvas>
                 <audio id="studio-voice-preview" controls preload="none"></audio>
+
+                <div id="studio-editor" class="studio-editor" hidden>
+                    <div class="studio-editor-head">
+                        <div>
+                            <strong>VOCAL SLICER</strong>
+                            <small>Разрежьте и подвиньте фразы прямо по биту</small>
+                        </div>
+                        <button id="studio-editor-reset" type="button">Сбросить</button>
+                    </div>
+                    <div class="studio-editor-settings">
+                        <label for="studio-editor-bpm">BPM
+                            <input id="studio-editor-bpm" type="number" min="70" max="200" step="1" value="120">
+                        </label>
+                        <label for="studio-editor-snap">Snap
+                            <select id="studio-editor-snap">
+                                <option value="0">OFF</option>
+                                <option value="4">1/4</option>
+                                <option value="8" selected>1/8</option>
+                                <option value="16">1/16</option>
+                            </select>
+                        </label>
+                        <label for="studio-editor-zoom">Zoom
+                            <input id="studio-editor-zoom" type="range" min="1" max="8" step="1" value="3">
+                        </label>
+                    </div>
+                    <div class="studio-editor-scroll" id="studio-editor-scroll">
+                        <canvas id="studio-editor-canvas" width="900" height="150" aria-label="Редактор бита и вокала"></canvas>
+                    </div>
+                    <p class="muted studio-editor-help">Тапните по дорожке, чтобы поставить курсор. Потяните выделенный кусок пальцем влево/вправо. Split режет вокал в позиции курсора.</p>
+                    <div class="studio-editor-toolbar">
+                        <button id="studio-editor-split" type="button">✂ Split</button>
+                        <button id="studio-editor-auto" type="button">Авто по паузам</button>
+                        <button id="studio-editor-left50" type="button">−50 ms</button>
+                        <button id="studio-editor-left10" type="button">−10 ms</button>
+                        <button id="studio-editor-right10" type="button">+10 ms</button>
+                        <button id="studio-editor-right50" type="button">+50 ms</button>
+                        <button id="studio-editor-delete" type="button">Удалить кусок</button>
+                    </div>
+                    <div class="studio-editor-readout">
+                        <span id="studio-editor-cursor">Курсор 0.00 с</span>
+                        <span id="studio-editor-selected">Фрагмент не выбран</span>
+                    </div>
+                </div>
             </div>
 
             <div class="studio-card">
