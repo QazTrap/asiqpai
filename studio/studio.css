@@ -22,3 +22,11 @@
 .studio .studio-fx-bypass.active{border-color:#ff7f8e;background:#3a171d;color:#ffd2d7;box-shadow:0 0 18px rgba(255,90,110,.12)}
 .studio .studio-fx-toggle:disabled,.studio .studio-fx-bypass:disabled{opacity:.4}
 @media(max-width:390px){.studio .studio-fx-rack{gap:7px}.studio .studio-fx-toggle,.studio .studio-fx-bypass{font-size:11px;padding:10px}}
+
+.studio .studio-tune-settings{margin:-4px 0 18px;padding:14px;border:1px solid rgba(231,197,107,.20);border-radius:16px;background:rgba(231,197,107,.045)}
+.studio .studio-tune-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.studio .studio-tune-grid label{margin:0;font-size:11px;color:#cfc7ae;letter-spacing:.6px}
+.studio .studio-tune-settings select{margin-top:7px}
+.studio .studio-tune-settings output{float:right;color:#e7c56b;font-weight:800}
+.studio .studio-tune-settings .muted{margin:10px 0 0;font-size:11px}
+@media(max-width:360px){.studio .studio-tune-grid{grid-template-columns:1fr}}
