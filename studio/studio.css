@@ -12,3 +12,13 @@
 @keyframes studioButtonShine{0%,68%,100%{transform:translateX(-55%) rotate(-5deg);opacity:0}76%{opacity:1}88%{transform:translateX(62%) rotate(-5deg);opacity:0}}
 @media (max-width:360px){.studio-launch-home{width:min(92vw,316px);grid-template-columns:42px minmax(0,1fr) 30px;min-height:62px;padding:8px 10px}.studio-launch-icon{width:42px;height:42px;border-radius:13px}.studio-launch-copy strong{font-size:13px}.studio-launch-copy small{font-size:8px}}
 @media (prefers-reduced-motion:reduce){.studio-launch-home::before{animation:none}}
+
+.studio .studio-fx-rack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0 18px}
+.studio .studio-fx-toggle,.studio .studio-fx-bypass{min-height:48px;padding:10px 12px;border-radius:14px;border:1px solid #3b3d48;background:#20222b;color:#aaa;font-size:12px;font-weight:850;letter-spacing:.5px;text-align:left}
+.studio .studio-fx-toggle small{float:right;color:#747681;font-size:9px;letter-spacing:1px}
+.studio .studio-fx-toggle.active{border-color:rgba(231,197,107,.72);background:linear-gradient(145deg,rgba(231,197,107,.16),rgba(231,197,107,.06));color:#f3d98c;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.studio .studio-fx-toggle.active small{color:#f0ca62}
+.studio .studio-fx-bypass{grid-column:1/-1;text-align:center;border-color:#5b3f43;color:#dba2a9;background:#25191c}
+.studio .studio-fx-bypass.active{border-color:#ff7f8e;background:#3a171d;color:#ffd2d7;box-shadow:0 0 18px rgba(255,90,110,.12)}
+.studio .studio-fx-toggle:disabled,.studio .studio-fx-bypass:disabled{opacity:.4}
+@media(max-width:390px){.studio .studio-fx-rack{gap:7px}.studio .studio-fx-toggle,.studio .studio-fx-bypass{font-size:11px;padding:10px}}
