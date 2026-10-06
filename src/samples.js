@@ -1,15 +1,7 @@
 import crypto from "node:crypto";
+import { PRESETS, durationFor, promptFor } from "./samplePrompt.js";
 
-const PRESETS = Object.freeze({
-  memphis: ["Memphis", "dark Southern trap sample with warm Rhodes, low-register acoustic piano, detuned electric guitar textures, restrained vintage soul strings, subtle tape saturation, dusty vinyl character, realistic instruments, thick low-mid body and an expensive moody feel"],
-  dark: ["Dark Trap", "dark cinematic trap sample with deep acoustic piano, warm analogue synth layers, bowed string textures, subtle electric guitar ambience, minor-key tension, rich harmonics, wide stereo depth and a polished expensive sound"],
-  atmospheric: ["Atmospheric", "spacious melodic trap sample with warm analog pads, expressive electric guitar, soft Rhodes, evolving cinematic textures, emotional minor-key harmony, natural ambience, wide stereo depth and a refined premium sound"]
-});
 const KEYS = Object.freeze(["Fm","F#m","Gm","G#m","Am","A#m","Bm","Cm","C#m","Dm","D#m","Em"]);
-const KEY_NAMES = Object.freeze({
-  Fm:"F minor","F#m":"F sharp minor",Gm:"G minor","G#m":"G sharp minor",Am:"A minor","A#m":"A sharp minor",
-  Bm:"B minor",Cm:"C minor","C#m":"C sharp minor",Dm:"D minor","D#m":"D sharp minor",Em:"E minor"
-});
 
 function boolEnv(name, fallback=false){
   const value=String(process.env[name]||"").trim().toLowerCase();
@@ -48,33 +40,6 @@ function settingsFrom(value){
   if(settings.description.length>600) throw new Error("Описание: до 600 символов.");
   return settings;
 }
-function durationFor(s){
-  return Math.max(6,Math.min(60,Number((((s.bars+2)*4*60)/s.bpm).toFixed(3))));
-}
-function cleanProviderDescription(value){
-  return String(value||"")
-    .replace(/young\s+dolph/gi,"Memphis trap, dark melodic piano, Southern trap atmosphere")
-    .replace(/lil\s+baby/gi,"modern melodic trap, emotional minor-key phrasing")
-    .replace(/future/gi,"dark atmospheric melodic trap")
-    .slice(0,600);
-}
-function promptFor(s){
-  const density=s.dense
-    ?"Full but tasteful layered arrangement with 2 to 4 complementary instruments, clear hierarchy, strong musical motif, controlled dynamics and no clutter."
-    :"Sparse premium arrangement with one main instrument and at most one subtle supporting texture, human phrasing, natural dynamics and deliberate space between phrases.";
-  return [
-    "TrackType: Instrument.",
-    PRESETS[s.preset][1]+".",
-    s.bpm+" BPM, 4/4, "+KEY_NAMES[s.key]+".",
-    "Repeating "+s.bars+"-bar melodic phrase, steady tempo from the first beat, loopable arrangement.",
-    density,
-    "Production quality: mature, dark, musical and record-ready; realistic timbre; warm low-mids; smooth transients; subtle saturation; believable room or tape character; avoid synthetic demo-like sound.",
-    "Avoid toy-like timbres: no music box, no glockenspiel, no toy piano, no chiptune, no cartoon plucks, no bright cheap bells, no childish melody, no stock ringtone sound.",
-    "Instrumental melody only: no drums, no percussion, no 808, no bassline, no vocals, no singing, no speech, no intro, no fade out.",
-    "Original composition. Do not copy or imitate any existing song or artist.",
-    "Additional sound direction: "+(cleanProviderDescription(s.description)||"none")+"."
-  ].join(" ");
-}
 function transformSettings(source,action){
   const s=settingsFrom(source);
   const extra={
@@ -84,7 +49,7 @@ function transformSettings(source,action){
     softer:"Make the melody softer, warmer, more spacious and emotional."
   }[action];
   if(!extra) throw new Error("Неизвестное действие.");
-  s.description=[s.description,extra].filter(Boolean).join(" ").slice(0,600);
+  s.description=[s.description||PRESETS[s.preset].instruments,extra].join(" ").slice(0,600);
   return s;
 }
 function stabilityHeaders(){
@@ -267,7 +232,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       const last=await pool.query("SELECT settings FROM sample_ai_jobs WHERE telegram_id=$1 ORDER BY created_at DESC LIMIT 1",[req.telegramUser.id]);
       const used=await usage(req.telegramUser.id);
       res.set("Cache-Control","no-store");
-      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v[0]})),keys:[...KEYS],limits:{daily:dailyLimit,used,remaining:Math.max(0,dailyLimit-used)},provider_ready:providerReady()});
+      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v.name})),keys:[...KEYS],limits:{daily:dailyLimit,used,remaining:Math.max(0,dailyLimit-used)},provider_ready:providerReady()});
     }catch(error){fail(res,error);}
   });
   app.get("/api/samples/history",requireTelegramUser,async(req,res)=>{
@@ -277,7 +242,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       const favorites=String(req.query.favorites||"0")==="1";
       let rows=(await pool.query("SELECT v.*,j.settings FROM sample_ai_variants v JOIN sample_ai_jobs j ON j.id=v.job_id WHERE v.telegram_id=$1 AND ($2::boolean=FALSE OR v.favorite=TRUE) ORDER BY v.created_at DESC LIMIT $3",[req.telegramUser.id,favorites,limit])).rows;
       rows=await Promise.all(rows.map(refresh));
-      const items=rows.map(row=>({id:row.id,status:row.status,ready:row.status==="ready",favorite:Boolean(row.favorite),bpm:Number(row.settings?.bpm||122),key:row.settings?.key||"Fm",bars:Number(row.settings?.bars||8),preset_name:PRESETS[row.settings?.preset]?.[0]||"Sample",created_at:row.created_at}));
+      const items=rows.map(row=>({id:row.id,status:row.status,ready:row.status==="ready",favorite:Boolean(row.favorite),bpm:Number(row.settings?.bpm||122),key:row.settings?.key||"Fm",bars:Number(row.settings?.bars||8),preset_name:PRESETS[row.settings?.preset]?.name||"Sample",created_at:row.created_at}));
       res.set("Cache-Control","no-store");res.json({ok:true,items});
     }catch(error){fail(res,error);}
   });

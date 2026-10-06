@@ -50,7 +50,7 @@ footer{text-align:center;color:#514d45;font-size:8px;letter-spacing:.18em;paddin
 <div class="field"><label>Длина</label><div class="seg" id="bars"><button data-v="4" type="button">4 такта</button><button data-v="8" class="active" type="button">8 тактов</button></div></div>
 <div class="field"><label>Плотность</label><div class="seg" id="density"><button data-v="false" type="button">Minimal</button><button data-v="true" class="active" type="button">Dense</button></div></div>
 </div>
-<div class="field"><label>Что хотите услышать?</label><textarea id="description" maxlength="600" placeholder="Например: мрачные колокола, винтажные клавиши, напряжённая мелодия…"></textarea><div class="hint">Без ударных, 808 и вокала — луп рассчитан под дальнейшую работу в DAW.</div></div>
+<div class="field"><label>Что хотите услышать?</label><textarea id="description" maxlength="600" placeholder="Например: только пианино, тёмные аккорды, живые нюансы игры…"></textarea><div class="hint">Запрашиваем мелодию без ударных, 808 и вокала. Укажите инструменты: описание имеет приоритет над стилем, Dense делает партию насыщеннее. Результат AI нужно прослушать.</div></div>
 <div class="generate-row">
 <div class="count" id="count"><button data-v="1" class="active" type="button">1 вариант</button><button data-v="3" type="button">3 варианта</button></div>
 <button class="generate" id="generate" type="button">♛ GENERATE SAMPLE</button>
@@ -73,7 +73,7 @@ var API="https://asiqpai-production.up.railway.app";
 var tg=window.Telegram&&window.Telegram.WebApp?window.Telegram.WebApp:null;
 try{if(tg){tg.ready();tg.expand();tg.setHeaderColor("#070708");tg.setBackgroundColor("#070708");}}catch(e){}
 var initData=tg&&tg.initData?tg.initData:"";
-var state={filter:"all",job:null,audio:null};
+var state={filter:"all",job:null,audio:null,busy:false,providerReady:false,remaining:0};
 function $(id){return document.getElementById(id);}
 var el={notice:$("notice"),quota:$("quota"),presets:$("presets"),bpm:$("bpm"),bpmValue:$("bpmValue"),key:$("key"),bars:$("bars"),density:$("density"),description:$("description"),count:$("count"),generate:$("generate"),progress:$("progress"),progressTitle:$("progressTitle"),progressText:$("progressText"),empty:$("empty"),library:$("library")};
 function haptic(type){try{if(tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred(type||"light");}catch(e){}}
@@ -86,17 +86,33 @@ function selected(container){var b=container.querySelector("button.active");retu
 function escapeHtml(value){return String(value||"").replace(/[&<>'"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c];});}
 function rid(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():(Date.now()+"_"+Math.random().toString(36).slice(2));}
 function settings(){return {preset:selected(el.presets)||"memphis",bpm:Number(el.bpm.value),key:el.key.value,bars:Number(selected(el.bars)||8),dense:selected(el.density)==="true",description:el.description.value.trim()};}
-async function bootstrap(){
+function updateGenerationControls(){
+  var count=Number(selected(el.count)||1);
+  el.generate.disabled=state.busy||!state.providerReady||state.remaining<count;
+  el.library.querySelectorAll('[data-act="similar"],[data-act="darker"],[data-act="harder"],[data-act="softer"]').forEach(function(b){b.disabled=state.busy||!state.providerReady||state.remaining<1;});
+}
+function beginGeneration(count){
+  if(state.busy)return false;
+  if(!state.providerReady){notice("Генератор временно недоступен.");return false;}
+  if(state.remaining<count){notice("Недостаточно попыток на сегодня для выбранного количества вариантов.");return false;}
+  state.busy=true;updateGenerationControls();return true;
+}
+function endGeneration(){state.busy=false;state.job=null;hideProgress();updateGenerationControls();}
+async function bootstrap(restoreSettings){
   clearNotice();
   try{
     var data=await api("/api/samples/bootstrap");
+    var s=restoreSettings===false?settings():data.settings;
     el.presets.innerHTML=data.presets.map(function(p){return '<button type="button" data-v="'+p.id+'">'+escapeHtml(p.name)+"</button>";}).join("");
     el.key.innerHTML=data.keys.map(function(k){return '<option value="'+k+'">'+k+"</option>";}).join("");
-    var s=data.settings;choose(el.presets,s.preset);el.bpm.value=s.bpm;el.bpmValue.textContent=s.bpm;el.key.value=s.key;choose(el.bars,s.bars);choose(el.density,String(s.dense));el.description.value=s.description||"";
+    choose(el.presets,s.preset);el.bpm.value=s.bpm;el.bpmValue.textContent=s.bpm;el.key.value=s.key;choose(el.bars,s.bars);choose(el.density,String(s.dense));el.description.value=s.description||"";
+    state.providerReady=Boolean(data.provider_ready);state.remaining=data.limits.remaining;
     el.quota.innerHTML="<strong>"+data.limits.remaining+"</strong><small>из "+data.limits.daily+"</small>";
     if(!data.provider_ready){notice("Интерфейс готов. Чтобы включить генерацию, нужно добавить STABILITY_API_KEY на Railway.");el.generate.disabled=true;}
+    else if(state.remaining===0)notice("Дневной лимит AI Samples исчерпан.");
     await loadHistory();
-  }catch(error){notice(error.message);el.generate.disabled=true;el.empty.classList.remove("hidden");}
+    updateGenerationControls();
+  }catch(error){state.providerReady=false;updateGenerationControls();notice(error.message);el.empty.classList.remove("hidden");}
 }
 async function loadHistory(){
   var fav=state.filter==="favorites"?"&favorites=1":"";
@@ -113,17 +129,19 @@ function render(items){
     actions+='<button class="small-btn danger" data-act="delete" data-id="'+x.id+'">Удалить</button>';
     return '<article class="card"><div class="card-top"><div><div class="card-title">'+escapeHtml(x.preset_name)+'</div><div class="meta">'+x.bpm+" BPM · "+escapeHtml(x.key)+" · "+x.bars+' bars</div></div><div><span class="'+cls+'">'+status+'</span> <button class="small-btn fav '+(x.favorite?"on":"")+'" data-act="favorite" data-id="'+x.id+'" data-value="'+(x.favorite?"0":"1")+'">★</button></div></div><div class="actions">'+actions+"</div></article>";
   }).join("");
+  updateGenerationControls();
 }
 function showProgress(title,text){el.progressTitle.textContent=title;el.progressText.textContent=text;el.progress.classList.remove("hidden");}
 function hideProgress(){el.progress.classList.add("hidden");}
 async function generate(){
-  clearNotice();haptic("medium");el.generate.disabled=true;
   var count=Number(selected(el.count)||1);
+  if(!beginGeneration(count))return;
+  clearNotice();haptic("medium");showProgress("Создаём "+(count===3?"3 варианта":"сэмпл")+"…","Результат автоматически появится в Library.");
   try{
     var payload=Object.assign(settings(),{count:count,request_id:rid()});
     var data=await api("/api/samples/generate",{method:"POST",body:JSON.stringify(payload)});
     state.job=data.job_id;showProgress("Создаём "+(count===3?"3 варианта":"сэмпл")+"…","Результат автоматически появится в Library.");pollJob(data.job_id);
-  }catch(error){notice(error.message);el.generate.disabled=false;hideProgress();}
+  }catch(error){endGeneration();notice(error.message);}
 }
 async function pollJob(job){
   for(var i=0;i<180;i++){
@@ -133,11 +151,11 @@ async function pollJob(job){
       var j=data.job;var ready=(j.variants||[]).filter(function(v){return v.ready;}).length;
       el.progressText.textContent="Готово "+ready+" из "+j.count+".";
       if(j.status==="ready"||j.status==="interrupted"){
-        state.job=null;hideProgress();el.generate.disabled=false;await bootstrap();if(j.status==="ready"){haptic("heavy");try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred("success");}catch(e){}}else notice("Часть генерации не завершилась. Готовые варианты сохранены.");return;
+        await bootstrap(false);endGeneration();if(j.status==="ready"){haptic("heavy");try{tg&&tg.HapticFeedback&&tg.HapticFeedback.notificationOccurred("success");}catch(e){}}else notice("Часть генерации не завершилась. Готовые варианты сохранены.");return;
       }
     }catch(error){notice(error.message);}
   }
-  hideProgress();el.generate.disabled=false;notice("Генерация ещё идёт. Откройте Library позже.");
+  endGeneration();notice("Генерация ещё идёт. Откройте Library позже.");
 }
 async function confirmDelete(){
   return new Promise(function(resolve){
@@ -152,6 +170,8 @@ async function confirmDelete(){
 }
 async function action(button){
   var id=button.dataset.id,act=button.dataset.act;
+  var isGeneration=["similar","darker","harder","softer"].indexOf(act)>=0;
+  if(isGeneration&&!beginGeneration(1))return;
   try{
     if(act==="delete"){
       if(!await confirmDelete()) return;
@@ -167,14 +187,14 @@ async function action(button){
       if(state.audio){state.audio.pause();state.audio=null;document.querySelectorAll('[data-act="play"]').forEach(function(b){b.textContent="▶ Слушать";});}
       var audioBlob=await api("/api/samples/file/"+encodeURIComponent(id));var audioUrl=URL.createObjectURL(audioBlob);var audio=new Audio(audioUrl);state.audio=audio;button.textContent="Ⅱ Пауза";audio.onended=function(){button.textContent="▶ Слушать";URL.revokeObjectURL(audioUrl);state.audio=null;};await audio.play();return;
     }
-    if(["similar","darker","harder","softer"].indexOf(act)>=0){
-      el.generate.disabled=true;showProgress("Создаём новый вариант…","Используем настройки выбранного сэмпла.");
-      var data=await api("/api/samples/action",{method:"POST",body:JSON.stringify({variant_id:id,action:act,request_id:rid()})});pollJob(data.job_id);
+    if(isGeneration){
+      clearNotice();showProgress("Создаём новый вариант…","Используем настройки выбранного сэмпла.");
+      var data=await api("/api/samples/action",{method:"POST",body:JSON.stringify({variant_id:id,action:act,request_id:rid()})});state.job=data.job_id;pollJob(data.job_id);
     }
-  }catch(error){notice(error.message);hideProgress();el.generate.disabled=false;}
+  }catch(error){if(isGeneration)endGeneration();notice(error.message);}
 }
 el.bpm.addEventListener("input",function(){el.bpmValue.textContent=el.bpm.value;});
-[el.presets,el.bars,el.density,el.count].forEach(function(container){container.addEventListener("click",function(event){var b=event.target.closest("button[data-v]");if(!b)return;choose(container,b.dataset.v);haptic("light");});});
+[el.presets,el.bars,el.density,el.count].forEach(function(container){container.addEventListener("click",function(event){var b=event.target.closest("button[data-v]");if(!b)return;choose(container,b.dataset.v);updateGenerationControls();haptic("light");});});
 el.generate.addEventListener("click",generate);
 el.library.addEventListener("click",function(event){var b=event.target.closest("[data-act]");if(b)action(b);});
 document.querySelectorAll(".tabs button").forEach(function(b){b.addEventListener("click",async function(){document.querySelectorAll(".tabs button").forEach(function(x){x.classList.remove("active");});b.classList.add("active");state.filter=b.dataset.filter;await loadHistory();});});
