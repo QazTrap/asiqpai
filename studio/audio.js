@@ -1,8 +1,32 @@
 export const MAX_SECONDS = 180;
 export const PRESETS = {
-  dry: { label: 'Сухой рэп', highpass: 85, presence: 2, ratio: 3, wet: 0, delay: 0 },
-  soft: { label: 'Мягкий вокал', highpass: 70, presence: 0.5, ratio: 2.5, wet: 0.12, delay: 0 },
-  space: { label: 'Атмосферный', highpass: 95, presence: 1, ratio: 3, wet: 0.23, delay: 0.14 }
+  dry: {
+    label: 'Сухой рэп',
+    highpass: 85,
+    presence: 2,
+    ratio: 3,
+    reverbMix: 0.08,
+    delayMix: 0.07,
+    defaults: { eq: true, comp: true, reverb: false, delay: false }
+  },
+  soft: {
+    label: 'Мягкий вокал',
+    highpass: 70,
+    presence: 0.5,
+    ratio: 2.5,
+    reverbMix: 0.12,
+    delayMix: 0.08,
+    defaults: { eq: true, comp: true, reverb: true, delay: false }
+  },
+  space: {
+    label: 'Атмосферный',
+    highpass: 95,
+    presence: 1,
+    ratio: 3,
+    reverbMix: 0.23,
+    delayMix: 0.14,
+    defaults: { eq: true, comp: true, reverb: true, delay: true }
+  }
 };
 export function analyse(buffer) {
   let sum = 0, peak = 0, count = 0;
@@ -43,7 +67,7 @@ function impulse(ctx) {
   }
   return b;
 }
-export async function renderMix({ beat, vocal, preset = 'dry', processed = true, offset = 0, beatLevel = 0.6, vocalLevel = 1 }) {
+export async function renderMix({ beat, vocal, preset = 'dry', processed = true, effects = null, offset = 0, beatLevel = 0.6, vocalLevel = 1 }) {
   if (!beat || !vocal) throw new Error('Сначала выберите бит и добавьте голос.');
   if (![offset, beatLevel, vocalLevel].every(Number.isFinite)) throw new Error('Некорректные настройки микса.');
   offset = Math.max(-10, Math.min(MAX_SECONDS, offset));
@@ -58,21 +82,50 @@ export async function renderMix({ beat, vocal, preset = 'dry', processed = true,
   let output = voice;
   if (processed) {
     const p = PRESETS[preset] || PRESETS.dry;
+    const enabled = { ...p.defaults, ...(effects || {}) };
     const stats = analyse(vocal);
-    const normal = ctx.createGain(); normal.gain.value = stats.rms > 0.0001 ? Math.min(4, 0.12 / stats.rms) : 1;
-    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = p.highpass;
-    const eq = ctx.createBiquadFilter(); eq.type = 'peaking'; eq.frequency.value = 3000; eq.Q.value = 0.7; eq.gain.value = p.presence;
-    const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = p.ratio;
-    comp.knee.value = 12; comp.attack.value = 0.005; comp.release.value = 0.15;
-    voice.connect(normal).connect(hp).connect(eq).connect(comp); output = comp;
-    if (p.wet) {
-      const reverb = ctx.createConvolver(); reverb.buffer = impulse(ctx);
-      const wet = ctx.createGain(); wet.gain.value = p.wet;
+    const normal = ctx.createGain();
+    normal.gain.value = stats.rms > 0.0001 ? Math.min(4, 0.12 / stats.rms) : 1;
+    voice.connect(normal);
+    output = normal;
+
+    if (enabled.eq) {
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = p.highpass;
+      const eq = ctx.createBiquadFilter();
+      eq.type = 'peaking';
+      eq.frequency.value = 3000;
+      eq.Q.value = 0.7;
+      eq.gain.value = p.presence;
+      output.connect(hp).connect(eq);
+      output = eq;
+    }
+
+    if (enabled.comp) {
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -20;
+      comp.ratio.value = p.ratio;
+      comp.knee.value = 12;
+      comp.attack.value = 0.005;
+      comp.release.value = 0.15;
+      output.connect(comp);
+      output = comp;
+    }
+
+    if (enabled.reverb) {
+      const reverb = ctx.createConvolver();
+      reverb.buffer = impulse(ctx);
+      const wet = ctx.createGain();
+      wet.gain.value = p.reverbMix;
       output.connect(reverb).connect(wet).connect(vg);
     }
-    if (p.delay) {
-      const delay = ctx.createDelay(1); delay.delayTime.value = 0.24;
-      const wet = ctx.createGain(); wet.gain.value = p.delay;
+
+    if (enabled.delay) {
+      const delay = ctx.createDelay(1);
+      delay.delayTime.value = 0.24;
+      const wet = ctx.createGain();
+      wet.gain.value = p.delayMix;
       output.connect(delay).connect(wet).connect(vg);
     }
   }
