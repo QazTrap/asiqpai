@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"
@@ -18,5 +19,8 @@
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
   }
 }
