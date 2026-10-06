@@ -179,6 +179,25 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
   let schemaPromise;
   const dailyLimit=Math.max(1,Math.min(50,Number(process.env.SAMPLES_DAILY_LIMIT||3)));
   const unlimitedFor=userId=>allowedUsers().has(String(userId));
+  const downloadKey=crypto.createHash("sha256").update("asiqpai-samples-download:"+String(process.env.BOT_TOKEN||"")).digest();
+
+  function makeDownloadToken(userId,variantId){
+    const payload=Buffer.from(JSON.stringify({u:String(userId),v:String(variantId),e:Date.now()+10*60*1000})).toString("base64url");
+    const signature=crypto.createHmac("sha256",downloadKey).update(payload).digest("base64url");
+    return payload+"."+signature;
+  }
+  function readDownloadToken(token){
+    const parts=String(token||"").split(".");
+    if(parts.length!==2) return null;
+    const expected=crypto.createHmac("sha256",downloadKey).update(parts[0]).digest();
+    let actual;
+    try{actual=Buffer.from(parts[1],"base64url");}catch{return null;}
+    if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected)) return null;
+    let data;
+    try{data=JSON.parse(Buffer.from(parts[0],"base64url").toString("utf8"));}catch{return null;}
+    if(!data||Date.now()>Number(data.e)||!/^[0-9]+$/.test(String(data.u||""))||!/^[0-9a-f-]{36}$/i.test(String(data.v||""))) return null;
+    return data;
+  }
 
   function initSchema(){
     if(!schemaPromise){
@@ -313,6 +332,37 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
       const download=String(req.query.download||"0")==="1";
       res.set({"Content-Type":"audio/wav","Cache-Control":"private, max-age=300","Content-Disposition":(download?"attachment":"inline")+"; filename=\"ASIQPAI_"+row.id+".wav\""});
+      res.send(row.audio);
+    }catch(error){fail(res,error);}
+  });
+  app.post("/api/samples/download-link",requireTelegramUser,async(req,res)=>{
+    try{
+      await initSchema();assertAccess(req.telegramUser.id);
+      let row=(await pool.query("SELECT * FROM sample_ai_variants WHERE id=$1 AND telegram_id=$2 LIMIT 1",[String(req.body?.variant_id||""),req.telegramUser.id])).rows[0];
+      if(!row){const e=new Error("Сэмпл не найден.");e.status=404;throw e;}
+      row=await refresh(row);
+      if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
+      const token=makeDownloadToken(req.telegramUser.id,row.id);
+      res.set("Cache-Control","no-store");
+      res.json({ok:true,path:"/api/samples/download/"+encodeURIComponent(token),filename:"ASIQPAI_"+row.id+".wav"});
+    }catch(error){fail(res,error);}
+  });
+  app.get("/api/samples/download/:token",async(req,res)=>{
+    try{
+      await initSchema();
+      const data=readDownloadToken(req.params.token);
+      if(!data){const e=new Error("Ссылка на скачивание недействительна или устарела.");e.status=403;throw e;}
+      let row=(await pool.query("SELECT * FROM sample_ai_variants WHERE id=$1 AND telegram_id=$2 LIMIT 1",[data.v,data.u])).rows[0];
+      if(!row){const e=new Error("Сэмпл не найден.");e.status=404;throw e;}
+      row=await refresh(row);
+      if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
+      res.set({
+        "Content-Type":"audio/wav",
+        "Content-Length":String(row.audio.length),
+        "Cache-Control":"private, no-store",
+        "Content-Disposition":"attachment; filename=\"ASIQPAI_"+row.id+".wav\"",
+        "X-Content-Type-Options":"nosniff"
+      });
       res.send(row.audio);
     }catch(error){fail(res,error);}
   });
