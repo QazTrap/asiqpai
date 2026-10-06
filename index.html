@@ -4937,9 +4937,16 @@ body .track-item-buy{
                 </select>
                 <label class="check">
                     <input id="studio-ai" type="checkbox" disabled>
-                    <span>AI-очистка шума <small id="studio-ai-state">— проверяем доступность</small></span>
+                    <span>AI CLEAN <small id="studio-ai-state">— проверяем доступность</small></span>
                 </label>
-                <p class="muted">AI-шумодав обрабатывает вокал на отдельном сервере. Вы сможете сравнить исходник и результат.</p>
+                <p class="muted">Каждый эффект можно включить или отключить отдельно. BYPASS ALL временно отключает всю обработку, не сбрасывая выбранные эффекты.</p>
+                <div class="studio-fx-rack" id="studio-fx-rack" aria-label="Эффекты вокала">
+                    <button type="button" class="studio-fx-toggle active" data-studio-fx="eq" aria-pressed="true">EQ <small>ON</small></button>
+                    <button type="button" class="studio-fx-toggle active" data-studio-fx="comp" aria-pressed="true">COMP <small>ON</small></button>
+                    <button type="button" class="studio-fx-toggle" data-studio-fx="reverb" aria-pressed="false">REVERB <small>OFF</small></button>
+                    <button type="button" class="studio-fx-toggle" data-studio-fx="delay" aria-pressed="false">DELAY <small>OFF</small></button>
+                    <button type="button" class="studio-fx-bypass" id="studio-bypass" aria-pressed="false">BYPASS ALL</button>
+                </div>
                 <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label>
                 <input id="studio-beat-level" type="range" min="0" max="100" value="60">
                 <label for="studio-voice-level">Громкость голоса <output id="studio-voice-value">100%</output></label>
