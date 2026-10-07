@@ -1237,96 +1237,148 @@ export function mountStudio({ apiUrl }) {
     invalidate();
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch {}
   });
+  async function enhanceTrackForMix(track, initData) {
+    const useAiClean = track.aiClean && !track.bypassAll;
+    const useTune = Boolean(track.effectState?.tune) && !track.bypassAll;
+    if (!useAiClean && !useTune) return track.vocal;
+    if (useTune && !tuneAvailable) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: TUNE пока недоступен на сервере.`);
+    }
+    if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+
+    const tuneKey = track.tuneMode === 'auto' ? (beatAnalysis?.key || track.tuneKey) : track.tuneKey;
+    const tuneScale = track.tuneMode === 'auto' ? (beatAnalysis?.scale || track.tuneScale) : track.tuneScale;
+    if (useTune && track.tuneMode === 'auto' && !beatAnalysis?.key) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: AUTO TUNE ждёт определения тональности бита.`);
+    }
+    if (useTune && (!NOTE_NAMES.includes(tuneKey) || !['minor','major'].includes(tuneScale))) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: выберите KEY и SCALE для TUNE.`);
+    }
+
+    const signature = JSON.stringify({
+      clean: useAiClean,
+      tune: useTune,
+      key: tuneKey || '',
+      scale: tuneScale || '',
+      amount: track.tuneAmount,
+      speed: track.tuneSpeed
+    });
+
+    if (!track.serverVocal || track.serverVocalSignature !== signature) {
+      status(`${TRACK_DEFAULTS[track.id].label}: ${useTune ? 'AI CLEAN / TUNE' : 'AI CLEAN'}…`);
+      const response = await fetch(`${apiUrl}/api/studio/enhance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Telegram-Init-Data': initData,
+          'X-Studio-Clean': useAiClean ? '1' : '0',
+          'X-Studio-Tune': useTune ? '1' : '0',
+          'X-Studio-Key': tuneKey || '',
+          'X-Studio-Scale': tuneScale || '',
+          'X-Studio-Amount': String(track.tuneAmount),
+          'X-Studio-Speed': String(track.tuneSpeed)
+        },
+        body: encodeWav(track.vocal, true),
+        signal: AbortSignal.timeout(255000)
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `${TRACK_DEFAULTS[track.id].label}: Vocal AI недоступен.`);
+      }
+      track.serverVocal = await decode(await response.blob(), MAX_SECONDS + 1);
+      track.serverVocalSignature = signature;
+    }
+    return track.serverVocal;
+  }
+
   el('process').addEventListener('click', () => action(async () => {
     for (const a of document.querySelectorAll('audio')) a.pause();
+    saveActiveTrackState();
     invalidate();
-    const offset = Number(el('offset').value);
-    if (!el('offset').checkValidity() || !Number.isFinite(offset) || offset >= MAX_SECONDS || offset <= -vocal.duration) throw new Error('Укажите сдвиг, при котором голос остаётся в пределах демо.');
-    if (offset + vocal.duration > MAX_SECONDS + 0.1) throw new Error('Голос со сдвигом выходит за 3 минуты. Уменьшите сдвиг или загрузите более короткую запись.');
-    let chosen = vocal;
-    const useAiClean = el('ai').checked && !bypassAll;
-    const useTune = effectState.tune && !bypassAll;
-    if (useTune && !tuneAvailable) throw new Error('TUNE пока недоступен на сервере.');
 
-    if (useAiClean || useTune) {
-      const initData = window.Telegram?.WebApp?.initData || '';
-      if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+    const recorded = Object.values(tracks).filter(track => track.vocal);
+    if (!recorded.length) throw new Error('Запишите хотя бы одну дорожку: MID, BACK или ADLIBS.');
 
-      const tuneKey = el('tune-key')?.value || '';
-      const tuneScale = el('tune-scale')?.value || '';
-      if (useTune && tuneMode === 'auto' && !beatAnalysis?.key) {
-        throw new Error('AUTO TUNE: сначала выберите бит и дождитесь определения тональности или переключите режим в MANUAL.');
+    const hasSolo = recorded.some(track => track.solo && !track.muted);
+    const audible = recorded.filter(track => !track.muted && (!hasSolo || track.solo));
+    if (!audible.length) throw new Error('Все записанные дорожки выключены MUTE.');
+
+    for (const track of audible) {
+      const offset = Number(track.offset);
+      if (!Number.isFinite(offset) || offset >= MAX_SECONDS || offset <= -track.vocal.duration) {
+        throw new Error(`${TRACK_DEFAULTS[track.id].label}: проверьте сдвиг вокала относительно бита.`);
       }
-      if (useTune && (!NOTE_NAMES.includes(tuneKey) || !['minor','major'].includes(tuneScale))) {
-        throw new Error('Выберите KEY и SCALE для TUNE.');
+      if (offset + track.vocal.duration > MAX_SECONDS + 0.1) {
+        throw new Error(`${TRACK_DEFAULTS[track.id].label}: вокал со сдвигом выходит за 3 минуты.`);
       }
-      const tuneAmount = Number(el('tune-amount')?.value || 70);
-      const tuneSpeed = Number(el('tune-speed')?.value || 35);
-      const signature = JSON.stringify({
-        clean: useAiClean,
-        tune: useTune,
-        key: tuneKey,
-        scale: tuneScale,
-        amount: tuneAmount,
-        speed: tuneSpeed
-      });
-
-      if (!serverVocal || serverVocalSignature !== signature) {
-        status(useTune
-          ? (useAiClean ? 'AI очищает вокал и корректирует ноты…' : 'TUNE корректирует вокал по тональности…')
-          : 'AI очищает вокал. Это может занять до 2–3 минут…'
-        );
-
-        const response = await fetch(`${apiUrl}/api/studio/enhance`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'X-Telegram-Init-Data': initData,
-            'X-Studio-Clean': useAiClean ? '1' : '0',
-            'X-Studio-Tune': useTune ? '1' : '0',
-            'X-Studio-Key': tuneKey,
-            'X-Studio-Scale': tuneScale,
-            'X-Studio-Amount': String(tuneAmount),
-            'X-Studio-Speed': String(tuneSpeed)
-          },
-          body: encodeWav(vocal, true),
-          signal: AbortSignal.timeout(255000)
-        });
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || 'Vocal AI недоступен. Повторите позже или выключите AI CLEAN / TUNE.');
-        }
-        serverVocal = await decode(await response.blob(), MAX_SECONDS + 1);
-        serverVocalSignature = signature;
-      }
-      chosen = serverVocal;
     }
-    const settings = { beat, offset, preset: el('preset').value, beatLevel: Number(el('beat-level').value) / 100, vocalLevel: Number(el('voice-level').value) / 100 };
-    status('Собираем вариант до обработки…');
-    const before = await renderMix({ ...settings, vocal, processed: false });
+
+    const needsRemote = audible.some(track =>
+      !track.bypassAll && (track.aiClean || track.effectState?.tune)
+    );
+    const initData = needsRemote ? (window.Telegram?.WebApp?.initData || '') : '';
+    if (needsRemote && !initData) {
+      throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+    }
+
+    const processedBuffers = new Map();
+    for (const track of audible) {
+      processedBuffers.set(track.id, await enhanceTrackForMix(track, initData));
+    }
+
+    const toMixTrack = (track, processedVersion = false) => ({
+      id: track.id,
+      vocal: processedVersion ? (processedBuffers.get(track.id) || track.vocal) : track.vocal,
+      preset: track.preset,
+      effects: track.effectState,
+      processed: !track.bypassAll,
+      offset: track.offset,
+      level: track.level,
+      pan: track.pan,
+      width: track.width,
+      muted: track.muted,
+      solo: track.solo
+    });
+
+    const beatLevel = Number(el('beat-level').value) / 100;
+    status('Собираем исходный микс MID / BACK / ADLIBS…');
+    const before = await renderSessionMix({
+      beat,
+      tracks: recorded.map(track => toMixTrack(track, false)),
+      beatLevel,
+      processed: false
+    });
     el('before').src = setURL('before', encodeWav(before));
-    status(bypassAll ? 'Собираем WAV без эффектов…' : 'Применяем выбранные эффекты и собираем WAV…');
-    const after = await renderMix({ ...settings, vocal: chosen, processed: !bypassAll, effects: effectState });
-    mixBlob = encodeWav(after); el('after').src = setURL('after', mixBlob);
+
+    status('Собираем полный вокальный микс…');
+    const after = await renderSessionMix({
+      beat,
+      tracks: recorded.map(track => toMixTrack(track, true)),
+      beatLevel,
+      processed: true
+    });
+
+    mixBlob = encodeWav(after);
+    el('after').src = setURL('after', mixBlob);
     el('download').href = setURL('download', mixBlob);
     const name = beatName.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 60) || 'demo';
-    el('download').download = `ASIQPAI-${name}-demo.wav`;
+    el('download').download = `ASIQPAI-${name}-multitrack.wav`;
     const file = new File([mixBlob], el('download').download, { type: 'audio/wav' });
     el('share').hidden = !navigator.canShare?.({ files: [file] });
-    const activeFx = bypassAll
-      ? ['BYPASS ALL']
-      : [
-          useAiClean ? 'AI CLEAN' : null,
-          useTune ? `TUNE ${el('tune-key')?.value || '—'} ${(el('tune-scale')?.value || '—').toUpperCase()}` : null,
-          effectState.eq ? 'EQ' : null,
-          effectState.comp ? 'COMP' : null,
-          effectState.reverb ? 'REVERB' : null,
-          effectState.delay ? 'DELAY' : null
-        ].filter(Boolean);
-    el('result-info').textContent = `${PRESETS[el('preset').value].label} · ${activeFx.join(' + ') || 'DRY'} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
-    el('result').hidden = false; status('Демо готово. Сравните звучание и скачайте результат.');
+
+    const roles = recorded.map(track => TRACK_DEFAULTS[track.id].label).join(' + ');
+    const keyInfo = beatAnalysis?.key
+      ? ` · ${beatAnalysis.key} ${beatAnalysis.scale === 'minor' ? 'Minor' : 'Major'}`
+      : '';
+    el('result-info').textContent = `${roles}${keyInfo} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
+    const current = activeTrack();
+    serverVocal = current.serverVocal;
+    serverVocalSignature = current.serverVocalSignature || '';
+    el('result').hidden = false;
+    status('Полный микс готов. Сравните исходник и обработанную версию.');
     el('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
+
   el('share').addEventListener('click', async () => {
     if (!mixBlob) return;
     try { await navigator.share({ files: [new File([mixBlob], el('download').download, { type: 'audio/wav' })] }); }
