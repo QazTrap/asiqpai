@@ -277,14 +277,18 @@ export function mountStudio({ apiUrl }) {
     }
   }
   function applyPresetDefaults() {
-    const preset = PRESETS[el('preset').value] || PRESETS.dry;
+    const preset = PRESETS[el('preset').value] || PRESETS.premium;
     effectState = { ...preset.defaults };
     bypassAll = false;
     syncFxButtons();
+    saveActiveTrackState();
+    updateTrackRack();
     invalidate();
   }
   function controls() {
-    for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'offset']) el(id).disabled = busy || recording;
+    for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'pan', 'width', 'offset']) {
+      if (el(id)) el(id).disabled = busy || recording;
+    }
     for (const id of ['tune-key', 'tune-scale']) {
       if (el(id)) el(id).disabled = busy || recording || !effectState.tune || tuneMode === 'auto';
     }
@@ -294,10 +298,14 @@ export function mountStudio({ apiUrl }) {
     document.querySelectorAll('[data-tune-mode]').forEach(button => {
       button.disabled = busy || recording || !effectState.tune;
     });
+    document.querySelectorAll('[data-track-select],[data-track-mute],[data-track-solo],[data-track-level],[data-track-pan]').forEach(control => {
+      control.disabled = busy || recording;
+    });
     if (el('analysis-rerun')) el('analysis-rerun').disabled = busy || recording || !beat;
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
-    el('process').disabled = busy || recording || !beat || !vocal;
+    const hasVocal = Boolean(vocal) || Object.values(tracks).some(track => Boolean(track.vocal));
+    el('process').disabled = busy || recording || !beat || !hasVocal;
     el('ai').disabled = busy || recording || !aiAvailable;
     document.querySelectorAll('[data-studio-fx]').forEach(button => {
       button.disabled = busy || recording;
