@@ -4911,6 +4911,22 @@ body .track-item-buy{
                 <label for="studio-beat">Инструментал</label>
                 <select id="studio-beat"><option value="">Выберите бит</option></select>
                 <audio id="studio-beat-preview" controls preload="none"></audio>
+                <div class="studio-beat-analysis" id="studio-beat-analysis">
+                    <div class="studio-beat-analysis-head">
+                        <div>
+                            <strong>BEAT ANALYSIS</strong>
+                            <small id="studio-analysis-state">Выберите бит — BPM и тональность определятся автоматически.</small>
+                        </div>
+                        <button id="studio-analysis-rerun" type="button" disabled>↻ Анализ</button>
+                    </div>
+                    <div class="studio-beat-analysis-grid">
+                        <div><span>BPM</span><strong id="studio-analysis-bpm">—</strong></div>
+                        <div><span>KEY</span><strong id="studio-analysis-key">—</strong></div>
+                        <div><span>SCALE</span><strong id="studio-analysis-scale">—</strong></div>
+                        <div><span>CONFIDENCE</span><strong id="studio-analysis-confidence">—</strong></div>
+                    </div>
+                    <p class="muted">Определение выполняется прямо на устройстве. Если тональность определилась неуверенно, переключите TUNE в MANUAL и выберите её вручную.</p>
+                </div>
                 <p class="muted">Экспорт демо не означает покупку лицензии на бит.</p>
             </div>
 
@@ -5019,6 +5035,11 @@ body .track-item-buy{
                     <button type="button" class="studio-fx-bypass" id="studio-bypass" aria-pressed="false">BYPASS ALL</button>
                 </div>
                 <div class="studio-tune-settings" id="studio-tune-settings" hidden>
+                    <div class="studio-tune-mode" id="studio-tune-mode" aria-label="Режим тональности">
+                        <button type="button" class="active" data-tune-mode="auto">AUTO</button>
+                        <button type="button" data-tune-mode="manual">MANUAL</button>
+                    </div>
+                    <div class="studio-tune-detected" id="studio-tune-detected">AUTO: выберите бит для определения тональности</div>
                     <div class="studio-tune-grid">
                         <label for="studio-tune-key">KEY
                             <select id="studio-tune-key">
@@ -5039,6 +5060,7 @@ body .track-item-buy{
                     <label for="studio-tune-speed">Speed <output id="studio-tune-speed-value">35%</output></label>
                     <input id="studio-tune-speed" type="range" min="0" max="100" value="35">
                     <p class="muted">Ниже Speed — мягкая коррекция. Выше — более заметный Hard Tune.</p>
+                    <p class="muted" id="studio-tune-availability">Проверяем доступность серверного TUNE…</p>
                 </div>
                 <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label>
                 <input id="studio-beat-level" type="range" min="0" max="100" value="60">
