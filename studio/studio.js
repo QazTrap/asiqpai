@@ -1,19 +1,89 @@
-import { MAX_SECONDS, analyse, encodeWav, renderMix, PRESETS } from './audio.js';
+import { MAX_SECONDS, analyse, encodeWav, renderSessionMix, PRESETS } from './audio.js';
 
 export function mountStudio({ apiUrl }) {
   const el = id => document.getElementById(`studio-${id}`);
   if (!el('beat')) return;
-  let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing, recordingTimer;
+  let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing = [], recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
   let aiAvailable = false, tuneAvailable = false, initialized = false, backgroundInterrupted = false;
   let sourceVocal = null, vocalSegments = [], editorCursor = 0, selectedSegmentId = null, editorDrag = null, segmentSeq = 0;
-  let effectState = { ...PRESETS.dry.defaults };
+  let effectState = { ...PRESETS.premium.defaults };
   let bypassAll = false;
   let beatAnalysis = null;
   let tuneMode = 'auto';
   const urls = new Map();
   const status = (message, error = false) => { el('status').textContent = message; el('status').classList.toggle('error', error); };
   const lyricsStorageKey = 'asiqpai-vocal-ai-lyrics-v1';
+
+  const TRACK_DEFAULTS = {
+    mid: {
+      label: 'MID',
+      description: 'Основной вокал',
+      preset: 'premium',
+      level: 1,
+      pan: 0,
+      width: 0,
+      tuneAmount: 58,
+      tuneSpeed: 34
+    },
+    back: {
+      label: 'BACK',
+      description: 'Бэки / даблы',
+      preset: 'back',
+      level: 0.76,
+      pan: 0,
+      width: 0.78,
+      tuneAmount: 78,
+      tuneSpeed: 62
+    },
+    adlibs: {
+      label: 'ADLIBS',
+      description: 'Вставки / выкрики',
+      preset: 'adlibs',
+      level: 0.82,
+      pan: 0.12,
+      width: 0.58,
+      tuneAmount: 84,
+      tuneSpeed: 68
+    }
+  };
+
+  function createTrackState(id) {
+    const defaults = TRACK_DEFAULTS[id];
+    return {
+      id,
+      vocal: null,
+      sourceVocal: null,
+      vocalSegments: [],
+      editorCursor: 0,
+      selectedSegmentId: null,
+      serverVocal: null,
+      serverVocalSignature: '',
+      preset: defaults.preset,
+      effectState: { ...PRESETS[defaults.preset].defaults },
+      bypassAll: false,
+      aiClean: false,
+      tuneMode: 'auto',
+      tuneKey: '',
+      tuneScale: '',
+      tuneAmount: defaults.tuneAmount,
+      tuneSpeed: defaults.tuneSpeed,
+      offset: 0,
+      level: defaults.level,
+      pan: defaults.pan,
+      width: defaults.width,
+      muted: false,
+      solo: false
+    };
+  }
+
+  const tracks = {
+    mid: createTrackState('mid'),
+    back: createTrackState('back'),
+    adlibs: createTrackState('adlibs')
+  };
+  let activeTrackId = 'mid';
+  const activeTrack = () => tracks[activeTrackId];
   function syncTeleprompterText() {
     const input = el('lyrics-input'), view = el('teleprompter-text');
     if (view) view.textContent = input?.value || '';
@@ -29,6 +99,139 @@ export function mountStudio({ apiUrl }) {
     if (urls.has(id)) URL.revokeObjectURL(urls.get(id));
     const url = URL.createObjectURL(blob); urls.set(id, url); return url;
   };
+  function formatPan(pan) {
+    const value = Math.round((Number(pan) || 0) * 100);
+    if (Math.abs(value) < 2) return 'CENTER';
+    return value < 0 ? `L ${Math.abs(value)}` : `R ${value}`;
+  }
+
+  function clearWave() {
+    const canvas = el('wave');
+    if (!canvas) return;
+    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function saveActiveTrackState() {
+    const track = activeTrack();
+    if (!track) return;
+    track.vocal = vocal || null;
+    track.sourceVocal = sourceVocal || null;
+    track.vocalSegments = vocalSegments.map(segment => ({ ...segment }));
+    track.editorCursor = editorCursor;
+    track.selectedSegmentId = selectedSegmentId;
+    track.serverVocal = serverVocal || null;
+    track.serverVocalSignature = serverVocalSignature || '';
+    track.effectState = { ...effectState };
+    track.bypassAll = bypassAll;
+    track.tuneMode = tuneMode;
+    track.preset = el('preset')?.value || track.preset;
+    track.aiClean = Boolean(el('ai')?.checked);
+    track.offset = Number(el('offset')?.value || 0);
+    track.level = Number(el('voice-level')?.value || 100) / 100;
+    track.pan = Number(el('pan')?.value || 0) / 100;
+    track.width = Number(el('width')?.value || 0) / 100;
+    track.tuneKey = el('tune-key')?.value || '';
+    track.tuneScale = el('tune-scale')?.value || '';
+    track.tuneAmount = Number(el('tune-amount')?.value || track.tuneAmount || 70);
+    track.tuneSpeed = Number(el('tune-speed')?.value || track.tuneSpeed || 35);
+  }
+
+  function updateTrackRack() {
+    for (const [id, track] of Object.entries(tracks)) {
+      document.querySelector(`[data-track-card="${id}"]`)?.classList.toggle('active', id === activeTrackId);
+      const state = el(`track-${id}-state`);
+      if (state) {
+        state.textContent = track.vocal
+          ? `${track.vocal.duration.toFixed(1)}s${track.muted ? ' · MUTE' : ''}${track.solo ? ' · SOLO' : ''}`
+          : 'EMPTY';
+        state.classList.toggle('ready', Boolean(track.vocal));
+      }
+      const mute = document.querySelector(`[data-track-mute="${id}"]`);
+      const solo = document.querySelector(`[data-track-solo="${id}"]`);
+      if (mute) {
+        mute.classList.toggle('active', track.muted);
+        mute.setAttribute('aria-pressed', track.muted ? 'true' : 'false');
+      }
+      if (solo) {
+        solo.classList.toggle('active', track.solo);
+        solo.setAttribute('aria-pressed', track.solo ? 'true' : 'false');
+      }
+      const level = document.querySelector(`[data-track-level="${id}"]`);
+      const pan = document.querySelector(`[data-track-pan="${id}"]`);
+      if (level && document.activeElement !== level) level.value = String(Math.round(track.level * 100));
+      if (pan && document.activeElement !== pan) pan.value = String(Math.round(track.pan * 100));
+    }
+    const definition = TRACK_DEFAULTS[activeTrackId];
+    if (el('active-track')) el('active-track').innerHTML = `Сейчас записывается: <strong>${definition.label}</strong> · ${definition.description}`;
+    if (el('processing-track-name')) el('processing-track-name').textContent = definition.label;
+    if (el('record')) el('record').textContent = `● REC ${definition.label}`;
+  }
+
+  function refreshActiveTrackView() {
+    const definition = TRACK_DEFAULTS[activeTrackId];
+    if (vocal) {
+      wave(vocal);
+      el('voice-preview').src = setURL('voice-preview', encodeWav(vocal));
+      const stats = analyse(vocal);
+      el('vocal-info').textContent = `${definition.label}: ${vocal.duration.toFixed(1)} с · ${vocalSegments.length || 1} фрагм. · MONO${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
+    } else {
+      clearWave();
+      el('voice-preview').pause();
+      el('voice-preview').removeAttribute('src');
+      el('voice-preview').load();
+      if (urls.has('voice-preview')) {
+        URL.revokeObjectURL(urls.get('voice-preview'));
+        urls.delete('voice-preview');
+      }
+      el('vocal-info').textContent = `${definition.label}: голос ещё не добавлен. Запись заменяет дубль только на этой дорожке.`;
+    }
+    if (el('editor')) el('editor').hidden = !sourceVocal;
+    if (sourceVocal) renderEditor();
+    updateTrackRack();
+  }
+
+  function loadTrackState(id) {
+    if (!tracks[id] || id === activeTrackId && vocal === tracks[id].vocal) {
+      updateTrackRack();
+      return;
+    }
+    saveActiveTrackState();
+    activeTrackId = id;
+    const track = tracks[id];
+    vocal = track.vocal;
+    sourceVocal = track.sourceVocal;
+    vocalSegments = track.vocalSegments.map(segment => ({ ...segment }));
+    editorCursor = track.editorCursor || 0;
+    selectedSegmentId = track.selectedSegmentId || vocalSegments[0]?.id || null;
+    serverVocal = track.serverVocal;
+    serverVocalSignature = track.serverVocalSignature || '';
+    effectState = { ...track.effectState };
+    bypassAll = track.bypassAll;
+    tuneMode = track.tuneMode || 'auto';
+
+    if (el('preset')) el('preset').value = track.preset;
+    if (el('ai')) el('ai').checked = track.aiClean;
+    if (el('offset')) el('offset').value = String(track.offset);
+    if (el('voice-level')) el('voice-level').value = String(Math.round(track.level * 100));
+    if (el('voice-value')) el('voice-value').textContent = `${Math.round(track.level * 100)}%`;
+    if (el('pan')) el('pan').value = String(Math.round(track.pan * 100));
+    if (el('pan-value')) el('pan-value').textContent = formatPan(track.pan);
+    if (el('width')) el('width').value = String(Math.round(track.width * 100));
+    if (el('width-value')) el('width-value').textContent = `${Math.round(track.width * 100)}%`;
+    if (el('tune-key')) el('tune-key').value = track.tuneKey || '';
+    if (el('tune-scale')) el('tune-scale').value = track.tuneScale || '';
+    if (el('tune-amount')) el('tune-amount').value = String(track.tuneAmount);
+    if (el('tune-speed')) el('tune-speed').value = String(track.tuneSpeed);
+    if (el('tune-amount-value')) el('tune-amount-value').textContent = `${track.tuneAmount}%`;
+    if (el('tune-speed-value')) el('tune-speed-value').textContent = `${track.tuneSpeed}%`;
+
+    if (tuneMode === 'auto') applyAutoTuneSelection();
+    syncFxButtons();
+    refreshActiveTrackView();
+    controls();
+    invalidate();
+  }
+
   function syncTuneMode() {
     document.querySelectorAll('[data-tune-mode]').forEach(button => {
       const active = button.dataset.tuneMode === tuneMode;
@@ -46,11 +249,17 @@ export function mountStudio({ apiUrl }) {
     if (tuneMode !== 'auto' || !beatAnalysis?.key) return;
     if (el('tune-key')) el('tune-key').value = beatAnalysis.key;
     if (el('tune-scale')) el('tune-scale').value = beatAnalysis.scale;
+    const track = activeTrack();
+    if (track) {
+      track.tuneKey = beatAnalysis.key;
+      track.tuneScale = beatAnalysis.scale;
+    }
   }
   function setTuneMode(mode) {
     tuneMode = mode === 'manual' ? 'manual' : 'auto';
     if (tuneMode === 'auto') applyAutoTuneSelection();
     syncTuneMode();
+    saveActiveTrackState();
     controls();
     invalidate();
   }
@@ -74,14 +283,18 @@ export function mountStudio({ apiUrl }) {
     }
   }
   function applyPresetDefaults() {
-    const preset = PRESETS[el('preset').value] || PRESETS.dry;
+    const preset = PRESETS[el('preset').value] || PRESETS.premium;
     effectState = { ...preset.defaults };
     bypassAll = false;
     syncFxButtons();
+    saveActiveTrackState();
+    updateTrackRack();
     invalidate();
   }
   function controls() {
-    for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'offset']) el(id).disabled = busy || recording;
+    for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'pan', 'width', 'offset']) {
+      if (el(id)) el(id).disabled = busy || recording;
+    }
     for (const id of ['tune-key', 'tune-scale']) {
       if (el(id)) el(id).disabled = busy || recording || !effectState.tune || tuneMode === 'auto';
     }
@@ -91,10 +304,14 @@ export function mountStudio({ apiUrl }) {
     document.querySelectorAll('[data-tune-mode]').forEach(button => {
       button.disabled = busy || recording || !effectState.tune;
     });
+    document.querySelectorAll('[data-track-select],[data-track-mute],[data-track-solo],[data-track-level],[data-track-pan]').forEach(control => {
+      control.disabled = busy || recording;
+    });
     if (el('analysis-rerun')) el('analysis-rerun').disabled = busy || recording || !beat;
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
-    el('process').disabled = busy || recording || !beat || !vocal;
+    const hasVocal = Boolean(vocal) || Object.values(tracks).some(track => Boolean(track.vocal));
+    el('process').disabled = busy || recording || !beat || !hasVocal;
     el('ai').disabled = busy || recording || !aiAvailable;
     document.querySelectorAll('[data-studio-fx]').forEach(button => {
       button.disabled = busy || recording;
@@ -133,6 +350,16 @@ export function mountStudio({ apiUrl }) {
 
   function resetBeatAnalysis() {
     beatAnalysis = null;
+    for (const track of Object.values(tracks)) {
+      if (track.tuneMode === 'auto') {
+        track.tuneKey = '';
+        track.tuneScale = '';
+      }
+    }
+    if (tuneMode === 'auto') {
+      if (el('tune-key')) el('tune-key').value = '';
+      if (el('tune-scale')) el('tune-scale').value = '';
+    }
     if (el('analysis-bpm')) el('analysis-bpm').textContent = '—';
     if (el('analysis-key')) el('analysis-key').textContent = '—';
     if (el('analysis-scale')) el('analysis-scale').textContent = '—';
@@ -275,13 +502,21 @@ export function mountStudio({ apiUrl }) {
 
   function applyBeatAnalysis(result) {
     beatAnalysis = result;
+    if (result.key && result.scale) {
+      for (const track of Object.values(tracks)) {
+        if (track.tuneMode === 'auto') {
+          track.tuneKey = result.key;
+          track.tuneScale = result.scale;
+        }
+      }
+    }
     if (el('analysis-bpm')) el('analysis-bpm').textContent = result.bpm || '—';
     if (el('analysis-key')) el('analysis-key').textContent = result.key || '—';
     if (el('analysis-scale')) el('analysis-scale').textContent = result.scale ? (result.scale === 'minor' ? 'Minor' : 'Major') : '—';
     if (el('analysis-confidence')) el('analysis-confidence').textContent = result.confidence ? `${result.confidence}%` : 'LOW';
     if (el('analysis-state')) {
       el('analysis-state').textContent = result.key && result.bpm
-        ? 'Автоанализ завершён. AUTO TUNE настроен под найденную тональность.'
+        ? 'Автоанализ завершён. AUTO TUNE настроен для MID / BACK / ADLIBS.'
         : 'Часть параметров определить не удалось — используйте MANUAL.';
     }
     if (result.bpm && el('editor-bpm')) el('editor-bpm').value = String(Math.max(70, Math.min(200, result.bpm)));
@@ -393,7 +628,7 @@ export function mountStudio({ apiUrl }) {
 
     if (beat) drawBufferRange(g, beat, 0, Math.min(width, Math.min(beat.duration, duration) * pps), 37, 42, 0, Math.min(beat.duration, duration), '#5d6270');
     g.fillStyle = '#8b8e98'; g.font = '10px sans-serif'; g.fillText('BEAT', 8, 62);
-    g.fillStyle = '#c7aa5d'; g.fillText('VOCAL', 8, 139);
+    g.fillStyle = '#c7aa5d'; g.fillText(TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL', 8, 139);
 
     const offset = editorOffset();
     for (const seg of vocalSegments) {
@@ -449,15 +684,19 @@ export function mountStudio({ apiUrl }) {
   function commitEditor(message = 'Монтаж вокала обновлён.') {
     const edited = renderEditedVocal();
     vocal = edited; serverVocal = null; serverVocalSignature = ''; invalidate();
+    const label = TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL';
     if (edited) {
       wave(edited);
       el('voice-preview').src = setURL('voice-preview', encodeWav(edited));
       const stats = analyse(edited);
-      el('vocal-info').textContent = `Вокал: ${edited.duration.toFixed(1)} с · ${vocalSegments.length} фрагм. · MONO / CENTER${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
+      el('vocal-info').textContent = `${label}: ${edited.duration.toFixed(1)} с · ${vocalSegments.length} фрагм. · MONO${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
     } else {
       el('voice-preview').removeAttribute('src'); el('voice-preview').load();
-      el('vocal-info').textContent = 'Все фрагменты удалены. Сбросьте монтаж или добавьте новый голос.';
+      clearWave();
+      el('vocal-info').textContent = `${label}: все фрагменты удалены. Сбросьте монтаж или добавьте новый голос.`;
     }
+    saveActiveTrackState();
+    updateTrackRack();
     renderEditor(); controls(); status(message);
   }
   function resetEditor(buffer) {
@@ -466,7 +705,7 @@ export function mountStudio({ apiUrl }) {
     selectedSegmentId = vocalSegments[0].id;
     editorCursor = 0;
     if (el('editor')) el('editor').hidden = false;
-    commitEditor('Голос добавлен. Можно подогнать фразы в Vocal Slicer.');
+    commitEditor(`${TRACK_DEFAULTS[activeTrackId].label} добавлен. Можно подогнать фразы в Vocal Slicer.`);
   }
   function splitAtCursor() {
     if (!sourceVocal) return;
@@ -667,7 +906,7 @@ export function mountStudio({ apiUrl }) {
     el('offset').value = '0';
     resetEditor(centered);
     const stats = analyse(centered);
-    if (stats.rms < 0.001) status('Запись очень тихая. Проверьте микрофон.', true);
+    if (stats.rms < 0.001) status(`${TRACK_DEFAULTS[activeTrackId].label}: запись очень тихая. Проверьте микрофон.`, true);
   }
   el('beat').addEventListener('change', () => action(async () => {
     await context();
@@ -720,6 +959,66 @@ export function mountStudio({ apiUrl }) {
     lyricsInput.value = '';
     syncTeleprompterText();
     try { localStorage.removeItem(lyricsStorageKey); } catch {}
+  });
+
+  document.querySelectorAll('[data-track-select]').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.trackSelect;
+      if (!tracks[id] || busy || recording) return;
+      loadTrackState(id);
+      status(`${TRACK_DEFAULTS[id].label} выбран. Запись и настройки относятся только к этой дорожке.`);
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-mute]').forEach(button => {
+    button.addEventListener('click', () => {
+      const track = tracks[button.dataset.trackMute];
+      if (!track || busy || recording) return;
+      if (track.id === activeTrackId) saveActiveTrackState();
+      track.muted = !track.muted;
+      updateTrackRack();
+      invalidate();
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-solo]').forEach(button => {
+    button.addEventListener('click', () => {
+      const track = tracks[button.dataset.trackSolo];
+      if (!track || busy || recording) return;
+      if (track.id === activeTrackId) saveActiveTrackState();
+      track.solo = !track.solo;
+      updateTrackRack();
+      invalidate();
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-level]').forEach(input => {
+    input.addEventListener('input', () => {
+      const track = tracks[input.dataset.trackLevel];
+      if (!track) return;
+      track.level = Number(input.value) / 100;
+      if (track.id === activeTrackId && el('voice-level')) {
+        el('voice-level').value = input.value;
+        el('voice-value').textContent = `${input.value}%`;
+      }
+      invalidate();
+    });
+  });
+
+  document.querySelectorAll('[data-track-pan]').forEach(input => {
+    input.addEventListener('input', () => {
+      const track = tracks[input.dataset.trackPan];
+      if (!track) return;
+      track.pan = Number(input.value) / 100;
+      if (track.id === activeTrackId && el('pan')) {
+        el('pan').value = input.value;
+        el('pan-value').textContent = formatPan(track.pan);
+      }
+      invalidate();
+    });
   });
 
   const editorCanvas = el('editor-canvas');
@@ -781,16 +1080,66 @@ export function mountStudio({ apiUrl }) {
     commitEditor('Монтаж сброшен к исходной записи.');
   });
   for (const id of ['editor-bpm','editor-snap','editor-zoom']) el(id)?.addEventListener('input', renderEditor);
+  function stopBackingPlayback() {
+    for (const node of backing) {
+      try { node.stop(); } catch {}
+    }
+    backing = [];
+  }
+
+  function startMonitorSource(buffer, level = 1, pan = 0, offset = 0) {
+    if (!buffer) return;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = Math.max(0, Number(level) || 0);
+    source.connect(gain);
+    if (typeof ctx.createStereoPanner === 'function') {
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, Number(pan) || 0));
+      gain.connect(panner).connect(ctx.destination);
+    } else {
+      gain.connect(ctx.destination);
+    }
+    const safeOffset = Number(offset) || 0;
+    const skip = Math.max(0, -safeOffset);
+    if (skip < buffer.duration) {
+      source.start(Math.max(0, safeOffset), skip);
+      backing.push(source);
+    }
+  }
+
+  function startRecordingBacking() {
+    stopBackingPlayback();
+    const beatSource = ctx.createBufferSource();
+    beatSource.buffer = beat;
+    const beatGain = ctx.createGain();
+    beatGain.gain.value = Number(el('beat-level').value) / 100;
+    beatSource.connect(beatGain).connect(ctx.destination);
+    beatSource.start();
+    backing.push(beatSource);
+
+    saveActiveTrackState();
+    const sessionTracks = Object.values(tracks);
+    const hasSolo = sessionTracks.some(track => track.solo && track.vocal && track.id !== activeTrackId);
+    for (const track of sessionTracks) {
+      if (track.id === activeTrackId || !track.vocal || track.muted) continue;
+      if (hasSolo && !track.solo) continue;
+      startMonitorSource(track.vocal, track.level, track.pan, track.offset);
+    }
+  }
+
   function stopRecording() {
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     clearInterval(recordingTimer);
-    try { backing?.stop(); } catch {}
-    backing = null; stream?.getTracks().forEach(track => track.stop()); stream = null;
+    stopBackingPlayback();
+    stream?.getTracks().forEach(track => track.stop()); stream = null;
     recording = false;
     el('teleprompter')?.classList.remove('recording');
   }
   el('record').addEventListener('click', () => action(async () => {
     backgroundInterrupted = false;
+    saveActiveTrackState();
     if (el('lyrics-input')?.value.trim()) setTeleprompter(true);
     await context();
     for (const a of document.querySelectorAll('audio')) a.pause();
@@ -815,7 +1164,7 @@ export function mountStudio({ apiUrl }) {
     recorder.onstop = async () => {
       const wasBackgroundInterrupted = backgroundInterrupted;
       backgroundInterrupted = false;
-      busy = true; stopRecording(); controls(); status('Сохраняем дубль…');
+      busy = true; stopRecording(); controls(); status(`Сохраняем ${TRACK_DEFAULTS[activeTrackId].label}…`);
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType });
         const buffer = await decode(blob, MAX_SECONDS + 2);
@@ -830,25 +1179,29 @@ export function mountStudio({ apiUrl }) {
     };
     recorder.onstart = () => {
       el('teleprompter')?.classList.add('recording');
-      backing = ctx.createBufferSource(); backing.buffer = beat;
-      const gain = ctx.createGain(); gain.gain.value = Number(el('beat-level').value) / 100;
-      backing.connect(gain).connect(ctx.destination); backing.start();
+      startRecordingBacking();
       elapsed = performance.now();
       recordingTimer = setInterval(() => {
         const secs = (performance.now() - elapsed) / 1000;
-        status(`● Запись ${Math.floor(secs)} / ${MAX_SECONDS} с. После записи при необходимости поправьте синхронизацию.`);
+        status(`● ${TRACK_DEFAULTS[activeTrackId].label} · запись ${Math.floor(secs)} / ${MAX_SECONDS} с. В наушниках играет бит и уже записанные дорожки.`);
         if (secs >= Math.min(MAX_SECONDS, beat.duration)) stopRecording();
       }, 200);
     };
-    invalidate(); recorder.start(250); recording = true; controls(); status('● Запись началась…');
+    invalidate(); recorder.start(250); recording = true; controls(); status(`● REC ${TRACK_DEFAULTS[activeTrackId].label}…`);
   }));
   el('stop').addEventListener('click', stopRecording);
   el('preset').addEventListener('change', applyPresetDefaults);
-  for (const id of ['ai', 'offset', 'beat-level', 'voice-level']) el(id).addEventListener('input', () => {
+  for (const id of ['ai', 'offset', 'beat-level', 'voice-level', 'pan', 'width']) el(id)?.addEventListener('input', () => {
     invalidate();
-    el('beat-value').textContent = `${el('beat-level').value}%`;
-    el('voice-value').textContent = `${el('voice-level').value}%`;
+    if (el('beat-value')) el('beat-value').textContent = `${el('beat-level').value}%`;
+    if (el('voice-value')) el('voice-value').textContent = `${el('voice-level').value}%`;
+    if (el('pan-value')) el('pan-value').textContent = formatPan(Number(el('pan').value) / 100);
+    if (el('width-value')) el('width-value').textContent = `${el('width').value}%`;
     if (id === 'offset') renderEditor();
+    if (id !== 'beat-level') {
+      saveActiveTrackState();
+      updateTrackRack();
+    }
   });
   for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
     el(id)?.addEventListener('input', () => {
@@ -856,6 +1209,7 @@ export function mountStudio({ apiUrl }) {
       invalidate();
       if (el('tune-amount-value')) el('tune-amount-value').textContent = `${el('tune-amount').value}%`;
       if (el('tune-speed-value')) el('tune-speed-value').textContent = `${el('tune-speed').value}%`;
+      saveActiveTrackState();
     });
   }
   document.querySelectorAll('[data-tune-mode]').forEach(button => {
@@ -871,6 +1225,7 @@ export function mountStudio({ apiUrl }) {
       effectState[key] = !effectState[key];
       bypassAll = false;
       syncFxButtons();
+      saveActiveTrackState();
       invalidate();
       try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
     });
@@ -878,99 +1233,152 @@ export function mountStudio({ apiUrl }) {
   el('bypass')?.addEventListener('click', () => {
     bypassAll = !bypassAll;
     syncFxButtons();
+    saveActiveTrackState();
     invalidate();
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch {}
   });
+  async function enhanceTrackForMix(track, initData) {
+    const useAiClean = track.aiClean && !track.bypassAll;
+    const useTune = Boolean(track.effectState?.tune) && !track.bypassAll;
+    if (!useAiClean && !useTune) return track.vocal;
+    if (useTune && !tuneAvailable) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: TUNE пока недоступен на сервере.`);
+    }
+    if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+
+    const tuneKey = track.tuneMode === 'auto' ? (beatAnalysis?.key || track.tuneKey) : track.tuneKey;
+    const tuneScale = track.tuneMode === 'auto' ? (beatAnalysis?.scale || track.tuneScale) : track.tuneScale;
+    if (useTune && track.tuneMode === 'auto' && !beatAnalysis?.key) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: AUTO TUNE ждёт определения тональности бита.`);
+    }
+    if (useTune && (!NOTE_NAMES.includes(tuneKey) || !['minor','major'].includes(tuneScale))) {
+      throw new Error(`${TRACK_DEFAULTS[track.id].label}: выберите KEY и SCALE для TUNE.`);
+    }
+
+    const signature = JSON.stringify({
+      clean: useAiClean,
+      tune: useTune,
+      key: tuneKey || '',
+      scale: tuneScale || '',
+      amount: track.tuneAmount,
+      speed: track.tuneSpeed
+    });
+
+    if (!track.serverVocal || track.serverVocalSignature !== signature) {
+      status(`${TRACK_DEFAULTS[track.id].label}: ${useTune ? 'AI CLEAN / TUNE' : 'AI CLEAN'}…`);
+      const response = await fetch(`${apiUrl}/api/studio/enhance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/octet-stream',
+          'X-Telegram-Init-Data': initData,
+          'X-Studio-Clean': useAiClean ? '1' : '0',
+          'X-Studio-Tune': useTune ? '1' : '0',
+          'X-Studio-Key': tuneKey || '',
+          'X-Studio-Scale': tuneScale || '',
+          'X-Studio-Amount': String(track.tuneAmount),
+          'X-Studio-Speed': String(track.tuneSpeed)
+        },
+        body: encodeWav(track.vocal, true),
+        signal: AbortSignal.timeout(255000)
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error || `${TRACK_DEFAULTS[track.id].label}: Vocal AI недоступен.`);
+      }
+      track.serverVocal = await decode(await response.blob(), MAX_SECONDS + 1);
+      track.serverVocalSignature = signature;
+    }
+    return track.serverVocal;
+  }
+
   el('process').addEventListener('click', () => action(async () => {
     for (const a of document.querySelectorAll('audio')) a.pause();
+    saveActiveTrackState();
     invalidate();
-    const offset = Number(el('offset').value);
-    if (!el('offset').checkValidity() || !Number.isFinite(offset) || offset >= MAX_SECONDS || offset <= -vocal.duration) throw new Error('Укажите сдвиг, при котором голос остаётся в пределах демо.');
-    if (offset + vocal.duration > MAX_SECONDS + 0.1) throw new Error('Голос со сдвигом выходит за 3 минуты. Уменьшите сдвиг или загрузите более короткую запись.');
-    let chosen = vocal;
-    const useAiClean = el('ai').checked && !bypassAll;
-    const useTune = effectState.tune && !bypassAll;
-    if (useTune && !tuneAvailable) throw new Error('TUNE пока недоступен на сервере.');
 
-    if (useAiClean || useTune) {
-      const initData = window.Telegram?.WebApp?.initData || '';
-      if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+    const recorded = Object.values(tracks).filter(track => track.vocal);
+    if (!recorded.length) throw new Error('Запишите хотя бы одну дорожку: MID, BACK или ADLIBS.');
 
-      const tuneKey = el('tune-key')?.value || '';
-      const tuneScale = el('tune-scale')?.value || '';
-      if (useTune && tuneMode === 'auto' && !beatAnalysis?.key) {
-        throw new Error('AUTO TUNE: сначала выберите бит и дождитесь определения тональности или переключите режим в MANUAL.');
+    const hasSolo = recorded.some(track => track.solo && !track.muted);
+    const audible = recorded.filter(track => !track.muted && (!hasSolo || track.solo));
+    if (!audible.length) throw new Error('Все записанные дорожки выключены MUTE.');
+
+    for (const track of audible) {
+      const offset = Number(track.offset);
+      if (!Number.isFinite(offset) || offset >= MAX_SECONDS || offset <= -track.vocal.duration) {
+        throw new Error(`${TRACK_DEFAULTS[track.id].label}: проверьте сдвиг вокала относительно бита.`);
       }
-      if (useTune && (!NOTE_NAMES.includes(tuneKey) || !['minor','major'].includes(tuneScale))) {
-        throw new Error('Выберите KEY и SCALE для TUNE.');
+      if (offset + track.vocal.duration > MAX_SECONDS + 0.1) {
+        throw new Error(`${TRACK_DEFAULTS[track.id].label}: вокал со сдвигом выходит за 3 минуты.`);
       }
-      const tuneAmount = Number(el('tune-amount')?.value || 70);
-      const tuneSpeed = Number(el('tune-speed')?.value || 35);
-      const signature = JSON.stringify({
-        clean: useAiClean,
-        tune: useTune,
-        key: tuneKey,
-        scale: tuneScale,
-        amount: tuneAmount,
-        speed: tuneSpeed
-      });
-
-      if (!serverVocal || serverVocalSignature !== signature) {
-        status(useTune
-          ? (useAiClean ? 'AI очищает вокал и корректирует ноты…' : 'TUNE корректирует вокал по тональности…')
-          : 'AI очищает вокал. Это может занять до 2–3 минут…'
-        );
-
-        const response = await fetch(`${apiUrl}/api/studio/enhance`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/octet-stream',
-            'X-Telegram-Init-Data': initData,
-            'X-Studio-Clean': useAiClean ? '1' : '0',
-            'X-Studio-Tune': useTune ? '1' : '0',
-            'X-Studio-Key': tuneKey,
-            'X-Studio-Scale': tuneScale,
-            'X-Studio-Amount': String(tuneAmount),
-            'X-Studio-Speed': String(tuneSpeed)
-          },
-          body: encodeWav(vocal, true),
-          signal: AbortSignal.timeout(255000)
-        });
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          throw new Error(error.error || 'Vocal AI недоступен. Повторите позже или выключите AI CLEAN / TUNE.');
-        }
-        serverVocal = await decode(await response.blob(), MAX_SECONDS + 1);
-        serverVocalSignature = signature;
-      }
-      chosen = serverVocal;
     }
-    const settings = { beat, offset, preset: el('preset').value, beatLevel: Number(el('beat-level').value) / 100, vocalLevel: Number(el('voice-level').value) / 100 };
-    status('Собираем вариант до обработки…');
-    const before = await renderMix({ ...settings, vocal, processed: false });
+
+    const needsRemote = audible.some(track =>
+      !track.bypassAll && (track.aiClean || track.effectState?.tune)
+    );
+    const initData = needsRemote ? (window.Telegram?.WebApp?.initData || '') : '';
+    if (needsRemote && !initData) {
+      throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
+    }
+
+    const processedBuffers = new Map();
+    for (const track of audible) {
+      processedBuffers.set(track.id, await enhanceTrackForMix(track, initData));
+    }
+
+    const toMixTrack = (track, processedVersion = false) => ({
+      id: track.id,
+      vocal: processedVersion ? (processedBuffers.get(track.id) || track.vocal) : track.vocal,
+      preset: track.preset,
+      effects: track.effectState,
+      processed: !track.bypassAll,
+      offset: track.offset,
+      level: track.level,
+      pan: track.pan,
+      width: track.width,
+      muted: track.muted,
+      solo: track.solo
+    });
+
+    const beatLevel = Number(el('beat-level').value) / 100;
+    status('Собираем исходный микс MID / BACK / ADLIBS…');
+    const before = await renderSessionMix({
+      beat,
+      tracks: recorded.map(track => toMixTrack(track, false)),
+      beatLevel,
+      processed: false
+    });
     el('before').src = setURL('before', encodeWav(before));
-    status(bypassAll ? 'Собираем WAV без эффектов…' : 'Применяем выбранные эффекты и собираем WAV…');
-    const after = await renderMix({ ...settings, vocal: chosen, processed: !bypassAll, effects: effectState });
-    mixBlob = encodeWav(after); el('after').src = setURL('after', mixBlob);
+
+    status('Собираем полный вокальный микс…');
+    const after = await renderSessionMix({
+      beat,
+      tracks: recorded.map(track => toMixTrack(track, true)),
+      beatLevel,
+      processed: true
+    });
+
+    mixBlob = encodeWav(after);
+    el('after').src = setURL('after', mixBlob);
     el('download').href = setURL('download', mixBlob);
     const name = beatName.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 60) || 'demo';
-    el('download').download = `ASIQPAI-${name}-demo.wav`;
+    el('download').download = `ASIQPAI-${name}-multitrack.wav`;
     const file = new File([mixBlob], el('download').download, { type: 'audio/wav' });
     el('share').hidden = !navigator.canShare?.({ files: [file] });
-    const activeFx = bypassAll
-      ? ['BYPASS ALL']
-      : [
-          useAiClean ? 'AI CLEAN' : null,
-          useTune ? `TUNE ${el('tune-key')?.value || '—'} ${(el('tune-scale')?.value || '—').toUpperCase()}` : null,
-          effectState.eq ? 'EQ' : null,
-          effectState.comp ? 'COMP' : null,
-          effectState.reverb ? 'REVERB' : null,
-          effectState.delay ? 'DELAY' : null
-        ].filter(Boolean);
-    el('result-info').textContent = `${PRESETS[el('preset').value].label} · ${activeFx.join(' + ') || 'DRY'} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
-    el('result').hidden = false; status('Демо готово. Сравните звучание и скачайте результат.');
+
+    const roles = recorded.map(track => TRACK_DEFAULTS[track.id].label).join(' + ');
+    const keyInfo = beatAnalysis?.key
+      ? ` · ${beatAnalysis.key} ${beatAnalysis.scale === 'minor' ? 'Minor' : 'Major'}`
+      : '';
+    el('result-info').textContent = `${roles}${keyInfo} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
+    const current = activeTrack();
+    serverVocal = current.serverVocal;
+    serverVocalSignature = current.serverVocalSignature || '';
+    el('result').hidden = false;
+    status('Полный микс готов. Сравните исходник и обработанную версию.');
     el('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
+
   el('share').addEventListener('click', async () => {
     if (!mixBlob) return;
     try { await navigator.share({ files: [new File([mixBlob], el('download').download, { type: 'audio/wav' })] }); }
@@ -990,7 +1398,7 @@ export function mountStudio({ apiUrl }) {
         const url = new URL(track.file, location.href); if (url.origin !== location.origin) continue;
         const option = document.createElement('option'); option.value = url.href; option.textContent = track.title; el('beat').append(option);
       }
-      status('Выберите бит, затем добавьте голос.');
+      status('Выберите бит, затем записывайте MID, BACK и ADLIBS по отдельности.');
     } catch (e) { initialized = false; status(`${e.message} Откройте студию повторно.`, true); }
     try {
       const response = await fetch(`${apiUrl}/api/studio/status`, { signal: AbortSignal.timeout(8000) });
@@ -1013,7 +1421,9 @@ export function mountStudio({ apiUrl }) {
         ? '✓ Серверный TUNE доступен. В AUTO используется тональность из Beat Analysis.'
         : '⚠ Серверный TUNE пока не подключён. AUTO/MANUAL и выбор KEY/SCALE доступны, но обработка TUNE не запустится.';
     }
+    loadTrackState('mid');
     syncFxButtons();
+    updateTrackRack();
     controls();
   }
   window.addEventListener('asiqpai:page', event => {
@@ -1031,5 +1441,6 @@ export function mountStudio({ apiUrl }) {
     for (const url of urls.values()) URL.revokeObjectURL(url); urls.clear();
   });
   syncFxButtons();
+  updateTrackRack();
   controls();
 }
