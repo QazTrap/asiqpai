@@ -628,7 +628,7 @@ export function mountStudio({ apiUrl }) {
 
     if (beat) drawBufferRange(g, beat, 0, Math.min(width, Math.min(beat.duration, duration) * pps), 37, 42, 0, Math.min(beat.duration, duration), '#5d6270');
     g.fillStyle = '#8b8e98'; g.font = '10px sans-serif'; g.fillText('BEAT', 8, 62);
-    g.fillStyle = '#c7aa5d'; g.fillText('VOCAL', 8, 139);
+    g.fillStyle = '#c7aa5d'; g.fillText(TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL', 8, 139);
 
     const offset = editorOffset();
     for (const seg of vocalSegments) {
@@ -684,15 +684,19 @@ export function mountStudio({ apiUrl }) {
   function commitEditor(message = 'Монтаж вокала обновлён.') {
     const edited = renderEditedVocal();
     vocal = edited; serverVocal = null; serverVocalSignature = ''; invalidate();
+    const label = TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL';
     if (edited) {
       wave(edited);
       el('voice-preview').src = setURL('voice-preview', encodeWav(edited));
       const stats = analyse(edited);
-      el('vocal-info').textContent = `Вокал: ${edited.duration.toFixed(1)} с · ${vocalSegments.length} фрагм. · MONO / CENTER${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
+      el('vocal-info').textContent = `${label}: ${edited.duration.toFixed(1)} с · ${vocalSegments.length} фрагм. · MONO${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
     } else {
       el('voice-preview').removeAttribute('src'); el('voice-preview').load();
-      el('vocal-info').textContent = 'Все фрагменты удалены. Сбросьте монтаж или добавьте новый голос.';
+      clearWave();
+      el('vocal-info').textContent = `${label}: все фрагменты удалены. Сбросьте монтаж или добавьте новый голос.`;
     }
+    saveActiveTrackState();
+    updateTrackRack();
     renderEditor(); controls(); status(message);
   }
   function resetEditor(buffer) {
@@ -701,7 +705,7 @@ export function mountStudio({ apiUrl }) {
     selectedSegmentId = vocalSegments[0].id;
     editorCursor = 0;
     if (el('editor')) el('editor').hidden = false;
-    commitEditor('Голос добавлен. Можно подогнать фразы в Vocal Slicer.');
+    commitEditor(`${TRACK_DEFAULTS[activeTrackId].label} добавлен. Можно подогнать фразы в Vocal Slicer.`);
   }
   function splitAtCursor() {
     if (!sourceVocal) return;
@@ -902,7 +906,7 @@ export function mountStudio({ apiUrl }) {
     el('offset').value = '0';
     resetEditor(centered);
     const stats = analyse(centered);
-    if (stats.rms < 0.001) status('Запись очень тихая. Проверьте микрофон.', true);
+    if (stats.rms < 0.001) status(`${TRACK_DEFAULTS[activeTrackId].label}: запись очень тихая. Проверьте микрофон.`, true);
   }
   el('beat').addEventListener('change', () => action(async () => {
     await context();
