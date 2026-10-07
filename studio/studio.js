@@ -896,8 +896,14 @@ export function mountStudio({ apiUrl }) {
       const initData = window.Telegram?.WebApp?.initData || '';
       if (!initData) throw new Error('Для AI CLEAN / TUNE откройте приложение через Telegram.');
 
-      const tuneKey = el('tune-key')?.value || 'F';
-      const tuneScale = el('tune-scale')?.value || 'minor';
+      const tuneKey = el('tune-key')?.value || '';
+      const tuneScale = el('tune-scale')?.value || '';
+      if (useTune && tuneMode === 'auto' && !beatAnalysis?.key) {
+        throw new Error('AUTO TUNE: сначала выберите бит и дождитесь определения тональности или переключите режим в MANUAL.');
+      }
+      if (useTune && (!NOTE_NAMES.includes(tuneKey) || !['minor','major'].includes(tuneScale))) {
+        throw new Error('Выберите KEY и SCALE для TUNE.');
+      }
       const tuneAmount = Number(el('tune-amount')?.value || 70);
       const tuneSpeed = Number(el('tune-speed')?.value || 35);
       const signature = JSON.stringify({
@@ -955,7 +961,7 @@ export function mountStudio({ apiUrl }) {
       ? ['BYPASS ALL']
       : [
           useAiClean ? 'AI CLEAN' : null,
-          useTune ? `TUNE ${el('tune-key')?.value || 'F'} ${(el('tune-scale')?.value || 'minor').toUpperCase()}` : null,
+          useTune ? `TUNE ${el('tune-key')?.value || '—'} ${(el('tune-scale')?.value || '—').toUpperCase()}` : null,
           effectState.eq ? 'EQ' : null,
           effectState.comp ? 'COMP' : null,
           effectState.reverb ? 'REVERB' : null,
