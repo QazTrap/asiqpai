@@ -99,6 +99,139 @@ export function mountStudio({ apiUrl }) {
     if (urls.has(id)) URL.revokeObjectURL(urls.get(id));
     const url = URL.createObjectURL(blob); urls.set(id, url); return url;
   };
+  function formatPan(pan) {
+    const value = Math.round((Number(pan) || 0) * 100);
+    if (Math.abs(value) < 2) return 'CENTER';
+    return value < 0 ? `L ${Math.abs(value)}` : `R ${value}`;
+  }
+
+  function clearWave() {
+    const canvas = el('wave');
+    if (!canvas) return;
+    canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function saveActiveTrackState() {
+    const track = activeTrack();
+    if (!track) return;
+    track.vocal = vocal || null;
+    track.sourceVocal = sourceVocal || null;
+    track.vocalSegments = vocalSegments.map(segment => ({ ...segment }));
+    track.editorCursor = editorCursor;
+    track.selectedSegmentId = selectedSegmentId;
+    track.serverVocal = serverVocal || null;
+    track.serverVocalSignature = serverVocalSignature || '';
+    track.effectState = { ...effectState };
+    track.bypassAll = bypassAll;
+    track.tuneMode = tuneMode;
+    track.preset = el('preset')?.value || track.preset;
+    track.aiClean = Boolean(el('ai')?.checked);
+    track.offset = Number(el('offset')?.value || 0);
+    track.level = Number(el('voice-level')?.value || 100) / 100;
+    track.pan = Number(el('pan')?.value || 0) / 100;
+    track.width = Number(el('width')?.value || 0) / 100;
+    track.tuneKey = el('tune-key')?.value || '';
+    track.tuneScale = el('tune-scale')?.value || '';
+    track.tuneAmount = Number(el('tune-amount')?.value || track.tuneAmount || 70);
+    track.tuneSpeed = Number(el('tune-speed')?.value || track.tuneSpeed || 35);
+  }
+
+  function updateTrackRack() {
+    for (const [id, track] of Object.entries(tracks)) {
+      document.querySelector(`[data-track-card="${id}"]`)?.classList.toggle('active', id === activeTrackId);
+      const state = el(`track-${id}-state`);
+      if (state) {
+        state.textContent = track.vocal
+          ? `${track.vocal.duration.toFixed(1)}s${track.muted ? ' · MUTE' : ''}${track.solo ? ' · SOLO' : ''}`
+          : 'EMPTY';
+        state.classList.toggle('ready', Boolean(track.vocal));
+      }
+      const mute = document.querySelector(`[data-track-mute="${id}"]`);
+      const solo = document.querySelector(`[data-track-solo="${id}"]`);
+      if (mute) {
+        mute.classList.toggle('active', track.muted);
+        mute.setAttribute('aria-pressed', track.muted ? 'true' : 'false');
+      }
+      if (solo) {
+        solo.classList.toggle('active', track.solo);
+        solo.setAttribute('aria-pressed', track.solo ? 'true' : 'false');
+      }
+      const level = document.querySelector(`[data-track-level="${id}"]`);
+      const pan = document.querySelector(`[data-track-pan="${id}"]`);
+      if (level && document.activeElement !== level) level.value = String(Math.round(track.level * 100));
+      if (pan && document.activeElement !== pan) pan.value = String(Math.round(track.pan * 100));
+    }
+    const definition = TRACK_DEFAULTS[activeTrackId];
+    if (el('active-track')) el('active-track').innerHTML = `Сейчас записывается: <strong>${definition.label}</strong> · ${definition.description}`;
+    if (el('processing-track-name')) el('processing-track-name').textContent = definition.label;
+    if (el('record')) el('record').textContent = `● REC ${definition.label}`;
+  }
+
+  function refreshActiveTrackView() {
+    const definition = TRACK_DEFAULTS[activeTrackId];
+    if (vocal) {
+      wave(vocal);
+      el('voice-preview').src = setURL('voice-preview', encodeWav(vocal));
+      const stats = analyse(vocal);
+      el('vocal-info').textContent = `${definition.label}: ${vocal.duration.toFixed(1)} с · ${vocalSegments.length || 1} фрагм. · MONO${stats.peak >= 0.999 ? ' · Есть перегруз.' : ''}`;
+    } else {
+      clearWave();
+      el('voice-preview').pause();
+      el('voice-preview').removeAttribute('src');
+      el('voice-preview').load();
+      if (urls.has('voice-preview')) {
+        URL.revokeObjectURL(urls.get('voice-preview'));
+        urls.delete('voice-preview');
+      }
+      el('vocal-info').textContent = `${definition.label}: голос ещё не добавлен. Запись заменяет дубль только на этой дорожке.`;
+    }
+    if (el('editor')) el('editor').hidden = !sourceVocal;
+    if (sourceVocal) renderEditor();
+    updateTrackRack();
+  }
+
+  function loadTrackState(id) {
+    if (!tracks[id] || id === activeTrackId && vocal === tracks[id].vocal) {
+      updateTrackRack();
+      return;
+    }
+    saveActiveTrackState();
+    activeTrackId = id;
+    const track = tracks[id];
+    vocal = track.vocal;
+    sourceVocal = track.sourceVocal;
+    vocalSegments = track.vocalSegments.map(segment => ({ ...segment }));
+    editorCursor = track.editorCursor || 0;
+    selectedSegmentId = track.selectedSegmentId || vocalSegments[0]?.id || null;
+    serverVocal = track.serverVocal;
+    serverVocalSignature = track.serverVocalSignature || '';
+    effectState = { ...track.effectState };
+    bypassAll = track.bypassAll;
+    tuneMode = track.tuneMode || 'auto';
+
+    if (el('preset')) el('preset').value = track.preset;
+    if (el('ai')) el('ai').checked = track.aiClean;
+    if (el('offset')) el('offset').value = String(track.offset);
+    if (el('voice-level')) el('voice-level').value = String(Math.round(track.level * 100));
+    if (el('voice-value')) el('voice-value').textContent = `${Math.round(track.level * 100)}%`;
+    if (el('pan')) el('pan').value = String(Math.round(track.pan * 100));
+    if (el('pan-value')) el('pan-value').textContent = formatPan(track.pan);
+    if (el('width')) el('width').value = String(Math.round(track.width * 100));
+    if (el('width-value')) el('width-value').textContent = `${Math.round(track.width * 100)}%`;
+    if (el('tune-key')) el('tune-key').value = track.tuneKey || '';
+    if (el('tune-scale')) el('tune-scale').value = track.tuneScale || '';
+    if (el('tune-amount')) el('tune-amount').value = String(track.tuneAmount);
+    if (el('tune-speed')) el('tune-speed').value = String(track.tuneSpeed);
+    if (el('tune-amount-value')) el('tune-amount-value').textContent = `${track.tuneAmount}%`;
+    if (el('tune-speed-value')) el('tune-speed-value').textContent = `${track.tuneSpeed}%`;
+
+    if (tuneMode === 'auto') applyAutoTuneSelection();
+    syncFxButtons();
+    refreshActiveTrackView();
+    controls();
+    invalidate();
+  }
+
   function syncTuneMode() {
     document.querySelectorAll('[data-tune-mode]').forEach(button => {
       const active = button.dataset.tuneMode === tuneMode;
