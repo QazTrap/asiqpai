@@ -1398,7 +1398,7 @@ export function mountStudio({ apiUrl }) {
         const url = new URL(track.file, location.href); if (url.origin !== location.origin) continue;
         const option = document.createElement('option'); option.value = url.href; option.textContent = track.title; el('beat').append(option);
       }
-      status('Выберите бит, затем добавьте голос.');
+      status('Выберите бит, затем записывайте MID, BACK и ADLIBS по отдельности.');
     } catch (e) { initialized = false; status(`${e.message} Откройте студию повторно.`, true); }
     try {
       const response = await fetch(`${apiUrl}/api/studio/status`, { signal: AbortSignal.timeout(8000) });
@@ -1421,7 +1421,9 @@ export function mountStudio({ apiUrl }) {
         ? '✓ Серверный TUNE доступен. В AUTO используется тональность из Beat Analysis.'
         : '⚠ Серверный TUNE пока не подключён. AUTO/MANUAL и выбор KEY/SCALE доступны, но обработка TUNE не запустится.';
     }
+    loadTrackState('mid');
     syncFxButtons();
+    updateTrackRack();
     controls();
   }
   window.addEventListener('asiqpai:page', event => {
@@ -1439,5 +1441,6 @@ export function mountStudio({ apiUrl }) {
     for (const url of urls.values()) URL.revokeObjectURL(url); urls.clear();
   });
   syncFxButtons();
+  updateTrackRack();
   controls();
 }
