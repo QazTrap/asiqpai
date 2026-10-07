@@ -92,3 +92,28 @@
 .studio .studio-tune-mode button{min-height:38px;padding:8px 10px;border-color:transparent;background:transparent;color:#858894;font-size:10px;font-weight:900;letter-spacing:1px}
 .studio .studio-tune-mode button.active{border-color:rgba(231,197,107,.45);background:rgba(231,197,107,.12);color:#f0d27b}
 .studio .studio-tune-detected{margin-bottom:12px;padding:9px 10px;border-left:2px solid #e7c56b;background:#171820;color:#aeadb5;font-size:10px;line-height:1.4}
+
+
+/* Multitrack vocal rack */
+.studio .studio-track-rack{display:grid;gap:10px;margin:14px 0}
+.studio .studio-track{display:grid;grid-template-columns:minmax(105px,1.25fr) auto auto;grid-template-areas:"select state actions" "vol vol pan";gap:8px 10px;align-items:center;padding:11px;border:1px solid #30323b;border-radius:16px;background:linear-gradient(145deg,#15171d,#111218);transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.studio .studio-track.active{border-color:rgba(231,197,107,.7);box-shadow:0 0 0 1px rgba(231,197,107,.08),0 10px 30px rgba(0,0,0,.22)}
+.studio .studio-track-select{grid-area:select;min-height:42px;padding:7px 9px;border:0;background:transparent;text-align:left}
+.studio .studio-track-name{display:block;color:#f1d477;font-size:14px;font-weight:950;letter-spacing:1.25px}
+.studio .studio-track-select small{display:block;margin-top:3px;color:#878995;font-size:9px;letter-spacing:.25px}
+.studio .studio-track-state{grid-area:state;justify-self:end;padding:5px 7px;border:1px solid #343640;border-radius:999px;color:#666a75;background:#101116;font-size:8px;font-weight:900;letter-spacing:.7px}
+.studio .studio-track-state.ready{border-color:rgba(231,197,107,.26);color:#cdb76f;background:rgba(231,197,107,.055)}
+.studio .studio-track-actions{grid-area:actions;display:flex;gap:5px}
+.studio .studio-track-actions button{min-width:34px;min-height:34px;padding:5px;border-radius:10px;font-size:10px;font-weight:950}
+.studio .studio-track-actions button.active[data-track-mute]{border-color:#ff6f7e;background:#3a171d;color:#ffd0d5}
+.studio .studio-track-actions button.active[data-track-solo]{border-color:#e7c56b;background:#332b16;color:#f5d97f}
+.studio .studio-track label{margin:0;color:#777a85;font-size:8px;font-weight:850;letter-spacing:.8px}
+.studio .studio-track label:first-of-type{grid-area:vol}
+.studio .studio-track label:last-of-type{grid-area:pan}
+.studio .studio-track input[type=range]{margin-top:5px}
+.studio .studio-active-track,.studio .studio-processing-track{margin:10px 0;padding:9px 11px;border-left:2px solid #e7c56b;background:#15161c;color:#a7a8b1;font-size:10px;line-height:1.4}
+.studio .studio-active-track strong,.studio .studio-processing-track strong{color:#f0d27b;letter-spacing:1px}
+@media(max-width:420px){
+  .studio .studio-track{grid-template-columns:minmax(90px,1fr) auto;grid-template-areas:"select actions" "state state" "vol pan"}
+  .studio .studio-track-state{justify-self:start}
+}
