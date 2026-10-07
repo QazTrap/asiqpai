@@ -7,6 +7,8 @@ export function mountStudio({ apiUrl }) {
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
   let aiAvailable = false, tuneAvailable = false, initialized = false, backgroundInterrupted = false;
   let sourceVocal = null, vocalSegments = [], editorCursor = 0, selectedSegmentId = null, editorDrag = null, segmentSeq = 0;
+  let editorPreviewNodes = [], editorPreviewFrame = 0, editorPreviewPlaying = false, editorPreviewStartTime = 0, editorPreviewBaseCursor = 0;
+  const waveformGainCache = new WeakMap();
   let effectState = { ...PRESETS.premium.defaults };
   let bypassAll = false;
   let beatAnalysis = null;
@@ -322,6 +324,8 @@ export function mountStudio({ apiUrl }) {
     for (const id of ['editor-reset','editor-split','editor-auto','editor-left50','editor-left10','editor-right10','editor-right50','editor-delete','editor-bpm','editor-snap','editor-zoom','editor-fit-natural','editor-fit-tight']) {
       if (el(id)) el(id).disabled = busy || recording || !sourceVocal || (id.startsWith('editor-fit-') && !beat);
     }
+    if (el('editor-play')) el('editor-play').disabled = busy || recording || !beat || !vocal;
+    if (el('editor-stop')) el('editor-stop').disabled = !editorPreviewPlaying;
     el('beat-preview').controls = !busy && !recording;
     el('voice-preview').controls = !busy && !recording;
   }
@@ -580,7 +584,20 @@ export function mountStudio({ apiUrl }) {
     const beatEnd = beat ? Math.min(MAX_SECONDS, beat.duration) : 0;
     return Math.max(8, Math.min(MAX_SECONDS, Math.max(beatEnd, segmentEnd + 2, sourceVocal?.duration || 0)));
   }
-  function drawBufferRange(g, buffer, x0, x1, y, height, sourceStart = 0, sourceEnd = buffer?.duration || 0, fill = '#777b87') {
+  function visualWaveGain(buffer) {
+    if (!buffer) return 1;
+    if (waveformGainCache.has(buffer)) return waveformGainCache.get(buffer);
+    const data = buffer.getChannelData(0);
+    const samples = [];
+    const stride = Math.max(1, Math.floor(data.length / 5000));
+    for (let i = 0; i < data.length; i += stride) samples.push(Math.abs(data[i]));
+    samples.sort((a,b) => a - b);
+    const reference = samples[Math.min(samples.length - 1, Math.floor(samples.length * 0.985))] || 0.01;
+    const gain = Math.max(0.75, Math.min(24, 0.82 / Math.max(0.008, reference)));
+    waveformGainCache.set(buffer, gain);
+    return gain;
+  }
+  function drawBufferRange(g, buffer, x0, x1, y, height, sourceStart = 0, sourceEnd = buffer?.duration || 0, fill = '#777b87', displayGain = 1) {
     if (!buffer || x1 <= x0 || sourceEnd <= sourceStart) return;
     const data = buffer.getChannelData(0);
     const sr = buffer.sampleRate;
@@ -594,7 +611,7 @@ export function mountStudio({ apiUrl }) {
       let peak = 0;
       const stride = Math.max(1, Math.floor((to - from) / 12));
       for (let n = from; n < to; n += stride) peak = Math.max(peak, Math.abs(data[n]));
-      const h = Math.max(1, peak * height);
+      const h = Math.min(height, Math.max(1, peak * displayGain * height));
       g.fillRect(x0 + i, y - h / 2, 1, h);
     }
   }
@@ -626,7 +643,7 @@ export function mountStudio({ apiUrl }) {
       }
     }
 
-    if (beat) drawBufferRange(g, beat, 0, Math.min(width, Math.min(beat.duration, duration) * pps), 37, 42, 0, Math.min(beat.duration, duration), '#5d6270');
+    if (beat) drawBufferRange(g, beat, 0, Math.min(width, Math.min(beat.duration, duration) * pps), 37, 42, 0, Math.min(beat.duration, duration), '#5d6270', visualWaveGain(beat));
     g.fillStyle = '#8b8e98'; g.font = '10px sans-serif'; g.fillText('BEAT', 8, 62);
     g.fillStyle = '#c7aa5d'; g.fillText(TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL', 8, 139);
 
@@ -643,7 +660,7 @@ export function mountStudio({ apiUrl }) {
       g.strokeStyle = selected ? '#e7c56b' : '#5d6270';
       g.lineWidth = selected ? 2 : 1;
       g.strokeRect(x0 + .5, 82.5, Math.max(1, x1 - x0 - 1), 56);
-      drawBufferRange(g, sourceVocal, x0, x1, 110, 43, seg.srcStart, seg.srcEnd, selected ? '#efd47f' : '#b1b5c0');
+      drawBufferRange(g, sourceVocal, x0, x1, 110, 43, seg.srcStart, seg.srcEnd, selected ? '#efd47f' : '#b1b5c0', visualWaveGain(sourceVocal));
     }
 
     const cx = Math.max(0, Math.min(width, editorCursor * pps));
@@ -657,6 +674,81 @@ export function mountStudio({ apiUrl }) {
       ? `Фрагмент ${(vocalSegments.indexOf(selected) + 1)} · ${(selected.srcEnd - selected.srcStart).toFixed(2)} с · позиция ${(offset + selected.at).toFixed(2)} с`
       : 'Фрагмент не выбран';
   }
+  function stopEditorPreview() {
+    for (const node of editorPreviewNodes) {
+      try { node.stop(); } catch {}
+    }
+    editorPreviewNodes = [];
+    if (editorPreviewFrame) cancelAnimationFrame(editorPreviewFrame);
+    editorPreviewFrame = 0;
+    editorPreviewPlaying = false;
+    if (el('editor-play')) el('editor-play').textContent = '▶ Бит + вокал';
+    controls();
+  }
+  function scheduleEditorPreviewSource(buffer, level, timelineStart, cursor, pan = 0) {
+    if (!buffer) return 0;
+    const now = ctx.currentTime + 0.025;
+    const start = Number(timelineStart) || 0;
+    const delay = Math.max(0, start - cursor);
+    const skip = Math.max(0, cursor - start);
+    if (skip >= buffer.duration) return 0;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = Math.max(0, Number(level) || 0);
+    source.connect(gain);
+    if (typeof ctx.createStereoPanner === 'function') {
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, Number(pan) || 0));
+      gain.connect(panner).connect(ctx.destination);
+    } else {
+      gain.connect(ctx.destination);
+    }
+    source.start(now + delay, skip);
+    editorPreviewNodes.push(source);
+    return delay + Math.max(0, buffer.duration - skip);
+  }
+  async function startEditorPreview() {
+    if (!beat || !vocal || busy || recording) return;
+    await context();
+    stopEditorPreview();
+    for (const audio of document.querySelectorAll('audio')) audio.pause();
+    const duration = timelineDuration();
+    const cursor = Math.max(0, Math.min(editorCursor, Math.max(0, duration - 0.01)));
+    const beatRemaining = scheduleEditorPreviewSource(beat, Number(el('beat-level')?.value || 60) / 100, 0, cursor, 0);
+    const vocalRemaining = scheduleEditorPreviewSource(vocal, Number(el('voice-level')?.value || 100) / 100, editorOffset(), cursor, Number(el('pan')?.value || 0) / 100);
+    const playFor = Math.max(beatRemaining, vocalRemaining);
+    if (!playFor) {
+      status('В этой точке уже нечего проигрывать.', true);
+      return;
+    }
+    editorPreviewPlaying = true;
+    editorPreviewStartTime = ctx.currentTime;
+    editorPreviewBaseCursor = cursor;
+    if (el('editor-play')) el('editor-play').textContent = 'Ⅱ Играет…';
+    controls();
+    const tick = () => {
+      if (!editorPreviewPlaying) return;
+      const next = editorPreviewBaseCursor + Math.max(0, ctx.currentTime - editorPreviewStartTime);
+      editorCursor = Math.min(duration, next);
+      renderEditor();
+      const scroll = el('editor-scroll'), canvas = el('editor-canvas');
+      if (scroll && canvas) {
+        const x = editorCursor * (canvas.width / duration);
+        if (x > scroll.scrollLeft + scroll.clientWidth * 0.82 || x < scroll.scrollLeft + scroll.clientWidth * 0.12) {
+          scroll.scrollLeft = Math.max(0, x - scroll.clientWidth * 0.28);
+        }
+      }
+      if (ctx.currentTime - editorPreviewStartTime >= playFor || editorCursor >= duration - 0.01) {
+        stopEditorPreview();
+        return;
+      }
+      editorPreviewFrame = requestAnimationFrame(tick);
+    };
+    editorPreviewFrame = requestAnimationFrame(tick);
+    status('Предпрослушивание: бит + выбранная вокальная дорожка.');
+  }
+
   function renderEditedVocal() {
     if (!sourceVocal || !vocalSegments.length) return null;
     const sr = sourceVocal.sampleRate;
@@ -682,6 +774,7 @@ export function mountStudio({ apiUrl }) {
     return outBuffer;
   }
   function commitEditor(message = 'Монтаж вокала обновлён.') {
+    stopEditorPreview();
     const edited = renderEditedVocal();
     vocal = edited; serverVocal = null; serverVocalSignature = ''; invalidate();
     const label = TRACK_DEFAULTS[activeTrackId]?.label || 'VOCAL';
@@ -1024,6 +1117,7 @@ export function mountStudio({ apiUrl }) {
   const editorCanvas = el('editor-canvas');
   editorCanvas?.addEventListener('pointerdown', event => {
     if (!sourceVocal || busy || recording) return;
+    if (editorPreviewPlaying) stopEditorPreview();
     const time = editorTimeFromEvent(event);
     editorCursor = time;
     const rect = editorCanvas.getBoundingClientRect();
@@ -1059,6 +1153,8 @@ export function mountStudio({ apiUrl }) {
   };
   editorCanvas?.addEventListener('pointerup', endEditorDrag);
   editorCanvas?.addEventListener('pointercancel', endEditorDrag);
+  el('editor-play')?.addEventListener('click', () => { if (editorPreviewPlaying) stopEditorPreview(); else startEditorPreview().catch(error => status(error.message || 'Не удалось включить предпрослушивание.', true)); });
+  el('editor-stop')?.addEventListener('click', stopEditorPreview);
   el('editor-split')?.addEventListener('click', splitAtCursor);
   el('editor-auto')?.addEventListener('click', autoSplitSilence);
   el('editor-fit-natural')?.addEventListener('click', () => aiFitToBeat('natural'));
@@ -1130,6 +1226,7 @@ export function mountStudio({ apiUrl }) {
   }
 
   function stopRecording() {
+    stopEditorPreview();
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     clearInterval(recordingTimer);
     stopBackingPlayback();
@@ -1428,7 +1525,7 @@ export function mountStudio({ apiUrl }) {
   }
   window.addEventListener('asiqpai:page', event => {
     if (event.detail === 'studio') initialize();
-    else { if (recording) stopRecording(); for (const id of ['before', 'after', 'beat-preview', 'voice-preview']) el(id).pause(); }
+    else { stopEditorPreview(); if (recording) stopRecording(); for (const id of ['before', 'after', 'beat-preview', 'voice-preview']) el(id).pause(); }
   });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && recording) {
@@ -1437,7 +1534,7 @@ export function mountStudio({ apiUrl }) {
     }
   });
   window.addEventListener('pagehide', () => {
-    disposed = true; if (recording) stopRecording(); stream?.getTracks().forEach(t => t.stop());
+    disposed = true; stopEditorPreview(); if (recording) stopRecording(); stream?.getTracks().forEach(t => t.stop());
     for (const url of urls.values()) URL.revokeObjectURL(url); urls.clear();
   });
   syncFxButtons();
