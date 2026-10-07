@@ -1191,11 +1191,17 @@ export function mountStudio({ apiUrl }) {
   }));
   el('stop').addEventListener('click', stopRecording);
   el('preset').addEventListener('change', applyPresetDefaults);
-  for (const id of ['ai', 'offset', 'beat-level', 'voice-level']) el(id).addEventListener('input', () => {
+  for (const id of ['ai', 'offset', 'beat-level', 'voice-level', 'pan', 'width']) el(id)?.addEventListener('input', () => {
     invalidate();
-    el('beat-value').textContent = `${el('beat-level').value}%`;
-    el('voice-value').textContent = `${el('voice-level').value}%`;
+    if (el('beat-value')) el('beat-value').textContent = `${el('beat-level').value}%`;
+    if (el('voice-value')) el('voice-value').textContent = `${el('voice-level').value}%`;
+    if (el('pan-value')) el('pan-value').textContent = formatPan(Number(el('pan').value) / 100);
+    if (el('width-value')) el('width-value').textContent = `${el('width').value}%`;
     if (id === 'offset') renderEditor();
+    if (id !== 'beat-level') {
+      saveActiveTrackState();
+      updateTrackRack();
+    }
   });
   for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
     el(id)?.addEventListener('input', () => {
@@ -1203,6 +1209,7 @@ export function mountStudio({ apiUrl }) {
       invalidate();
       if (el('tune-amount-value')) el('tune-amount-value').textContent = `${el('tune-amount').value}%`;
       if (el('tune-speed-value')) el('tune-speed-value').textContent = `${el('tune-speed').value}%`;
+      saveActiveTrackState();
     });
   }
   document.querySelectorAll('[data-tune-mode]').forEach(button => {
@@ -1218,6 +1225,7 @@ export function mountStudio({ apiUrl }) {
       effectState[key] = !effectState[key];
       bypassAll = false;
       syncFxButtons();
+      saveActiveTrackState();
       invalidate();
       try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
     });
@@ -1225,6 +1233,7 @@ export function mountStudio({ apiUrl }) {
   el('bypass')?.addEventListener('click', () => {
     bypassAll = !bypassAll;
     syncFxButtons();
+    saveActiveTrackState();
     invalidate();
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch {}
   });
