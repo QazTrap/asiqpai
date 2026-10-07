@@ -309,7 +309,7 @@ export async function renderSessionMix({
       vocal: track.vocal,
       preset: track.preset,
       effects: track.effects,
-      processed,
+      processed: processed && track.processed !== false,
       level: Number.isFinite(track.level) ? track.level : 1,
       pan: Number.isFinite(track.pan) ? track.pan : 0,
       width: Number.isFinite(track.width) ? track.width : 0
