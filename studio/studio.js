@@ -249,11 +249,17 @@ export function mountStudio({ apiUrl }) {
     if (tuneMode !== 'auto' || !beatAnalysis?.key) return;
     if (el('tune-key')) el('tune-key').value = beatAnalysis.key;
     if (el('tune-scale')) el('tune-scale').value = beatAnalysis.scale;
+    const track = activeTrack();
+    if (track) {
+      track.tuneKey = beatAnalysis.key;
+      track.tuneScale = beatAnalysis.scale;
+    }
   }
   function setTuneMode(mode) {
     tuneMode = mode === 'manual' ? 'manual' : 'auto';
     if (tuneMode === 'auto') applyAutoTuneSelection();
     syncTuneMode();
+    saveActiveTrackState();
     controls();
     invalidate();
   }
@@ -344,6 +350,16 @@ export function mountStudio({ apiUrl }) {
 
   function resetBeatAnalysis() {
     beatAnalysis = null;
+    for (const track of Object.values(tracks)) {
+      if (track.tuneMode === 'auto') {
+        track.tuneKey = '';
+        track.tuneScale = '';
+      }
+    }
+    if (tuneMode === 'auto') {
+      if (el('tune-key')) el('tune-key').value = '';
+      if (el('tune-scale')) el('tune-scale').value = '';
+    }
     if (el('analysis-bpm')) el('analysis-bpm').textContent = '—';
     if (el('analysis-key')) el('analysis-key').textContent = '—';
     if (el('analysis-scale')) el('analysis-scale').textContent = '—';
@@ -486,13 +502,21 @@ export function mountStudio({ apiUrl }) {
 
   function applyBeatAnalysis(result) {
     beatAnalysis = result;
+    if (result.key && result.scale) {
+      for (const track of Object.values(tracks)) {
+        if (track.tuneMode === 'auto') {
+          track.tuneKey = result.key;
+          track.tuneScale = result.scale;
+        }
+      }
+    }
     if (el('analysis-bpm')) el('analysis-bpm').textContent = result.bpm || '—';
     if (el('analysis-key')) el('analysis-key').textContent = result.key || '—';
     if (el('analysis-scale')) el('analysis-scale').textContent = result.scale ? (result.scale === 'minor' ? 'Minor' : 'Major') : '—';
     if (el('analysis-confidence')) el('analysis-confidence').textContent = result.confidence ? `${result.confidence}%` : 'LOW';
     if (el('analysis-state')) {
       el('analysis-state').textContent = result.key && result.bpm
-        ? 'Автоанализ завершён. AUTO TUNE настроен под найденную тональность.'
+        ? 'Автоанализ завершён. AUTO TUNE настроен для MID / BACK / ADLIBS.'
         : 'Часть параметров определить не удалось — используйте MANUAL.';
     }
     if (result.bpm && el('editor-bpm')) el('editor-bpm').value = String(Math.max(70, Math.min(200, result.bpm)));
