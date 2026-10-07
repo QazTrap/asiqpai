@@ -9,6 +9,8 @@ export function mountStudio({ apiUrl }) {
   let sourceVocal = null, vocalSegments = [], editorCursor = 0, selectedSegmentId = null, editorDrag = null, segmentSeq = 0;
   let effectState = { ...PRESETS.dry.defaults };
   let bypassAll = false;
+  let beatAnalysis = null;
+  let tuneMode = 'auto';
   const urls = new Map();
   const status = (message, error = false) => { el('status').textContent = message; el('status').classList.toggle('error', error); };
   const lyricsStorageKey = 'asiqpai-vocal-ai-lyrics-v1';
@@ -27,6 +29,31 @@ export function mountStudio({ apiUrl }) {
     if (urls.has(id)) URL.revokeObjectURL(urls.get(id));
     const url = URL.createObjectURL(blob); urls.set(id, url); return url;
   };
+  function syncTuneMode() {
+    document.querySelectorAll('[data-tune-mode]').forEach(button => {
+      const active = button.dataset.tuneMode === tuneMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    const detected = el('tune-detected');
+    if (detected) {
+      detected.textContent = beatAnalysis?.key
+        ? `AUTO: ${beatAnalysis.key} ${beatAnalysis.scale === 'minor' ? 'Minor' : 'Major'} · ${beatAnalysis.confidence}% confidence`
+        : 'AUTO: выберите бит для определения тональности';
+    }
+  }
+  function applyAutoTuneSelection() {
+    if (tuneMode !== 'auto' || !beatAnalysis?.key) return;
+    if (el('tune-key')) el('tune-key').value = beatAnalysis.key;
+    if (el('tune-scale')) el('tune-scale').value = beatAnalysis.scale;
+  }
+  function setTuneMode(mode) {
+    tuneMode = mode === 'manual' ? 'manual' : 'auto';
+    if (tuneMode === 'auto') applyAutoTuneSelection();
+    syncTuneMode();
+    controls();
+    invalidate();
+  }
   function syncFxButtons() {
     document.querySelectorAll('[data-studio-fx]').forEach(button => {
       const key = button.dataset.studioFx;
@@ -38,6 +65,7 @@ export function mountStudio({ apiUrl }) {
     });
     const tuneSettings = el('tune-settings');
     if (tuneSettings) tuneSettings.hidden = !effectState.tune;
+    syncTuneMode();
     const bypass = el('bypass');
     if (bypass) {
       bypass.classList.toggle('active', bypassAll);
@@ -54,15 +82,22 @@ export function mountStudio({ apiUrl }) {
   }
   function controls() {
     for (const id of ['beat', 'upload', 'preset', 'beat-level', 'voice-level', 'offset']) el(id).disabled = busy || recording;
-    for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
-      if (el(id)) el(id).disabled = busy || recording || !effectState.tune || !tuneAvailable;
+    for (const id of ['tune-key', 'tune-scale']) {
+      if (el(id)) el(id).disabled = busy || recording || !effectState.tune || tuneMode === 'auto';
     }
+    for (const id of ['tune-amount', 'tune-speed']) {
+      if (el(id)) el(id).disabled = busy || recording || !effectState.tune;
+    }
+    document.querySelectorAll('[data-tune-mode]').forEach(button => {
+      button.disabled = busy || recording || !effectState.tune;
+    });
+    if (el('analysis-rerun')) el('analysis-rerun').disabled = busy || recording || !beat;
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
     el('process').disabled = busy || recording || !beat || !vocal;
     el('ai').disabled = busy || recording || !aiAvailable;
     document.querySelectorAll('[data-studio-fx]').forEach(button => {
-      button.disabled = busy || recording || (button.dataset.studioFx === 'tune' && !tuneAvailable);
+      button.disabled = busy || recording;
     });
     if (el('bypass')) el('bypass').disabled = busy || recording;
     if (el('lyrics-input')) el('lyrics-input').readOnly = busy || recording;
@@ -92,6 +127,192 @@ export function mountStudio({ apiUrl }) {
     if (!audio.length || audio.duration > max + 0.25) throw new Error(`Максимальная длительность — ${max} секунд.`);
     return audio;
   }
+  const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const MAJOR_PROFILE = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+  const MINOR_PROFILE = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+
+  function resetBeatAnalysis() {
+    beatAnalysis = null;
+    if (el('analysis-bpm')) el('analysis-bpm').textContent = '—';
+    if (el('analysis-key')) el('analysis-key').textContent = '—';
+    if (el('analysis-scale')) el('analysis-scale').textContent = '—';
+    if (el('analysis-confidence')) el('analysis-confidence').textContent = '—';
+    if (el('analysis-state')) el('analysis-state').textContent = 'Анализ ещё не выполнен.';
+    syncTuneMode();
+  }
+
+  function downmixForAnalysis(buffer, maxSeconds = 75, targetRate = 11025) {
+    const stride = Math.max(1, Math.round(buffer.sampleRate / targetRate));
+    const sampleRate = buffer.sampleRate / stride;
+    const sourceLength = Math.min(buffer.length, Math.floor(maxSeconds * buffer.sampleRate));
+    const length = Math.max(1, Math.ceil(sourceLength / stride));
+    const out = new Float32Array(length);
+    const channels = Array.from({ length: buffer.numberOfChannels }, (_, index) => buffer.getChannelData(index));
+    let outIndex = 0;
+    for (let sourceIndex = 0; sourceIndex < sourceLength; sourceIndex += stride) {
+      let sample = 0;
+      for (const channel of channels) sample += channel[sourceIndex] || 0;
+      out[outIndex++] = sample / Math.max(1, channels.length);
+    }
+    return { samples: out, sampleRate };
+  }
+
+  function estimateBpm(samples, sampleRate) {
+    const frame = 512, hop = 256;
+    const frames = Math.floor((samples.length - frame) / hop);
+    if (frames < 24) return { bpm: null, confidence: 0 };
+    const envelope = new Float32Array(frames);
+    let previous = 0;
+    for (let n = 0; n < frames; n++) {
+      const start = n * hop;
+      let energy = 0;
+      for (let i = 0; i < frame; i += 2) {
+        const x = samples[start + i] || 0;
+        energy += x * x;
+      }
+      const rms = Math.sqrt(energy / (frame / 2));
+      envelope[n] = Math.max(0, rms - previous);
+      previous = rms * 0.75 + previous * 0.25;
+    }
+    let mean = 0;
+    for (const value of envelope) mean += value;
+    mean /= envelope.length;
+    for (let i = 0; i < envelope.length; i++) envelope[i] = Math.max(0, envelope[i] - mean * 0.55);
+
+    const rate = sampleRate / hop;
+    const minLag = Math.max(2, Math.floor(rate * 60 / 180));
+    const maxLag = Math.min(envelope.length - 2, Math.ceil(rate * 60 / 70));
+    const candidates = [];
+    for (let lag = minLag; lag <= maxLag; lag++) {
+      let cross = 0, left = 0, right = 0;
+      for (let i = lag; i < envelope.length; i++) {
+        const a = envelope[i], b = envelope[i - lag];
+        cross += a * b; left += a * a; right += b * b;
+      }
+      const score = cross / Math.sqrt(Math.max(1e-12, left * right));
+      const bpm = 60 * rate / lag;
+      const tempoBias = bpm >= 85 && bpm <= 165 ? 1.035 : 1;
+      candidates.push({ bpm, lag, score: score * tempoBias });
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    const best = candidates[0];
+    if (!best || !Number.isFinite(best.bpm)) return { bpm: null, confidence: 0 };
+    const rival = candidates.find(candidate => Math.abs(candidate.lag - best.lag) > 2) || candidates[1] || { score: 0 };
+    const separation = Math.max(0, best.score - rival.score);
+    const confidence = Math.max(35, Math.min(94, Math.round(45 + best.score * 35 + separation * 90)));
+    return { bpm: Math.round(best.bpm), confidence };
+  }
+
+  function goertzelPower(frame, sampleRate, frequency) {
+    const omega = 2 * Math.PI * frequency / sampleRate;
+    const coeff = 2 * Math.cos(omega);
+    let s1 = 0, s2 = 0;
+    for (let i = 0; i < frame.length; i++) {
+      const s0 = frame[i] + coeff * s1 - s2;
+      s2 = s1; s1 = s0;
+    }
+    return Math.max(0, s1 * s1 + s2 * s2 - coeff * s1 * s2);
+  }
+
+  function correlationForRoot(chroma, profile, root) {
+    let xMean = 0, yMean = 0;
+    for (let i = 0; i < 12; i++) {
+      xMean += chroma[(root + i) % 12];
+      yMean += profile[i];
+    }
+    xMean /= 12; yMean /= 12;
+    let numerator = 0, xPower = 0, yPower = 0;
+    for (let i = 0; i < 12; i++) {
+      const x = chroma[(root + i) % 12] - xMean;
+      const y = profile[i] - yMean;
+      numerator += x * y; xPower += x * x; yPower += y * y;
+    }
+    return numerator / Math.sqrt(Math.max(1e-12, xPower * yPower));
+  }
+
+  function estimateKey(samples, sampleRate) {
+    const frameSize = 2048;
+    if (samples.length < frameSize * 2) return { key: null, scale: null, confidence: 0 };
+    const chroma = new Float64Array(12);
+    const frameCount = Math.min(14, Math.max(6, Math.floor(samples.length / (sampleRate * 3))));
+    const usable = Math.max(1, samples.length - frameSize);
+    let analysedFrames = 0;
+    for (let f = 0; f < frameCount; f++) {
+      const start = Math.floor((f + 0.5) * usable / frameCount);
+      const frame = new Float32Array(frameSize);
+      let mean = 0;
+      for (let i = 0; i < frameSize; i++) mean += samples[start + i] || 0;
+      mean /= frameSize;
+      let energy = 0;
+      for (let i = 0; i < frameSize; i++) {
+        const window = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (frameSize - 1));
+        const value = ((samples[start + i] || 0) - mean) * window;
+        frame[i] = value;
+        energy += value * value;
+      }
+      if (energy < 1e-5) continue;
+      analysedFrames++;
+      for (let midi = 48; midi <= 83; midi++) {
+        const frequency = 440 * Math.pow(2, (midi - 69) / 12);
+        if (frequency >= sampleRate * 0.45) continue;
+        const power = goertzelPower(frame, sampleRate, frequency);
+        chroma[midi % 12] += Math.log1p(power);
+      }
+    }
+    if (!analysedFrames) return { key: null, scale: null, confidence: 0 };
+    const scores = [];
+    for (let root = 0; root < 12; root++) {
+      scores.push({ root, scale: 'major', score: correlationForRoot(chroma, MAJOR_PROFILE, root) });
+      scores.push({ root, scale: 'minor', score: correlationForRoot(chroma, MINOR_PROFILE, root) });
+    }
+    scores.sort((a, b) => b.score - a.score);
+    const best = scores[0], second = scores[1] || { score: 0 };
+    if (!best || !Number.isFinite(best.score)) return { key: null, scale: null, confidence: 0 };
+    const separation = Math.max(0, best.score - second.score);
+    const confidence = Math.max(35, Math.min(95, Math.round(48 + Math.max(0, best.score) * 30 + separation * 120)));
+    return { key: NOTE_NAMES[best.root], scale: best.scale, confidence };
+  }
+
+  function applyBeatAnalysis(result) {
+    beatAnalysis = result;
+    if (el('analysis-bpm')) el('analysis-bpm').textContent = result.bpm || '—';
+    if (el('analysis-key')) el('analysis-key').textContent = result.key || '—';
+    if (el('analysis-scale')) el('analysis-scale').textContent = result.scale ? (result.scale === 'minor' ? 'Minor' : 'Major') : '—';
+    if (el('analysis-confidence')) el('analysis-confidence').textContent = result.confidence ? `${result.confidence}%` : 'LOW';
+    if (el('analysis-state')) {
+      el('analysis-state').textContent = result.key && result.bpm
+        ? 'Автоанализ завершён. AUTO TUNE настроен под найденную тональность.'
+        : 'Часть параметров определить не удалось — используйте MANUAL.';
+    }
+    if (result.bpm && el('editor-bpm')) el('editor-bpm').value = String(Math.max(70, Math.min(200, result.bpm)));
+    applyAutoTuneSelection();
+    syncTuneMode();
+    renderEditor();
+  }
+
+  async function runBeatAnalysis(buffer) {
+    if (!buffer) return;
+    if (el('analysis-state')) el('analysis-state').textContent = 'Анализируем BPM и тональность…';
+    await new Promise(resolve => setTimeout(resolve, 25));
+    const preview = downmixForAnalysis(buffer);
+    const tempo = estimateBpm(preview.samples, preview.sampleRate);
+    const tonality = estimateKey(preview.samples, preview.sampleRate);
+    const confidenceValues = [tempo.confidence, tonality.confidence].filter(Boolean);
+    const confidence = confidenceValues.length
+      ? Math.round(confidenceValues.reduce((sum, value) => sum + value, 0) / confidenceValues.length)
+      : 0;
+    const result = {
+      bpm: tempo.bpm,
+      key: tonality.key,
+      scale: tonality.scale,
+      confidence,
+      bpmConfidence: tempo.confidence,
+      keyConfidence: tonality.confidence
+    };
+    applyBeatAnalysis(result);
+    return result;
+  }
+
   async function action(fn) {
     if (busy || recording) return;
     busy = true; controls();
@@ -450,7 +671,7 @@ export function mountStudio({ apiUrl }) {
   }
   el('beat').addEventListener('change', () => action(async () => {
     await context();
-    invalidate(); beat = null; el('beat-preview').pause(); el('beat-preview').removeAttribute('src');
+    invalidate(); beat = null; resetBeatAnalysis(); el('beat-preview').pause(); el('beat-preview').removeAttribute('src');
     const option = el('beat').selectedOptions[0]; if (!option?.value) return;
     status('Загружаем бит…');
     const response = await fetch(option.value, { signal: AbortSignal.timeout(45000) });
@@ -459,8 +680,23 @@ export function mountStudio({ apiUrl }) {
     // Existing catalogue beats may exceed three minutes; render only the first three.
     beat = await decode(blob, 600); beatName = option.textContent;
     el('beat-preview').src = setURL('beat-preview', blob);
+    status('Анализируем BPM и тональность бита…');
+    const detected = await runBeatAnalysis(beat);
     renderEditor();
-    status('Бит готов. Запишите голос в наушниках или загрузите отдельную вокальную дорожку.');
+    const summary = detected?.key && detected?.bpm
+      ? `${detected.bpm} BPM · ${detected.key} ${detected.scale === 'minor' ? 'Minor' : 'Major'}`
+      : 'анализ частично завершён';
+    status(`Бит готов · ${summary}. Запишите голос или загрузите отдельную вокальную дорожку.`);
+  }));
+  el('analysis-rerun')?.addEventListener('click', () => action(async () => {
+    if (!beat) return;
+    status('Повторно анализируем BPM и тональность…');
+    const detected = await runBeatAnalysis(beat);
+    if (detected?.key && detected?.bpm) {
+      status(`Анализ: ${detected.bpm} BPM · ${detected.key} ${detected.scale === 'minor' ? 'Minor' : 'Major'}.`);
+    } else {
+      status('Не удалось уверенно определить все параметры. Используйте MANUAL.', true);
+    }
   }));
   el('upload').addEventListener('change', () => action(async () => {
     const file = el('upload').files[0]; if (!file) return;
@@ -616,16 +852,22 @@ export function mountStudio({ apiUrl }) {
   });
   for (const id of ['tune-key', 'tune-scale', 'tune-amount', 'tune-speed']) {
     el(id)?.addEventListener('input', () => {
+      if ((id === 'tune-key' || id === 'tune-scale') && tuneMode !== 'manual') setTuneMode('manual');
       invalidate();
       if (el('tune-amount-value')) el('tune-amount-value').textContent = `${el('tune-amount').value}%`;
       if (el('tune-speed-value')) el('tune-speed-value').textContent = `${el('tune-speed').value}%`;
     });
   }
+  document.querySelectorAll('[data-tune-mode]').forEach(button => {
+    button.addEventListener('click', () => {
+      setTuneMode(button.dataset.tuneMode);
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
   document.querySelectorAll('[data-studio-fx]').forEach(button => {
     button.addEventListener('click', () => {
       const key = button.dataset.studioFx;
       if (!Object.hasOwn(effectState, key)) return;
-      if (key === 'tune' && !tuneAvailable) return;
       effectState[key] = !effectState[key];
       bypassAll = false;
       syncFxButtons();
@@ -755,8 +997,15 @@ export function mountStudio({ apiUrl }) {
     }
     el('ai-state').textContent = aiAvailable ? '— доступна' : '— сервер не подключён';
     const tuneButton = document.querySelector('[data-studio-fx="tune"]');
-    if (tuneButton && !tuneAvailable) {
-      tuneButton.title = 'TUNE пока недоступен на сервере';
+    if (tuneButton) {
+      tuneButton.title = tuneAvailable
+        ? 'TUNE доступен. AUTO использует найденную тональность бита.'
+        : 'Серверный TUNE пока недоступен, но KEY/SCALE можно настроить заранее.';
+    }
+    if (el('tune-availability')) {
+      el('tune-availability').textContent = tuneAvailable
+        ? '✓ Серверный TUNE доступен. В AUTO используется тональность из Beat Analysis.'
+        : '⚠ Серверный TUNE пока не подключён. AUTO/MANUAL и выбор KEY/SCALE доступны, но обработка TUNE не запустится.';
     }
     syncFxButtons();
     controls();
