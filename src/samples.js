@@ -28,7 +28,17 @@ function assertAccess(userId){
   throw error;
 }
 function providerReady(){
-  return String(process.env.STABILITY_API_KEY||"").trim().length>10;
+  return String(process.env.SUNO_API_KEY||"").trim().length>20;
+}
+function sunoBaseUrl(){
+  return String(process.env.SUNO_API_BASE_URL||"https://api.suno.com").trim().replace(/\/$/,"");
+}
+function audioExtForMime(mime){
+  const value=String(mime||"").toLowerCase();
+  if(value.includes("wav")||value.includes("wave")) return "wav";
+  if(value.includes("flac")) return "flac";
+  if(value.includes("mp4")||value.includes("m4a")) return "m4a";
+  return "mp3";
 }
 function settingsFrom(value){
   value=value||{};
@@ -101,78 +111,86 @@ function transformSettings(source,action){
   s.description=[s.description,extra].filter(Boolean).join(" ").slice(0,600);
   return s;
 }
-function stabilityHeaders(){
+function sunoHeaders(){
   return {
-    authorization:"Bearer "+String(process.env.STABILITY_API_KEY||"").trim(),
-    accept:"audio/*",
-    "stability-client-id":"asiqpai-samples",
-    "stability-client-version":"0.3.0"
+    authorization:"Bearer "+String(process.env.SUNO_API_KEY||"").trim(),
+    accept:"application/json",
+    "content-type":"application/json"
   };
+}
+function sunoStyle(settings){
+  return promptFor(settings)
+    .replace(/\s{2,}/g," ")
+    .trim()
+    .slice(0,1000);
 }
 async function submitAudio(settings,seed){
   if(!providerReady()){
-    const error=new Error("AI Samples ещё не подключён к генератору.");
+    const error=new Error("Suno API ещё не подключён.");
     error.status=503;
     throw error;
   }
 
-  const model=String(process.env.SAMPLES_STABILITY_MODEL||"stable-audio-2.5").trim();
-  const useV3=model==="stable-audio-3";
-  const form=new FormData();
-  form.append("none",new Blob([],{type:"application/octet-stream"}),"none");
-  form.append("prompt",promptFor(settings));
-  form.append("duration",String(durationFor(settings)));
-  form.append("model",useV3?"stable-audio-3":"stable-audio-2.5");
-  form.append("output_format","wav");
-  form.append("seed",String(seed));
-  form.append("steps","8");
-  form.append("cfg_scale",String(Math.max(1,Math.min(25,Number(process.env.SAMPLES_CFG_SCALE||4)))));
-
-  const endpoint=useV3
-    ?"https://api.stability.ai/v2beta/audio/stable-audio/text-to-audio"
-    :"https://api.stability.ai/v2beta/audio/stable-audio-2/text-to-audio";
-
-  const response=await fetch(endpoint,{
-    method:"POST",headers:stabilityHeaders(),body:form,signal:AbortSignal.timeout(useV3?65000:180000)
+  const title=("ASIQPAI "+PRESETS[settings.preset][0]+" "+settings.bpm+" "+settings.key+" "+settings.bars+" bars").slice(0,80);
+  const response=await fetch(sunoBaseUrl()+"/v0/audio",{
+    method:"POST",
+    headers:sunoHeaders(),
+    body:JSON.stringify({
+      style:sunoStyle(settings),
+      title,
+      instrumental:true
+    }),
+    signal:AbortSignal.timeout(45000)
   });
-
-  if(useV3){
-    const data=await response.json().catch(()=>({}));
-    if(response.status!==202||!/^[a-f0-9]{64}$/i.test(String(data.id||""))){
-      const detail=String(data?.errors?.join?.("; ")||data?.message||data?.name||"").slice(0,240);
-      const error=new Error("Stable Audio "+response.status+(detail?": "+detail:""));
-      error.status=response.status;
-      throw error;
-    }
-    return {generationId:data.id};
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||!data?.id){
+    const detail=String(data?.error||data?.message||"").slice(0,240);
+    const error=new Error("Suno API "+response.status+(detail?": "+detail:""));
+    error.status=response.status||502;
+    throw error;
   }
-
-  if(response.status!==200){
-    const data=await response.json().catch(()=>({}));
-    const detail=String(data?.errors?.join?.("; ")||data?.message||data?.name||"").slice(0,240);
-    const error=new Error("Stable Audio "+response.status+(detail?": "+detail:""));
-    error.status=response.status;
+  return {generationId:String(data.id),seed};
+}
+async function fetchAudio(id){
+  const response=await fetch(sunoBaseUrl()+"/v0/audio/"+encodeURIComponent(id),{
+    headers:sunoHeaders(),
+    signal:AbortSignal.timeout(30000)
+  });
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok){
+    const detail=String(data?.error||data?.message||"").slice(0,240);
+    const error=new Error("Suno result "+response.status+(detail?": "+detail:""));
+    error.status=response.status||502;
     throw error;
   }
 
-  const audio=Buffer.from(await response.arrayBuffer());
-  if(audio.length<44||audio.length>32*1024*1024||audio.toString("ascii",0,4)!=="RIFF"||audio.toString("ascii",8,12)!=="WAVE"){
-    const error=new Error("Stable Audio вернул некорректный WAV.");
+  const status=String(data?.status||"").toLowerCase();
+  if(status==="error"||status==="failed"){
+    return {status:"failed",error:String(data?.error||"Suno generation failed").slice(0,300)};
+  }
+  if(status!=="complete"){
+    return {status:"waiting"};
+  }
+
+  const url=String(data?.audio_url||"").trim();
+  if(!/^https:\/\//i.test(url)){
+    return {status:"failed",error:"Suno не вернул итоговый audio URL."};
+  }
+  const audioResponse=await fetch(url,{signal:AbortSignal.timeout(90000)});
+  if(!audioResponse.ok){
+    const error=new Error("Suno audio download "+audioResponse.status);
     error.status=502;
     throw error;
   }
-  return {audio};
-}
-async function fetchAudio(id){
-  const response=await fetch("https://api.stability.ai/v2beta/audio/results/"+encodeURIComponent(id),{
-    headers:stabilityHeaders(),signal:AbortSignal.timeout(45000)
-  });
-  if(response.status===202) return {status:"waiting"};
-  if(response.status===404) return {status:"failed",error:"Результат генерации истёк или не найден."};
-  if(response.status!==200) throw new Error("Stable Audio result failed.");
-  const audio=Buffer.from(await response.arrayBuffer());
-  if(audio.length<44||audio.length>32*1024*1024||audio.toString("ascii",0,4)!=="RIFF"||audio.toString("ascii",8,12)!=="WAVE") throw new Error("Некорректный WAV.");
-  return {status:"ready",audio};
+  const audio=Buffer.from(await audioResponse.arrayBuffer());
+  if(audio.length<1024||audio.length>40*1024*1024){
+    const error=new Error("Suno вернул некорректный аудиофайл.");
+    error.status=502;
+    throw error;
+  }
+  let mime=String(audioResponse.headers.get("content-type")||"").split(";")[0].trim().toLowerCase();
+  if(!mime.startsWith("audio/")) mime=url.toLowerCase().includes(".wav")?"audio/wav":"audio/mpeg";
+  return {status:"ready",audio,mime};
 }
 
 export function mountSampleRoutes(app,{pool,requireTelegramUser}){
@@ -204,7 +222,8 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       schemaPromise=(async()=>{
         await pool.query("CREATE TABLE IF NOT EXISTS sample_ai_usage (telegram_id BIGINT NOT NULL, usage_day DATE NOT NULL DEFAULT CURRENT_DATE, requests INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (telegram_id,usage_day))");
         await pool.query("CREATE TABLE IF NOT EXISTS sample_ai_jobs (id UUID PRIMARY KEY, telegram_id BIGINT NOT NULL, request_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'waiting', count INTEGER NOT NULL CHECK (count IN (1,3)), settings JSONB NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), UNIQUE (telegram_id,request_id))");
-        await pool.query("CREATE TABLE IF NOT EXISTS sample_ai_variants (id UUID PRIMARY KEY, job_id UUID NOT NULL REFERENCES sample_ai_jobs(id) ON DELETE CASCADE, telegram_id BIGINT NOT NULL, generation_id TEXT, seed BIGINT NOT NULL, status TEXT NOT NULL DEFAULT 'waiting', favorite BOOLEAN NOT NULL DEFAULT FALSE, audio BYTEA, error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+        await pool.query("CREATE TABLE IF NOT EXISTS sample_ai_variants (id UUID PRIMARY KEY, job_id UUID NOT NULL REFERENCES sample_ai_jobs(id) ON DELETE CASCADE, telegram_id BIGINT NOT NULL, generation_id TEXT, seed BIGINT NOT NULL, status TEXT NOT NULL DEFAULT 'waiting', favorite BOOLEAN NOT NULL DEFAULT FALSE, audio BYTEA, audio_mime TEXT, error TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())");
+        await pool.query("ALTER TABLE sample_ai_variants ADD COLUMN IF NOT EXISTS audio_mime TEXT");
         await pool.query("CREATE INDEX IF NOT EXISTS sample_ai_variants_user_idx ON sample_ai_variants (telegram_id,created_at DESC)");
       })().catch(error=>{schemaPromise=null;throw error;});
     }
@@ -233,7 +252,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       const result=await fetchAudio(row.generation_id);
       if(result.status==="waiting") return row;
       if(result.status==="ready"){
-        const r=await pool.query("UPDATE sample_ai_variants SET status='ready',audio=$2,error=NULL,updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,result.audio]);
+        const r=await pool.query("UPDATE sample_ai_variants SET status='ready',audio=$2,audio_mime=$3,error=NULL,updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,result.audio,result.mime||"audio/mpeg"]);
         return r.rows[0];
       }
       const r=await pool.query("UPDATE sample_ai_variants SET status='failed',error=$2,updated_at=NOW() WHERE id=$1 RETURNING *",[row.id,result.error||"Generation failed"]);
@@ -259,7 +278,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
     await initSchema(); assertAccess(userId);
     const settings=settingsFrom(value);
     const count=Number(countValue);
-    if(![1,3].includes(count)) throw new Error("Можно создать 1 или 3 варианта.");
+    if(count!==1) throw new Error("На этапе теста Suno создаём по 1 варианту, чтобы не тратить кредиты впустую.");
     const requestId=String(requestIdValue||"").trim();
     if(!/^[a-zA-Z0-9_-]{8,100}$/.test(requestId)) throw new Error("Некорректный идентификатор запроса.");
     if(!providerReady()){const e=new Error("AI Samples ещё не подключён к генератору.");e.status=503;throw e;}
@@ -280,7 +299,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       try{
         const result=await submitAudio(settings,seed);
         if(result.audio){
-          await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,seed,status,audio) VALUES ($1,$2,$3,$4,'ready',$5)",[variantId,jobId,userId,seed,result.audio]);
+          await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,seed,status,audio,audio_mime) VALUES ($1,$2,$3,$4,'ready',$5,$6)",[variantId,jobId,userId,seed,result.audio,result.mime||"audio/mpeg"]);
         }else{
           await pool.query("INSERT INTO sample_ai_variants (id,job_id,telegram_id,generation_id,seed,status) VALUES ($1,$2,$3,$4,$5,'waiting')",[variantId,jobId,userId,result.generationId,seed]);
         }
@@ -306,7 +325,7 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       const unlimited=unlimitedFor(req.telegramUser.id);
       const used=await usage(req.telegramUser.id);
       res.set("Cache-Control","no-store");
-      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v[0]})),keys:[...KEYS],limits:{daily:unlimited?null:dailyLimit,used,remaining:unlimited?null:Math.max(0,dailyLimit-used),unlimited},provider_ready:providerReady()});
+      res.json({ok:true,settings:settingsFrom(last.rows[0]?.settings||{}),presets:Object.entries(PRESETS).map(([id,v])=>({id,name:v[0]})),keys:[...KEYS],limits:{daily:unlimited?null:dailyLimit,used,remaining:unlimited?null:Math.max(0,dailyLimit-used),unlimited},provider:"suno",provider_ready:providerReady(),max_variants:1});
     }catch(error){fail(res,error);}
   });
   app.get("/api/samples/history",requireTelegramUser,async(req,res)=>{
@@ -331,7 +350,9 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       row=await refresh(row);
       if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
       const download=String(req.query.download||"0")==="1";
-      res.set({"Content-Type":"audio/wav","Cache-Control":"private, max-age=300","Content-Disposition":(download?"attachment":"inline")+"; filename=\"ASIQPAI_"+row.id+".wav\""});
+      const mime=row.audio_mime||"audio/mpeg";
+      const ext=audioExtForMime(mime);
+      res.set({"Content-Type":mime,"Cache-Control":"private, max-age=300","Content-Disposition":(download?"attachment":"inline")+"; filename=\"ASIQPAI_"+row.id+"."+ext+"\"","X-Content-Type-Options":"nosniff"});
       res.send(row.audio);
     }catch(error){fail(res,error);}
   });
@@ -344,7 +365,8 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
       const token=makeDownloadToken(req.telegramUser.id,row.id);
       res.set("Cache-Control","no-store");
-      res.json({ok:true,path:"/api/samples/download/"+encodeURIComponent(token),filename:"ASIQPAI_"+row.id+".wav"});
+      const ext=audioExtForMime(row.audio_mime||"audio/mpeg");
+      res.json({ok:true,path:"/api/samples/download/"+encodeURIComponent(token),filename:"ASIQPAI_"+row.id+"."+ext});
     }catch(error){fail(res,error);}
   });
   app.get("/api/samples/download/:token",async(req,res)=>{
@@ -356,11 +378,13 @@ export function mountSampleRoutes(app,{pool,requireTelegramUser}){
       if(!row){const e=new Error("Сэмпл не найден.");e.status=404;throw e;}
       row=await refresh(row);
       if(row.status!=="ready"||!row.audio){const e=new Error("Сэмпл ещё не готов.");e.status=409;throw e;}
+      const mime=row.audio_mime||"audio/mpeg";
+      const ext=audioExtForMime(mime);
       res.set({
-        "Content-Type":"audio/wav",
+        "Content-Type":mime,
         "Content-Length":String(row.audio.length),
         "Cache-Control":"private, no-store",
-        "Content-Disposition":"attachment; filename=\"ASIQPAI_"+row.id+".wav\"",
+        "Content-Disposition":"attachment; filename=\"ASIQPAI_"+row.id+"."+ext+"\"",
         "X-Content-Type-Options":"nosniff"
       });
       res.send(row.audio);
