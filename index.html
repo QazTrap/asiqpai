@@ -4948,14 +4948,68 @@ body .track-item-buy{
                     </div>
                     <p class="muted">На iPhone не сворачивайте Telegram во время записи: iOS останавливает микрофон у мини-приложения. Читайте текст здесь и прокручивайте его прямо во время дубля.</p>
                 </div>
+                <div class="studio-track-rack" id="studio-track-rack" aria-label="Вокальные дорожки">
+                    <article class="studio-track active" data-track-card="mid">
+                        <button type="button" class="studio-track-select" data-track-select="mid">
+                            <span class="studio-track-name">MID</span>
+                            <small>Основной вокал</small>
+                        </button>
+                        <span class="studio-track-state" id="studio-track-mid-state">EMPTY</span>
+                        <div class="studio-track-actions">
+                            <button type="button" data-track-mute="mid" aria-pressed="false">M</button>
+                            <button type="button" data-track-solo="mid" aria-pressed="false">S</button>
+                        </div>
+                        <label>VOL
+                            <input type="range" min="0" max="150" value="100" data-track-level="mid">
+                        </label>
+                        <label>PAN
+                            <input type="range" min="-100" max="100" value="0" data-track-pan="mid">
+                        </label>
+                    </article>
+                    <article class="studio-track" data-track-card="back">
+                        <button type="button" class="studio-track-select" data-track-select="back">
+                            <span class="studio-track-name">BACK</span>
+                            <small>Бэки / даблы</small>
+                        </button>
+                        <span class="studio-track-state" id="studio-track-back-state">EMPTY</span>
+                        <div class="studio-track-actions">
+                            <button type="button" data-track-mute="back" aria-pressed="false">M</button>
+                            <button type="button" data-track-solo="back" aria-pressed="false">S</button>
+                        </div>
+                        <label>VOL
+                            <input type="range" min="0" max="150" value="76" data-track-level="back">
+                        </label>
+                        <label>PAN
+                            <input type="range" min="-100" max="100" value="0" data-track-pan="back">
+                        </label>
+                    </article>
+                    <article class="studio-track" data-track-card="adlibs">
+                        <button type="button" class="studio-track-select" data-track-select="adlibs">
+                            <span class="studio-track-name">ADLIBS</span>
+                            <small>Вставки / выкрики</small>
+                        </button>
+                        <span class="studio-track-state" id="studio-track-adlibs-state">EMPTY</span>
+                        <div class="studio-track-actions">
+                            <button type="button" data-track-mute="adlibs" aria-pressed="false">M</button>
+                            <button type="button" data-track-solo="adlibs" aria-pressed="false">S</button>
+                        </div>
+                        <label>VOL
+                            <input type="range" min="0" max="150" value="82" data-track-level="adlibs">
+                        </label>
+                        <label>PAN
+                            <input type="range" min="-100" max="100" value="12" data-track-pan="adlibs">
+                        </label>
+                    </article>
+                </div>
+                <div class="studio-active-track" id="studio-active-track">Сейчас записывается: <strong>MID</strong></div>
                 <div class="row">
-                    <button id="studio-record" type="button" disabled>● Записать под бит</button>
+                    <button id="studio-record" type="button" disabled>● REC MID</button>
                     <button id="studio-stop" type="button" disabled>■ Остановить запись</button>
                 </div>
                 <p class="muted" id="studio-input-source">🎙 Источник записи: будет определён при запуске микрофона</p>
-                <label for="studio-upload">Или загрузите вокал без бита (до 25 МБ)</label>
+                <label for="studio-upload">Или загрузите вокал на выбранную дорожку (до 25 МБ)</label>
                 <input id="studio-upload" type="file" accept="audio/*">
-                <p class="muted" id="studio-vocal-info">Голос ещё не добавлен. Запись заменяет предыдущий дубль.</p>
+                <p class="muted" id="studio-vocal-info">MID: голос ещё не добавлен. Запись заменяет дубль только на выбранной дорожке.</p>
                 <canvas id="studio-wave" class="wave" width="600" height="68" aria-label="Волновая форма вокала"></canvas>
                 <audio id="studio-voice-preview" controls preload="none"></audio>
 
@@ -5015,11 +5069,14 @@ body .track-item-buy{
 
             <div class="studio-card">
                 <h2>03 / AI и обработка</h2>
-                <label for="studio-preset">Обработка голоса</label>
+                <div class="studio-processing-track">Настройки дорожки: <strong id="studio-processing-track-name">MID</strong></div>
+                <label for="studio-preset">Характер обработки</label>
                 <select id="studio-preset">
-                    <option value="dry">Сухой рэп</option>
-                    <option value="soft">Мягкий вокал</option>
-                    <option value="space">Атмосферный</option>
+                    <option value="clean">MID · CLEAN</option>
+                    <option value="premium" selected>MID · PREMIUM</option>
+                    <option value="dark">MID · DARK</option>
+                    <option value="back">BACK · WIDE</option>
+                    <option value="adlibs">ADLIBS · SPACE</option>
                 </select>
                 <label class="check">
                     <input id="studio-ai" type="checkbox" disabled>
@@ -5066,18 +5123,23 @@ body .track-item-buy{
                 </div>
                 <label for="studio-beat-level">Громкость бита <output id="studio-beat-value">60%</output></label>
                 <input id="studio-beat-level" type="range" min="0" max="100" value="60">
-                <label for="studio-voice-level">Громкость голоса <output id="studio-voice-value">100%</output></label>
+                <label for="studio-voice-level">Громкость выбранной дорожки <output id="studio-voice-value">100%</output></label>
                 <input id="studio-voice-level" type="range" min="0" max="150" value="100">
-                <label for="studio-offset">Начало вокала относительно бита, секунды</label>
+                <label for="studio-pan">PAN <output id="studio-pan-value">CENTER</output></label>
+                <input id="studio-pan" type="range" min="-100" max="100" value="0">
+                <label for="studio-width">WIDTH / DOUBLE <output id="studio-width-value">0%</output></label>
+                <input id="studio-width" type="range" min="0" max="100" value="0">
+                <p class="muted">BACK и ADLIBS по умолчанию шире. MID остаётся по центру.</p>
+                <label for="studio-offset">Начало выбранной дорожки относительно бита, секунды</label>
                 <input id="studio-offset" type="number" min="-10" max="180" step="0.01" value="0">
                 <p class="muted">Положительное значение сдвигает голос позже, отрицательное — раньше.</p>
-                <button id="studio-process" type="button" class="primary" disabled>Обработать и собрать демо</button>
+                <button id="studio-process" type="button" class="primary" disabled>Собрать полный микс MID + BACK + ADLIBS</button>
             </div>
 
             <div class="studio-card" id="studio-result" hidden>
                 <h2>04 / Результат</h2>
                 <p id="studio-result-info" class="muted"></p>
-                <label for="studio-before">До обработки — бит + исходный голос</label>
+                <label for="studio-before">До обработки — бит + все вокальные дорожки</label>
                 <audio id="studio-before" controls preload="metadata"></audio>
                 <label for="studio-after">После обработки</label>
                 <audio id="studio-after" controls preload="metadata"></audio>
