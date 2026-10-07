@@ -961,6 +961,66 @@ export function mountStudio({ apiUrl }) {
     try { localStorage.removeItem(lyricsStorageKey); } catch {}
   });
 
+  document.querySelectorAll('[data-track-select]').forEach(button => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.trackSelect;
+      if (!tracks[id] || busy || recording) return;
+      loadTrackState(id);
+      status(`${TRACK_DEFAULTS[id].label} выбран. Запись и настройки относятся только к этой дорожке.`);
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-mute]').forEach(button => {
+    button.addEventListener('click', () => {
+      const track = tracks[button.dataset.trackMute];
+      if (!track || busy || recording) return;
+      if (track.id === activeTrackId) saveActiveTrackState();
+      track.muted = !track.muted;
+      updateTrackRack();
+      invalidate();
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-solo]').forEach(button => {
+    button.addEventListener('click', () => {
+      const track = tracks[button.dataset.trackSolo];
+      if (!track || busy || recording) return;
+      if (track.id === activeTrackId) saveActiveTrackState();
+      track.solo = !track.solo;
+      updateTrackRack();
+      invalidate();
+      try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch {}
+    });
+  });
+
+  document.querySelectorAll('[data-track-level]').forEach(input => {
+    input.addEventListener('input', () => {
+      const track = tracks[input.dataset.trackLevel];
+      if (!track) return;
+      track.level = Number(input.value) / 100;
+      if (track.id === activeTrackId && el('voice-level')) {
+        el('voice-level').value = input.value;
+        el('voice-value').textContent = `${input.value}%`;
+      }
+      invalidate();
+    });
+  });
+
+  document.querySelectorAll('[data-track-pan]').forEach(input => {
+    input.addEventListener('input', () => {
+      const track = tracks[input.dataset.trackPan];
+      if (!track) return;
+      track.pan = Number(input.value) / 100;
+      if (track.id === activeTrackId && el('pan')) {
+        el('pan').value = input.value;
+        el('pan-value').textContent = formatPan(track.pan);
+      }
+      invalidate();
+    });
+  });
+
   const editorCanvas = el('editor-canvas');
   editorCanvas?.addEventListener('pointerdown', event => {
     if (!sourceVocal || busy || recording) return;
