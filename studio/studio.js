@@ -1,19 +1,89 @@
-import { MAX_SECONDS, analyse, encodeWav, renderMix, PRESETS } from './audio.js';
+import { MAX_SECONDS, analyse, encodeWav, renderSessionMix, PRESETS } from './audio.js';
 
 export function mountStudio({ apiUrl }) {
   const el = id => document.getElementById(`studio-${id}`);
   if (!el('beat')) return;
-  let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing, recordingTimer;
+  let ctx, beat, vocal, serverVocal, serverVocalSignature = '', recorder, stream, backing = [], recordingTimer;
   let busy = false, recording = false, disposed = false, elapsed = 0, mixBlob, beatName = 'demo';
   let aiAvailable = false, tuneAvailable = false, initialized = false, backgroundInterrupted = false;
   let sourceVocal = null, vocalSegments = [], editorCursor = 0, selectedSegmentId = null, editorDrag = null, segmentSeq = 0;
-  let effectState = { ...PRESETS.dry.defaults };
+  let effectState = { ...PRESETS.premium.defaults };
   let bypassAll = false;
   let beatAnalysis = null;
   let tuneMode = 'auto';
   const urls = new Map();
   const status = (message, error = false) => { el('status').textContent = message; el('status').classList.toggle('error', error); };
   const lyricsStorageKey = 'asiqpai-vocal-ai-lyrics-v1';
+
+  const TRACK_DEFAULTS = {
+    mid: {
+      label: 'MID',
+      description: 'Основной вокал',
+      preset: 'premium',
+      level: 1,
+      pan: 0,
+      width: 0,
+      tuneAmount: 58,
+      tuneSpeed: 34
+    },
+    back: {
+      label: 'BACK',
+      description: 'Бэки / даблы',
+      preset: 'back',
+      level: 0.76,
+      pan: 0,
+      width: 0.78,
+      tuneAmount: 78,
+      tuneSpeed: 62
+    },
+    adlibs: {
+      label: 'ADLIBS',
+      description: 'Вставки / выкрики',
+      preset: 'adlibs',
+      level: 0.82,
+      pan: 0.12,
+      width: 0.58,
+      tuneAmount: 84,
+      tuneSpeed: 68
+    }
+  };
+
+  function createTrackState(id) {
+    const defaults = TRACK_DEFAULTS[id];
+    return {
+      id,
+      vocal: null,
+      sourceVocal: null,
+      vocalSegments: [],
+      editorCursor: 0,
+      selectedSegmentId: null,
+      serverVocal: null,
+      serverVocalSignature: '',
+      preset: defaults.preset,
+      effectState: { ...PRESETS[defaults.preset].defaults },
+      bypassAll: false,
+      aiClean: false,
+      tuneMode: 'auto',
+      tuneKey: '',
+      tuneScale: '',
+      tuneAmount: defaults.tuneAmount,
+      tuneSpeed: defaults.tuneSpeed,
+      offset: 0,
+      level: defaults.level,
+      pan: defaults.pan,
+      width: defaults.width,
+      muted: false,
+      solo: false
+    };
+  }
+
+  const tracks = {
+    mid: createTrackState('mid'),
+    back: createTrackState('back'),
+    adlibs: createTrackState('adlibs')
+  };
+  let activeTrackId = 'mid';
+  const activeTrack = () => tracks[activeTrackId];
   function syncTeleprompterText() {
     const input = el('lyrics-input'), view = el('teleprompter-text');
     if (view) view.textContent = input?.value || '';
