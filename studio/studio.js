@@ -1080,16 +1080,66 @@ export function mountStudio({ apiUrl }) {
     commitEditor('Монтаж сброшен к исходной записи.');
   });
   for (const id of ['editor-bpm','editor-snap','editor-zoom']) el(id)?.addEventListener('input', renderEditor);
+  function stopBackingPlayback() {
+    for (const node of backing) {
+      try { node.stop(); } catch {}
+    }
+    backing = [];
+  }
+
+  function startMonitorSource(buffer, level = 1, pan = 0, offset = 0) {
+    if (!buffer) return;
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    const gain = ctx.createGain();
+    gain.gain.value = Math.max(0, Number(level) || 0);
+    source.connect(gain);
+    if (typeof ctx.createStereoPanner === 'function') {
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = Math.max(-1, Math.min(1, Number(pan) || 0));
+      gain.connect(panner).connect(ctx.destination);
+    } else {
+      gain.connect(ctx.destination);
+    }
+    const safeOffset = Number(offset) || 0;
+    const skip = Math.max(0, -safeOffset);
+    if (skip < buffer.duration) {
+      source.start(Math.max(0, safeOffset), skip);
+      backing.push(source);
+    }
+  }
+
+  function startRecordingBacking() {
+    stopBackingPlayback();
+    const beatSource = ctx.createBufferSource();
+    beatSource.buffer = beat;
+    const beatGain = ctx.createGain();
+    beatGain.gain.value = Number(el('beat-level').value) / 100;
+    beatSource.connect(beatGain).connect(ctx.destination);
+    beatSource.start();
+    backing.push(beatSource);
+
+    saveActiveTrackState();
+    const sessionTracks = Object.values(tracks);
+    const hasSolo = sessionTracks.some(track => track.solo && track.vocal && track.id !== activeTrackId);
+    for (const track of sessionTracks) {
+      if (track.id === activeTrackId || !track.vocal || track.muted) continue;
+      if (hasSolo && !track.solo) continue;
+      startMonitorSource(track.vocal, track.level, track.pan, track.offset);
+    }
+  }
+
   function stopRecording() {
     if (recorder && recorder.state !== 'inactive') recorder.stop();
     clearInterval(recordingTimer);
-    try { backing?.stop(); } catch {}
-    backing = null; stream?.getTracks().forEach(track => track.stop()); stream = null;
+    stopBackingPlayback();
+    stream?.getTracks().forEach(track => track.stop()); stream = null;
     recording = false;
     el('teleprompter')?.classList.remove('recording');
   }
   el('record').addEventListener('click', () => action(async () => {
     backgroundInterrupted = false;
+    saveActiveTrackState();
     if (el('lyrics-input')?.value.trim()) setTeleprompter(true);
     await context();
     for (const a of document.querySelectorAll('audio')) a.pause();
@@ -1114,7 +1164,7 @@ export function mountStudio({ apiUrl }) {
     recorder.onstop = async () => {
       const wasBackgroundInterrupted = backgroundInterrupted;
       backgroundInterrupted = false;
-      busy = true; stopRecording(); controls(); status('Сохраняем дубль…');
+      busy = true; stopRecording(); controls(); status(`Сохраняем ${TRACK_DEFAULTS[activeTrackId].label}…`);
       try {
         const blob = new Blob(chunks, { type: recorder.mimeType });
         const buffer = await decode(blob, MAX_SECONDS + 2);
@@ -1129,17 +1179,15 @@ export function mountStudio({ apiUrl }) {
     };
     recorder.onstart = () => {
       el('teleprompter')?.classList.add('recording');
-      backing = ctx.createBufferSource(); backing.buffer = beat;
-      const gain = ctx.createGain(); gain.gain.value = Number(el('beat-level').value) / 100;
-      backing.connect(gain).connect(ctx.destination); backing.start();
+      startRecordingBacking();
       elapsed = performance.now();
       recordingTimer = setInterval(() => {
         const secs = (performance.now() - elapsed) / 1000;
-        status(`● Запись ${Math.floor(secs)} / ${MAX_SECONDS} с. После записи при необходимости поправьте синхронизацию.`);
+        status(`● ${TRACK_DEFAULTS[activeTrackId].label} · запись ${Math.floor(secs)} / ${MAX_SECONDS} с. В наушниках играет бит и уже записанные дорожки.`);
         if (secs >= Math.min(MAX_SECONDS, beat.duration)) stopRecording();
       }, 200);
     };
-    invalidate(); recorder.start(250); recording = true; controls(); status('● Запись началась…');
+    invalidate(); recorder.start(250); recording = true; controls(); status(`● REC ${TRACK_DEFAULTS[activeTrackId].label}…`);
   }));
   el('stop').addEventListener('click', stopRecording);
   el('preset').addEventListener('change', applyPresetDefaults);
