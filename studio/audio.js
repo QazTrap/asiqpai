@@ -1,3 +1,5 @@
+import { applyVocalProMix, routeProMixMaster, resolveProMixSettings } from './pro-mix.js';
+
 export const MAX_SECONDS = 180;
 
 export const PRESETS = {
@@ -168,7 +170,9 @@ function connectVoice({
   processed = true,
   level = 1,
   pan = 0,
-  width = 0
+  width = 0,
+  proMix = null,
+  trackId = 'mid'
 }) {
   const p = PRESETS[preset] || PRESETS.premium;
   const enabled = { ...p.defaults, ...(effects || {}) };
@@ -204,6 +208,11 @@ function connectVoice({
       output.connect(comp);
       output = comp;
     }
+  }
+
+  // Optional vocal polish follows standard non-destructive EQ / compression.
+  if (processed && proMix?.enabled) {
+    output = applyVocalProMix(ctx, output, proMix, trackId);
   }
 
   const dryBus = ctx.createGain();
@@ -254,10 +263,10 @@ function startVoiceSource(source, vocal, offset = 0) {
   if (skip < vocal.duration) source.start(Math.max(0, safeOffset), skip);
 }
 
-async function normalizeRendered(result) {
+async function normalizeRendered(result, ceiling = 0.97) {
   const { peak } = analyse(result);
-  if (peak > 0.97) {
-    const scale = 0.97 / peak;
+  if (peak > ceiling) {
+    const scale = ceiling / peak;
     for (let c = 0; c < result.numberOfChannels; c++) {
       const d = result.getChannelData(c);
       for (let i = 0; i < d.length; i++) d[i] *= scale;
@@ -270,7 +279,8 @@ export async function renderSessionMix({
   beat,
   tracks = [],
   beatLevel = 0.6,
-  processed = true
+  processed = true,
+  proMix = null
 }) {
   if (!beat) throw new Error('Сначала выберите бит.');
   const audible = tracks.filter(track => track?.vocal && !track.muted);
@@ -290,7 +300,8 @@ export async function renderSessionMix({
   const ctx = new OfflineAudioContext(2, Math.ceil(duration * 44100), 44100);
   const master = ctx.createGain();
   master.gain.value = 0.72;
-  master.connect(ctx.destination);
+  const proMixSettings = resolveProMixSettings(processed ? proMix : null);
+  routeProMixMaster(ctx, master, ctx.destination, proMixSettings);
 
   const backing = ctx.createBufferSource();
   backing.buffer = beat;
@@ -312,12 +323,16 @@ export async function renderSessionMix({
       processed: processed && track.processed !== false,
       level: Number.isFinite(track.level) ? track.level : 1,
       pan: Number.isFinite(track.pan) ? track.pan : 0,
-      width: Number.isFinite(track.width) ? track.width : 0
+      width: Number.isFinite(track.width) ? track.width : 0,
+      proMix: proMixSettings,
+      trackId: track.id || 'mid'
     });
     startVoiceSource(source, track.vocal, track.offset);
   }
 
-  return normalizeRendered(await ctx.startRendering());
+  // Pro Mix sets a safer sample-peak ceiling near -1 dBFS; true-peak analysis
+  // and loudness-targeted mastering are not claimed in this first version.
+  return normalizeRendered(await ctx.startRendering(), proMixSettings.enabled && proMixSettings.intensity > 0 ? 0.89 : 0.97);
 }
 
 export async function renderMix({

@@ -123,3 +123,20 @@
 .studio .studio-editor-transport #studio-editor-play{border-color:rgba(231,197,107,.58);background:linear-gradient(145deg,rgba(231,197,107,.18),rgba(231,197,107,.07));color:#f0d27b;font-weight:850}
 .studio .studio-editor-transport span{margin-left:auto;color:#6f7280;font-size:8px;letter-spacing:.7px}
 @media(max-width:430px){.studio .studio-editor-transport span{width:100%;margin-left:0}}
+
+
+/* ASIQPAI PRO MIX — isolated styles, keep existing studio effects unchanged. */
+.studio .studio-pro-mix-card{margin:18px 0;padding:18px;border:1px solid rgba(230,196,109,.38);border-radius:20px;background:radial-gradient(circle at 100% 0,rgba(212,175,55,.11),transparent 55%),linear-gradient(160deg,#1b1916,#111218);box-shadow:inset 0 1px rgba(255,255,255,.035)}
+.studio .studio-pro-mix-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.studio .studio-pro-mix-label{color:#b49b66;font-size:9px;letter-spacing:2px;font-weight:900}
+.studio .studio-pro-mix-heading h3{margin:3px 0 0;color:#f2d781;font-size:23px;font-weight:950;letter-spacing:1.2px}
+.studio .studio-pro-mix-heading h3 small{vertical-align:middle;margin-left:4px;padding:4px 7px;border:1px solid rgba(231,197,107,.35);border-radius:999px;color:#e4c981;font-size:9px;letter-spacing:1px}
+.studio .studio-pro-mix-mark{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;border:1px solid rgba(212,175,55,.3);background:#262116;color:#efd47f;font-size:24px}
+.studio .studio-pro-mix-check{display:flex;align-items:center;gap:11px;margin:16px 0;padding:12px;border:1px solid rgba(212,175,55,.22);border-radius:12px;background:rgba(212,175,55,.075);font-weight:800}
+.studio .studio-pro-mix-check input{width:20px;height:20px;margin:0;accent-color:#e7c56b;flex-shrink:0}
+.studio #studio-pro-mix-options{padding:1px 2px 0}
+.studio #studio-pro-mix-options label{font-size:12px;font-weight:750}
+.studio #studio-pro-mix-intensity-value{float:right;color:#f1d47e;font-weight:900}
+.studio .studio-pro-mix-disclaimer{font-size:10px;opacity:.8}
+.studio #studio-pro-mix-report{padding:9px 12px;border-left:2px solid #bca463;background:#14151a;font-size:11px;line-height:1.5}
+@media(max-width:360px){.studio .studio-pro-mix-card{padding:14px}.studio .studio-pro-mix-heading h3{font-size:19px}}

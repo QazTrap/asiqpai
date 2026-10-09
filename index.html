@@ -5138,12 +5138,35 @@ body .track-item-buy{
                 <label for="studio-offset">Начало выбранной дорожки относительно бита, секунды</label>
                 <input id="studio-offset" type="number" min="-10" max="180" step="0.01" value="0">
                 <p class="muted">Положительное значение сдвигает голос позже, отрицательное — раньше.</p>
+                <div class="studio-pro-mix-card" id="studio-pro-mix-card">
+                    <div class="studio-pro-mix-heading">
+                        <div><span class="studio-pro-mix-label">ASIQPAI / NEW</span><h3>AI PRO MIX <small>BETA</small></h3></div>
+                        <span class="studio-pro-mix-mark" aria-hidden="true">◉</span>
+                    </div>
+                    <p class="muted">Плотный, сухой рэп-вокал: контролируем низ, добавляем разборчивость и мягкую сатурацию, затем слегка склеиваем общий микс. Ваш тембр, слова и флоу не заменяются.</p>
+                    <label class="check studio-pro-mix-check" for="studio-pro-mix-enable">
+                        <input id="studio-pro-mix-enable" type="checkbox">
+                        <span>Включить PRO MIX для экспорта</span>
+                    </label>
+                    <div id="studio-pro-mix-options" hidden>
+                        <label for="studio-pro-mix-style">Характер звучания</label>
+                        <select id="studio-pro-mix-style">
+                            <option value="dry" selected>DRY PUNCH · сухой, плотный вокал</option>
+                            <option value="heavy">HEAVY · более агрессивный</option>
+                        </select>
+                        <label for="studio-pro-mix-intensity">Интенсивность <output id="studio-pro-mix-intensity-value">65%</output></label>
+                        <input id="studio-pro-mix-intensity" type="range" min="0" max="100" step="5" value="65">
+                        <p class="muted">Начните с 65%. Результат зависит от качества микрофона и исходной записи.</p>
+                    </div>
+                    <p class="muted studio-pro-mix-disclaimer">Версия 1 использует локальную Web Audio обработку, без генерации голоса. AI CLEAN и TUNE по-прежнему работают отдельно при наличии серверного обработчика.</p>
+                </div>
                 <button id="studio-process" type="button" class="primary" disabled>Собрать полный микс MID + BACK + ADLIBS</button>
             </div>
 
             <div class="studio-card" id="studio-result" hidden>
                 <h2>04 / Результат</h2>
                 <p id="studio-result-info" class="muted"></p>
+                <p id="studio-pro-mix-report" class="muted" aria-live="polite"></p>
                 <label for="studio-before">До обработки — бит + все вокальные дорожки</label>
                 <audio id="studio-before" controls preload="metadata"></audio>
                 <label for="studio-after">После обработки</label>
