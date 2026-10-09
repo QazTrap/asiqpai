@@ -332,7 +332,7 @@ export async function renderSessionMix({
 
   // Pro Mix sets a safer sample-peak ceiling near -1 dBFS; true-peak analysis
   // and loudness-targeted mastering are not claimed in this first version.
-  return normalizeRendered(await ctx.startRendering(), proMixSettings.enabled ? 0.89 : 0.97);
+  return normalizeRendered(await ctx.startRendering(), proMixSettings.enabled && proMixSettings.intensity > 0 ? 0.89 : 0.97);
 }
 
 export async function renderMix({
