@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<title>ASIQPAI / AI PRO MIX · Test</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0b0d;--surface:#18181c;--border:#39342c;--gold:#e8c77d;--dim:#aaa7a0;--white:#faf4e9}
+*{box-sizing:border-box}body{margin:0;color:var(--white);background:radial-gradient(circle at 70% 0%,#302414 0%,transparent 29%),var(--bg);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:600px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 26px) 15px calc(env(safe-area-inset-bottom) + 50px)}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:18px}header strong{letter-spacing:3px;color:var(--gold);font-size:15px}.tag{font-size:10px;font-weight:800;letter-spacing:2px;border:1px solid var(--border);border-radius:24px;padding:7px 11px;color:#cdb783}
+h1{font-size:clamp(29px,9vw,46px);letter-spacing:1.7px;line-height:1.06;margin:0 0 12px}h1 span{color:var(--gold)}.lead{color:#beb8ac;font-size:13px;line-height:1.7;margin-bottom:24px}
+section{background:linear-gradient(155deg,#1c1b1b,#111115);border:1px solid var(--border);border-radius:20px;margin-bottom:15px;padding:19px;box-shadow:0 8px 40px #0003}
+section h2{font-size:14px;letter-spacing:1.3px;margin:0 0 14px;text-transform:uppercase}section h2 b{color:var(--gold);margin-right:10px}
+label{display:block;color:#e8dcc3;font-size:12px;margin:14px 0 7px;font-weight:650}
+input[type=file],select{display:block;width:100%;max-width:100%;background:#29282a;border:1px solid #4b463d;color:white;border-radius:12px;padding:11px;font-size:12px}
+input[type=range]{width:100%;accent-color:var(--gold)}input[type=checkbox]{accent-color:var(--gold);width:19px;height:19px}
+small,p.muted{font-size:11px;line-height:1.6;color:var(--dim)}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+button,.download{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:48px;border:1px solid #71603b;border-radius:12px;background:#2a241b;color:#ead6a8;font:800 12px system-ui;cursor:pointer;text-decoration:none;text-align:center;padding:12px}
+button.main,.download{background:linear-gradient(135deg,#f1d993,#c39b4f);color:#20190c;border:0;font-size:14px}
+button.secondary{background:#242427;border-color:#484348;color:#e9e7e3}button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #f3d77f;outline-offset:3px}
+.switch{display:flex;align-items:center;gap:10px;background:#29251c;border-radius:14px;padding:12px;margin:12px 0}
+.switch label{margin:0}.switch span{display:block;font-size:11px;color:var(--dim);font-weight:400;margin-top:2px}
+#options[hidden],#results[hidden]{display:none}#status{padding:12px 14px;background:#14171b;border-left:3px solid #d9b869;color:#ead6a7;border-radius:5px;font-size:12px;line-height:1.65;margin:18px 0;white-space:pre-line}#status.error{border-color:#fa7d7d;color:#ffa3a3}
+audio{width:100%;display:block;margin:9px 0 15px}.readout{color:var(--gold);font-size:12px;text-align:right}
+.note{background:#151518;border-radius:12px;padding:12px;color:#b1aba0;font-size:11px;line-height:1.6;margin-top:16px}
+@media(max-width:390px){main{padding-left:11px;padding-right:11px}section{padding:15px}}
+</style>
+</head>
+<body>
+<main>
+<header><strong>ASIQPAI</strong><span class="tag">PRO MIX / PRIVATE TEST</span></header>
+<h1>ВАШ ГОЛОС.<br><span>НОВЫЙ УРОВЕНЬ.</span></h1>
+<p class="lead">Тестовая студия рэп-вокала. Записывайте поверх своего бита и сравнивайте звук с обработкой и без. Всё аудио остаётся на Вашем устройстве.</p>
+<section>
+  <h2><b>01</b> Выберите бит</h2>
+  <label for="beat">Инструментал (MP3 / WAV / M4A и другие поддерживаемые браузером форматы)</label>
+  <input type="file" id="beat" accept="audio/*">
+  <small id="beatDetails">До 3 минут, желательно без вокала.</small>
+  <label for="beatVolume">Громкость бита <output id="beatVolumeText">60%</output></label>
+  <input id="beatVolume" type="range" min="0" max="100" value="60">
+</section>
+<section>
+  <h2><b>02</b> Ваш голос</h2>
+  <label for="recordTrack">Куда записать</label>
+  <select id="recordTrack"><option value="mid">MID — основной голос</option><option value="back">BACK — бэки</option><option value="adlibs">ADLIBS — эдлибы</option></select>
+  <div class="row" style="margin-top:12px">
+    <button id="record" type="button" disabled>● НАЧАТЬ ЗАПИСЬ</button>
+    <button id="stop" type="button" class="secondary" disabled>■ СТОП</button>
+  </div>
+  <small>Наденьте наушники, чтобы бит не попал в микрофон. Запись заменит только выбранную дорожку.</small>
+  <div id="uploads">
+    <label for="mid">MID — загрузить чистый вокал</label><input type="file" id="mid" accept="audio/*">
+    <label for="back">BACK — дополнительная дорожка</label><input type="file" id="back" accept="audio/*">
+    <label for="adlibs">ADLIBS — дополнительная дорожка</label><input type="file" id="adlibs" accept="audio/*">
+  </div>
+  <label for="offset">Сдвиг дорожек относительно бита <output id="offsetText">0 ms</output></label>
+  <input type="range" id="offset" min="-500" max="500" value="0" step="10">
+  <small>Если записанный голос немного запаздывает, попробуйте отрицательный сдвиг.</small>
+  <small id="voiceDetails">Ни одной записанной дорожки.</small>
+</section>
+<section>
+  <h2><b>03</b> AI PRO MIX · BETA</h2>
+  <div class="switch">
+    <input type="checkbox" id="enabled">
+    <label for="enabled">Включить PRO MIX<span>Ничего не меняет в исходной записи</span></label>
+  </div>
+  <div id="options" hidden>
+    <label for="style">Характер звучания</label>
+    <select id="style">
+      <option value="dry">DRY PUNCH — сухой и плотный</option>
+      <option value="heavy">HEAVY — более агрессивный</option>
+    </select>
+    <label for="intensity">Интенсивность <output id="intensityText">65%</output></label>
+    <input type="range" id="intensity" min="0" max="100" value="65" step="5">
+  </div>
+  <button type="button" class="main" id="render" disabled style="margin-top:14px">◉ СВЕСТИ ТРЕК</button>
+  <div class="note">Это тест локальной DSP-обработки, а не нейросетевое сведение. Сервер и аккаунт ASIQPAI не используются. Для красивого микса нужна чистая запись.</div>
+</section>
+<div id="status" role="status" aria-live="polite">Загрузите бит и вокал или запишите его через микрофон.</div>
+<section id="results" hidden>
+  <h2><b>04</b> Сравнение и экспорт</h2>
+  <label for="before">До PRO MIX — обычная обработка студии</label>
+  <audio id="before" controls preload="metadata"></audio>
+  <label for="after">После PRO MIX</label>
+  <audio id="after" controls preload="metadata"></audio>
+  <p id="report" class="muted"></p>
+  <a id="download" class="download" download="ASIQPAI-PRO-MIX.wav">↓ СКАЧАТЬ WAV</a>
+</section>
+<p class="muted">© ASIQPAI / staging. Храните скачанный WAV: при закрытии страницы запись удаляется из оперативной памяти.</p>
+</main>
+<script type="module" src="./app.js"></script>
+</body>
+</html>
