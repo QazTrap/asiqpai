@@ -4,7 +4,7 @@ import { resolveProMixSettings, applyVocalProMix, routeProMixMaster, measureProM
 
 function makeNode(type, registry) {
   const node = {
-    type,
+    kind: type,
     connections: [],
     frequency: { value: 0 }, gain: { value: 0 }, Q: { value: 0 },
     threshold: { value: 0 }, ratio: { value: 0 }, knee: { value: 0 },
@@ -48,11 +48,11 @@ test('enabled mode uses vocal filters, soft saturation and master glue', () => {
   const settings = { enabled:true, style:'heavy', intensity:70 };
   const vocalOut = applyVocalProMix(ctx, input, settings, 'mid');
   assert.notEqual(vocalOut, input);
-  assert.equal(nodes.filter(n=>n.type==='biquad').length, 4);
-  assert.ok(nodes.some(n=>n.type==='waveshaper' && n.curve.length===1025));
-  assert.ok(nodes.filter(n=>n.type==='biquad').every(n=>Number.isFinite(n.frequency.value)));
+  assert.equal(nodes.filter(n=>n.kind==='biquad').length, 4);
+  assert.ok(nodes.some(n=>n.kind==='waveshaper' && n.curve.length===1025));
+  assert.ok(nodes.filter(n=>n.kind==='biquad').every(n=>Number.isFinite(n.frequency.value)));
   routeProMixMaster(ctx, vocalOut, master, settings);
-  const comp = nodes.find(n=>n.type==='compressor');
+  const comp = nodes.find(n=>n.kind==='compressor');
   assert.ok(comp && comp.ratio.value > 1);
   assert.ok(nodes.some(n=>n.connections.includes(master)));
 });
