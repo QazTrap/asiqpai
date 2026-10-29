@@ -4640,66 +4640,63 @@ body .track-item-buy{
 </style>
 
 <link rel="stylesheet" href="studio/studio.css">
+
+<style id="home-backend-v1">
+/* Home: restore the ASIQPAI Backend v1.0 crown landing screen.
+   AI tools remain in their source files and can be re-enabled later. */
+#page-home .home-backend-hero{
+    width:100%;
+    min-height:min(620px,calc(100dvh - 132px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    padding:24px 16px 32px!important;
+    box-sizing:border-box;
+    display:flex!important;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:24px;
+    text-align:center;
+}
+#page-home .home-backend-logo{
+    display:block;
+    width:clamp(210px,64vw,292px)!important;
+    max-width:78vw!important;
+    height:auto;
+    margin:0 auto!important;
+    filter:brightness(1.02) drop-shadow(0 18px 36px rgba(214,180,76,.20));
+    animation:asiqLogoGlow 4.5s ease-in-out infinite!important;
+}
+#page-home .home-backend-title{
+    color:#f4d875;
+    font-size:clamp(14px,3.8vw,18px);
+    line-height:1.4;
+    font-weight:900;
+    letter-spacing:1.8px;
+    text-transform:uppercase;
+    text-shadow:0 0 20px rgba(212,175,55,.16);
+}
+@media(max-height:620px){
+    #page-home .home-backend-hero{
+        min-height:calc(100dvh - 104px);
+        gap:14px;
+        padding:10px 12px 18px!important;
+    }
+    #page-home .home-backend-logo{width:clamp(160px,43vh,230px)!important}
+}
+@media(prefers-reduced-motion:reduce){
+    #page-home .home-backend-logo{animation:none!important}
+}
+</style>
+
 </head>
 <body>
 <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
 <main class="app-shell">
     <section class="app-page" id="page-home" data-page="home">
-        <div class="ai-studio-home">
-            <div class="ai-studio-kicker"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i> ASIQPAI AI</div>
-            <h1 class="ai-studio-title">AI STUDIO</h1>
-            <p class="ai-studio-copy">Инструменты искусственного интеллекта для музыкантов и артистов.</p>
-
-            <div class="ai-tool-card ai-tool-card-active" id="aiSamplesCard">
-                <div class="ai-tool-icon" aria-hidden="true"><i class="fa-solid fa-wave-square"></i></div>
-                <div class="ai-tool-body">
-                    <div class="ai-tool-topline">
-                        <strong>AI Samples</strong>
-                        <span class="ai-tool-badge">BETA</span>
-                    </div>
-                    <p>Создавайте оригинальные мелодии и лупы: BPM, тональность, длина, стиль и настроение.</p>
-                    <div class="ai-tool-features">
-                        <span>BPM</span>
-                        <span>KEY</span>
-                        <span>4 / 8 BARS</span>
-                        <span>WAV</span>
-                    </div>
-                </div>
-                <button class="ai-tool-open" id="aiSamplesOpenButton" type="button">
-                    OPEN
-                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-                </button>
-            </div>
-
-            <div class="ai-tool-card ai-tool-card-active" id="aiVocalCard">
-                <div class="ai-tool-icon" aria-hidden="true"><i class="fa-solid fa-microphone-lines"></i></div>
-                <div class="ai-tool-body">
-                    <div class="ai-tool-topline">
-                        <strong>Vocal AI</strong>
-                        <span class="ai-tool-badge">BETA</span>
-                    </div>
-                    <p>Запись под бит, AI-шумодав, TUNE по тональности, обработка голоса и экспорт готового WAV.</p>
-                    <div class="ai-tool-features">
-                        <span>RECORD</span>
-                        <span>AI DENOISE</span>
-                        <span>TUNE</span>
-                        <span>VOCAL FX</span>
-                        <span>WAV</span>
-                    </div>
-                </div>
-                <button class="ai-tool-open" id="aiVocalOpenButton" type="button" data-open-page="studio">
-                    OPEN
-                    <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-                </button>
-            </div>
-
-            <div class="ai-studio-next">
-                <span>NEXT AI TOOLS</span>
-                <small>Дальше можно добавить Stem AI, mastering и другие музыкальные инструменты.</small>
-            </div>
+        <div class="home-hero crown-tap-game home-backend-hero" aria-label="ASIQPAI Home">
+            <img src="images/crow.png" class="logo home-backend-logo" alt="ASIQPAI crown logo" draggable="false">
+            <div class="home-backend-title">ASIQPAI Backend v1.0</div>
         </div>
-
 
         <div class="artist-card" id="submissionCard" aria-live="polite" data-paid-action hidden>
             <div class="artist-card-head">
@@ -5163,7 +5160,7 @@ body .track-item-buy{
 <nav class="app-bottom-nav" aria-label="Навигация приложения">
 <button class="nav-tab active" type="button" data-target="music"><i class="fa-solid fa-music"></i><span>Music</span></button>
 <button class="nav-tab" type="button" data-target="library"><i class="fa-solid fa-book-open"></i><span>Library</span></button>
-<button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI Studio</span></button>
+<button class="nav-tab" type="button" data-target="home"><i class="fa-solid fa-crown"></i><span>Home</span></button>
 <button class="nav-tab" type="button" data-target="wallet"><i class="fa-solid fa-wallet"></i><span>Wallet</span></button>
 <button class="nav-tab" type="button" data-target="community"><i class="fa-solid fa-users"></i><span>Community</span></button>
 </nav>
