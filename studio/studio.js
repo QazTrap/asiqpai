@@ -1,4 +1,5 @@
 import { MAX_SECONDS, analyse, encodeWav, renderSessionMix, PRESETS } from './audio.js';
+import { measureProMixStats } from './pro-mix.js';
 
 export function mountStudio({ apiUrl }) {
   const el = id => document.getElementById(`studio-${id}`);
@@ -309,6 +310,9 @@ export function mountStudio({ apiUrl }) {
     document.querySelectorAll('[data-track-select],[data-track-mute],[data-track-solo],[data-track-level],[data-track-pan]').forEach(control => {
       control.disabled = busy || recording;
     });
+    for (const id of ['pro-mix-enable', 'pro-mix-style', 'pro-mix-intensity']) {
+      if (el(id)) el(id).disabled = busy || recording;
+    }
     if (el('analysis-rerun')) el('analysis-rerun').disabled = busy || recording || !beat;
     el('record').disabled = busy || recording || !beat || !navigator.mediaDevices?.getUserMedia || !window.MediaRecorder;
     el('stop').disabled = !recording;
@@ -1288,6 +1292,14 @@ export function mountStudio({ apiUrl }) {
   }));
   el('stop').addEventListener('click', stopRecording);
   el('preset').addEventListener('change', applyPresetDefaults);
+  for (const id of ['pro-mix-enable', 'pro-mix-style', 'pro-mix-intensity']) {
+    el(id)?.addEventListener('input', () => {
+      const active = el('pro-mix-enable')?.checked === true;
+      if (el('pro-mix-options')) el('pro-mix-options').hidden = !active;
+      if (el('pro-mix-intensity-value')) el('pro-mix-intensity-value').textContent = `${el('pro-mix-intensity')?.value || 0}%`;
+      invalidate();
+    });
+  }
   for (const id of ['ai', 'offset', 'beat-level', 'voice-level', 'pan', 'width']) el(id)?.addEventListener('input', () => {
     invalidate();
     if (el('beat-value')) el('beat-value').textContent = `${el('beat-level').value}%`;
@@ -1438,6 +1450,11 @@ export function mountStudio({ apiUrl }) {
     });
 
     const beatLevel = Number(el('beat-level').value) / 100;
+    const proMix = {
+      enabled: el('pro-mix-enable')?.checked === true,
+      style: el('pro-mix-style')?.value || 'dry',
+      intensity: Number(el('pro-mix-intensity')?.value || 65)
+    };
     status('Собираем исходный микс MID / BACK / ADLIBS…');
     const before = await renderSessionMix({
       beat,
@@ -1447,19 +1464,20 @@ export function mountStudio({ apiUrl }) {
     });
     el('before').src = setURL('before', encodeWav(before));
 
-    status('Собираем полный вокальный микс…');
+    status(proMix.enabled ? 'PRO MIX: обрабатываем вокал и общий микс…' : 'Собираем полный вокальный микс…');
     const after = await renderSessionMix({
       beat,
       tracks: recorded.map(track => toMixTrack(track, true)),
       beatLevel,
-      processed: true
+      processed: true,
+      proMix
     });
 
     mixBlob = encodeWav(after);
     el('after').src = setURL('after', mixBlob);
     el('download').href = setURL('download', mixBlob);
     const name = beatName.replace(/[^\p{L}\p{N} _-]/gu, '').slice(0, 60) || 'demo';
-    el('download').download = `ASIQPAI-${name}-multitrack.wav`;
+    el('download').download = `ASIQPAI-${name}-${proMix.enabled ? 'pro-mix' : 'multitrack'}.wav`;
     const file = new File([mixBlob], el('download').download, { type: 'audio/wav' });
     el('share').hidden = !navigator.canShare?.({ files: [file] });
 
@@ -1467,12 +1485,19 @@ export function mountStudio({ apiUrl }) {
     const keyInfo = beatAnalysis?.key
       ? ` · ${beatAnalysis.key} ${beatAnalysis.scale === 'minor' ? 'Minor' : 'Major'}`
       : '';
-    el('result-info').textContent = `${roles}${keyInfo} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ`;
+    el('result-info').textContent = `${roles}${keyInfo} · WAV, 44,1 кГц · ${(mixBlob.size / 1048576).toFixed(1)} МБ${proMix.enabled ? ' · PRO MIX' : ''}`;
+    const report = el('pro-mix-report');
+    if (report) {
+      const beforeStats = measureProMixStats(before);
+      const afterStats = measureProMixStats(after);
+      const show = number => number == null ? 'тишина' : `${number} dBFS`;
+      report.textContent = `Пики: до ${show(beforeStats.peakDbfs)} / после ${show(afterStats.peakDbfs)} · RMS: до ${show(beforeStats.rmsDbfs)} / после ${show(afterStats.rmsDbfs)}. Это измерения пика и средней мощности, не LUFS.`;
+    }
     const current = activeTrack();
     serverVocal = current.serverVocal;
     serverVocalSignature = current.serverVocalSignature || '';
     el('result').hidden = false;
-    status('Полный микс готов. Сравните исходник и обработанную версию.');
+    status(proMix.enabled ? 'PRO MIX готов. Сравните с исходником и оцените вокал на наушниках.' : 'Полный микс готов. Сравните исходник и обработанную версию.');
     el('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 
