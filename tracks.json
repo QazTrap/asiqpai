@@ -9,6 +9,16 @@
     "accent": "212,175,55",
     "priceAsiq": 1000
   },
+   {
+    "title": "Demo",
+    "artist": "ASIQPAI",
+    "meta": "TRACK",
+    "cover": "images/Demo.png",
+    "artwork": "images/Demo-160.jpg",
+    "file": "music/Demo.mp3",
+    "accent": "212,175,55",
+    "priceAsiq": 1000
+  },
   {
     "title": "ASIQ",
     "artist": "ASIQPAI",
